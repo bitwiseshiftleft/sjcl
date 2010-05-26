@@ -1,0 +1,136 @@
+#!/usr/bin/env perl
+
+use strict;
+
+my ($arg, $i, $j, $targ);
+
+my @targets = qw/sjcl aes bitArray codecString codecHex codecBase64 codecBytes sha256 ccm ocb2 hmac pbkdf2 random convenience/;
+my %deps = ('aes'=>'sjcl',
+            'bitArray'=>'sjcl',
+            'codecString'=>'bitArray',
+            'codecHex'=>'bitArray',
+            'codecBase64'=>'bitArray',
+            'codecBytes'=>'bitArray',
+            'sha256'=>'codecString',
+            'ccm'=>'bitArray,aes',
+            'ocb2'=>'bitArray,aes',
+            'hmac'=>'sha256',
+            'pbkdf2'=>'hmac',
+            'random'=>'sha256,aes',
+            'convenience'=>'ccm,pbkdf2,random');
+            
+my $compress = "closure";
+            
+my %enabled = ();
+$enabled{$_} = 0 foreach (@targets);
+
+# by default, all but codecBytes
+$enabled{$_} = 1 foreach (qw/aes bitArray codecString codecHex codecBase64 sha256 ccm ocb2 hmac pbkdf2 random convenience/);
+
+# argument parsing
+while ($arg = shift @ARGV) {
+  if ($arg =~ /^--?with-all$/) {
+    foreach (@targets) {
+      if ($enabled{$_} == 0) {
+        $enabled{$_} = 1;
+      }
+    }
+  } elsif ($arg =~ /^--?without-all$/) {
+    foreach (@targets) {
+      if ($enabled{$_} == 1) {
+        $enabled{$_} = 0;
+      }
+    }
+  } elsif ($arg =~ /^--?with-(.*)$/) {
+    $targ = $1;
+    $targ =~ s/-(.)/uc $1/ge;
+    if (!defined $deps{$targ}) {
+      print STDERR "No such target $targ\n";
+      exit 1;
+    }
+    $enabled{$targ} = 2;
+  } elsif ($arg =~ /^--?without-(.*)$/) {
+    $targ = $1;
+    $targ =~ s/-(.)/uc $1/ge;
+    if (!defined $deps{$targ}) {
+      print STDERR "No such target $targ\n";
+      exit 1;
+    }
+    $enabled{$targ} = -1;
+  } elsif ($arg =~ /^--?compress(?:or|ion)=(none|closure|yui)$/) {
+    $compress = $1;
+  } else {
+    my $targets = join " ", @targets;
+    $targets =~ s/sjcl //;
+    $targets =~ s/(.{50})\s+/$1\n    /g;
+    print STDERR <<EOT;
+Usage: $0 arguments...
+
+Valid arguments are:
+  --with-all: by default, include all targets
+  --without-all: by default, include no targets
+  
+  --compress=none|closure|yui
+  
+  --with-TARGET: require TARGET
+  --without-TARGET: forbid TARGET
+  
+  --help: show this message
+  
+  Valid targets are:
+    $targets
+
+EOT
+    exit 1 unless $arg =~ /^--?help$/;
+    exit 0;
+  }
+}
+
+my $config = '';
+my $pconfig;
+
+# dependency analysis: forbidden
+foreach $i (@targets) {
+  if ($enabled{$i} > 0) {
+    foreach $j (split /,/, $deps{$i}) {
+      if ($enabled{$j} == -1) {
+        if ($enabled{$i} == 2) {
+          print STDERR "Conflicting options: $i depends on $j\n";
+          exit 1;
+        } else {
+          $enabled{$i} = -1;
+          last;
+        }
+      }
+    }
+  }
+}
+
+# reverse
+foreach $i (reverse @targets) {
+  if ($enabled{$i} > 0) {
+    foreach $j (split /,/, $deps{$i}) {
+      if ($enabled{$j} < $enabled{$i}) {
+        $enabled{$j} = $enabled{$i};
+      }
+    }
+    $config = "$i $config";
+  }
+}
+
+open CONFIG, "> config.mk" or die "$!";
+
+
+($pconfig = $config) =~ s/^sjcl //;
+$pconfig =~ s/ /\n  /g;
+print "Enabled components:\n  $pconfig\n";
+print "Compression: $compress\n";
+
+$config =~ s=\S+=core/$&.js=g;
+print CONFIG "SOURCES= $config\n";
+
+$compress = "core_$compress.js";
+$compress = 'core.js' if ($compress eq 'core_none.js');
+
+print CONFIG "COMPRESS= $compress\n";
+
