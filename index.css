@@ -12,6 +12,12 @@ h1 {
   margin-bottom: 1em;
 }
 
+code {
+  display: block;
+  margin: 0.5em 1em;
+  font-family: monospace;
+}
+
 #main {
   margin: 0px auto;
   width: 640px;
