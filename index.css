@@ -1,0 +1,26 @@
+* {
+  margin: 0px;
+  padding: 0px;
+  font-family: Arial, Helvetica, FreeSans, sans;
+}
+
+h1 {
+  text-align: center;
+  background: #eee;
+  padding: 5px;
+  color: black;
+  margin-bottom: 1em;
+}
+
+#main {
+  margin: 0px auto;
+  width: 640px;
+}
+
+p {
+  text-align: justify;
+}
+
+p+p {
+  margin-top: 1em;
+}

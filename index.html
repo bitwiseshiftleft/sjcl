@@ -1,0 +1,65 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+        
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Stanford Javascript Crypto Library</title>
+  <link rel="stylesheet" type="text/css" href="index.css"/>
+</head>
+<body>
+  <h1>Stanford Javascript Crypto Library</h1>
+
+  <div id="main">
+
+  <p>The Stanford Javascript Crypto Library
+  (hosted <a href="http://github.com/bitwiseshiftleft/sjcl/">here</a>
+  on GitHub) is a project by the Stanford Computer Security Lab to
+  build a secure, powerful, fast, small, easy-to-use, cross-browser
+  library for cryptography in Javascript.</p>
+
+  <p>SJCL is easy to use: simply run <code>sjcl.encrypt("password",
+  "data")</code> to encrypt data, or <code>sjcl.decrypt("password",
+  "encrypted-data")</code> to decrypt it.  For users with more complex
+  security requirements, there is a much more powerful API, described
+  in the <a href="doc">documentation</a>.</p>
+
+  <p>SJCL is small but powerful.  The
+  <a href="sjcl.js">minified version</a> of the library is under 6.4KB
+  compressed, and yet it posts impressive speed results.  (TODO: put
+  up a benchmarks page.)</p>
+
+  <p>SJCL is secure.  It uses the industry-standard AES algorithm at
+  128, 192 or 256 bits; the SHA256 hash function; the HMAC
+  authentication code; the PBKDF2 password strengthener; and the CCM
+  and OCB authenticated-encryption modes.  Just as importantly, the
+  default parameters are sensible: SJCL strengthens your passwords by
+  a factor of 1000 and salts them to protect against rainbow tables,
+  and it authenticates every message it sends to prevent it from being
+  modified.  We believe that SJCL provides the best security which is
+  practically available in Javascript.  (Unforunately, this is not as
+  great as in desktop applications because it is not feasible to
+  completely protect against code injection, malicious servers and
+  side-channel attacks.)</p>
+
+  <p>SJCL is cross-browser.  We hope.  We've tested it on all the
+  install browsers on the security lab computers (including various
+  versions of Internet Explorer, Chrome, Firefox, Safari and Opera on
+  Mac, Linux and Windows) and on the rhino engine, but still need to
+  do more comprehensive testing.  We have a <a href="browserTest">test
+  page</a> up on this site; if it reports any failures,
+  please <a href="http://github.com/bitwiseshiftleft/sjcl/issues">report
+  an issue</a>.</p>
+
+  <p>SJCL is open.  You can use, modify and redistribute it under a
+  BSD license or under the GNU GPL, version 2.0 or higher.</p>
+
+
+  <p>Currently, SJCL supports only symmetric-key cryptography, but
+  public-key cryptography using elliptic curves is on the way.</p>
+
+  <p>SJCL was written by Emily Stark, Mike Hamburg and Dan Boneh at
+  Stanford University.  Special thanks to Aldo Cortesi and Roy
+  Nicholson for reporting bugs in earlier versions of SJCL.</p>
+  </div>
+</body>
+</html>
