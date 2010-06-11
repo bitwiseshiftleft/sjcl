@@ -54,7 +54,7 @@ lint: core.js core/*.js test/*.js browser/*.js lint/coding_guidelines.pl
 	lint/coding_guidelines.pl core/*.js test/*.js browser/*.js
 
 
-TEST_SCRIPTS= browser/rhinoUtil.js \
+TEST_SCRIPTS= browserTest/rhinoUtil.js \
 							test/test.js \
               test/aes_vectors.js test/aes_test.js \
               test/ocb2_vectors.js test/ocb2_test.js  \
