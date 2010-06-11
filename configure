@@ -57,7 +57,7 @@ while ($arg = shift @ARGV) {
       exit 1;
     }
     $enabled{$targ} = -1;
-  } elsif ($arg =~ /^--?compress(?:or|ion)=(none|closure|yui)$/) {
+  } elsif ($arg =~ /^--?compress(?:or|ion)?=(none|closure|yui)$/) {
     $compress = $1;
   } else {
     my $targets = join " ", @targets;
