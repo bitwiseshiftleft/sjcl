@@ -4,7 +4,7 @@ use strict;
 
 my ($arg, $i, $j, $targ);
 
-my @targets = qw/sjcl aes bitArray codecString codecHex codecBase64 codecBytes sha256 ccm ocb2 hmac pbkdf2 random convenience/;
+my @targets = qw/sjcl aes bitArray codecString codecHex codecBase64 codecBytes sha256 ccm ocb2 hmac pbkdf2 random convenience bn ecc/;
 my %deps = ('aes'=>'sjcl',
             'bitArray'=>'sjcl',
             'codecString'=>'bitArray',
@@ -16,6 +16,7 @@ my %deps = ('aes'=>'sjcl',
             'ocb2'=>'bitArray,aes',
             'hmac'=>'sha256',
             'pbkdf2'=>'hmac',
+            'ecc'=>'bn',
             'random'=>'sha256,aes',
             'convenience'=>'ccm,pbkdf2,random');
             
@@ -24,7 +25,7 @@ my $compress = "closure";
 my %enabled = ();
 $enabled{$_} = 0 foreach (@targets);
 
-# by default, all but codecBytes
+# by default, all but codecBytes, ecc, bn
 $enabled{$_} = 1 foreach (qw/aes bitArray codecString codecHex codecBase64 sha256 ccm ocb2 hmac pbkdf2 random convenience/);
 
 # argument parsing
