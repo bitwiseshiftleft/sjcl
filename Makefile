@@ -49,9 +49,9 @@ doc_private: $(SOURCES)
 	rm -fr $@
 	JSDOCDIR=$(JSDOCDIR) $(JSDOC) -t=$(JSTEMPLATEDIR) $(SOURCES) --private -d=$@
 
-lint: core.js core/*.js test/*.js browser/*.js lint/coding_guidelines.pl
+lint: core.js core/*.js test/*.js browserTest/*.js lint/coding_guidelines.pl
 	rhino lint/jslint_rhino.js core.js
-	lint/coding_guidelines.pl core/*.js test/*.js browser/*.js
+	lint/coding_guidelines.pl core/*.js test/*.js browserTest/*.js
 
 
 TEST_SCRIPTS= browserTest/rhinoUtil.js \
