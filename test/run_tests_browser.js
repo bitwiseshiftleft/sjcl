@@ -17,7 +17,9 @@ function testCore(coreName, cb) {
     "hmac_vectors.js",
     "pbkdf2_test.js",
     "ecdh_test.js",
-    "ecdsa_test.js"
+    "ecdsa_test.js",
+    "bn_test.js",
+    "bn_vectors.js"
   ], i;
   
   for (i=1; i<testFiles.length; i++) {
