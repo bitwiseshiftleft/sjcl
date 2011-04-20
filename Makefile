@@ -62,7 +62,8 @@ TEST_SCRIPTS= browserTest/rhinoUtil.js \
               test/sha256_vectors.js test/sha256_test.js \
               test/sha256_test_brute_force.js \
               test/hmac_vectors.js test/hmac_test.js \
-              test/pbkdf2_test.js
+              test/pbkdf2_test.js \
+              test/bn_vectors.js test/bn_test.js
 
 # Rhino fails at -O 0.  Probably because the big files full of test vectors blow the
 # bytecode limit.
