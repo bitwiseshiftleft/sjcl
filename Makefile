@@ -44,7 +44,7 @@ compression_stats: core.js core_closure.js core_yui.js
 doc: $(SOURCES)
 	rm -fr $@
 	JSDOCDIR=$(JSDOCDIR) $(JSDOC) -t=$(JSTEMPLATEDIR) $(SOURCES) -d=$@
-	
+
 doc_private: $(SOURCES)
 	rm -fr $@
 	JSDOCDIR=$(JSDOCDIR) $(JSDOC) -t=$(JSTEMPLATEDIR) $(SOURCES) --private -d=$@
@@ -55,7 +55,7 @@ lint: core.js core/*.js test/*.js browserTest/*.js lint/coding_guidelines.pl
 
 
 TEST_SCRIPTS= browserTest/rhinoUtil.js \
-							test/test.js \
+              test/test.js \
               test/aes_vectors.js test/aes_test.js \
               test/ocb2_vectors.js test/ocb2_test.js  \
               test/ccm_vectors.js test/ccm_test.js  \
@@ -64,14 +64,18 @@ TEST_SCRIPTS= browserTest/rhinoUtil.js \
               test/sha1_vectors.js test/sha1_test.js \
               test/hmac_vectors.js test/hmac_test.js \
               test/pbkdf2_test.js \
-              test/srp_vectors.js test/srp_test.js \
               test/bn_vectors.js test/bn_test.js
+
+SRP_TEST_SCRIPTS= browserTest/rhinoUtil.js \
+              test/test.js \
+              test/srp_vectors.js test/srp_test.js
 
 # Rhino fails at -O 0.  Probably because the big files full of test vectors blow the
 # bytecode limit.
 
 test: sjcl.js $(TEST_SCRIPTS) test/run_tests_rhino.js
 	@rhino -O -1 -w test/run_tests_rhino.js $< $(TEST_SCRIPTS)
+	@rhino -O 9 -w test/run_tests_rhino.js $< $(SRP_TEST_SCRIPTS)
 
 tidy:
 	find . -name '*~' -delete
