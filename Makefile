@@ -72,7 +72,7 @@ TEST_SCRIPTS_OPT= $(TEST_COMMON) \
 
 # Rhino fails at -O 0.  Probably because the big files full of test vectors blow the
 # bytecode limit. So, run most tests with -O -1. But modular exponentiation is
-# currently very slow, so run the SRP test with optimizations on.
+# currently very slow (on Rhino), so run the SRP test with optimizations on.
 
 test: sjcl.js $(TEST_SCRIPTS) test/run_tests_rhino.js
 	@rhino -O -1 -w test/run_tests_rhino.js $< $(TEST_SCRIPTS)
