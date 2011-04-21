@@ -19,6 +19,7 @@ my %deps = ('aes'=>'sjcl',
             'hmac'=>'sha256',
             'pbkdf2'=>'hmac',
             'srp'=>'sha1,bn,bitArray',
+            'bn'=>'bitArray,random',
             'ecc'=>'bn',
             'random'=>'sha256,aes',
             'convenience'=>'ccm,pbkdf2,random');
