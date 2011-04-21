@@ -20,7 +20,6 @@ my %deps = ('aes'=>'sjcl',
             'pbkdf2'=>'hmac',
             'srp'=>'sha1,bn,bitArray',
             'bn'=>'bitArray,random',
-            'ecc'=>'bn',
             'random'=>'sha256,aes',
             'convenience'=>'ccm,pbkdf2,random');
             
@@ -29,7 +28,7 @@ my $compress = "closure";
 my %enabled = ();
 $enabled{$_} = 0 foreach (@targets);
 
-# by default, all but codecBytes, ecc, bn, cbc
+# by default, all but codecBytes, srp, bn, cbc
 $enabled{$_} = 1 foreach (qw/aes bitArray codecString codecHex codecBase64 sha256 ccm ocb2 hmac pbkdf2 random convenience/);
 
 # argument parsing
