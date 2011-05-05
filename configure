@@ -4,7 +4,7 @@ use strict;
 
 my ($arg, $i, $j, $targ);
 
-my @targets = qw/sjcl aes bitArray codecString codecHex codecBase64 codecBytes bn sha256 sha1 ccm ocb2 hmac pbkdf2 srp random convenience/;
+my @targets = qw/sjcl aes bitArray codecString codecHex codecBase64 codecBytes bn sha256 sha1 md5 ccm ocb2 hmac pbkdf2 srp random convenience/;
 my %deps = ('aes'=>'sjcl',
             'bitArray'=>'sjcl',
             'codecString'=>'bitArray',
@@ -13,6 +13,7 @@ my %deps = ('aes'=>'sjcl',
             'codecBytes'=>'bitArray',
             'sha256'=>'codecString',
             'sha1'=>'codecString',
+            'md5'=>'codecString',
             'ccm'=>'bitArray,aes',
             'ocb2'=>'bitArray,aes',
             'hmac'=>'sha256',
@@ -28,7 +29,7 @@ my %enabled = ();
 $enabled{$_} = 0 foreach (@targets);
 
 # by default, all but codecBytes, srp, bn
-$enabled{$_} = 1 foreach (qw/aes bitArray codecString codecHex codecBase64 sha256 ccm ocb2 hmac pbkdf2 random convenience/);
+$enabled{$_} = 1 foreach (qw/aes bitArray codecString codecHex codecBase64 md5 sha1 sha256 ccm ocb2 hmac pbkdf2 random convenience/);
 
 # argument parsing
 while ($arg = shift @ARGV) {
