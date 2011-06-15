@@ -54,7 +54,11 @@ sjcl.hash.ripemd160.prototype = {
             ol = this._length,
             nl = this._length = ol + sjcl.bitArray.bitLength(data);
         for ( var i = 512+ol & -512; i <= nl; i+= 512 ) {
-            _block.call( this, b.splice(0,16) );
+            var words = b.splice(0,16);
+            for ( var w = 0; w < 16; ++w )
+                words[w] = _cvt(words[w]);
+
+            _block.call( this, words );
         }
 
         return this;
@@ -65,19 +69,32 @@ sjcl.hash.ripemd160.prototype = {
      * @return {bitArray} The hash value, an array of 5 big-endian words.
      */
     finalize: function () {
-        var b = sjcl.bitArray.concat( this._buffer, [ sjcl.bitArray.partial(1,1) ] );
+        var b = sjcl.bitArray.concat( this._buffer, [ sjcl.bitArray.partial(1,1) ] ),
+            l = ( this._length + 1 ) % 512,
+            z = ( l > 448 ? 512 : 448 ) - l % 448,
+            zp = z % 32;
 
-        for ( var i = b.length + 2; i & 15; i++ )
-          b.push(0);
+        if ( zp > 0 )
+            b = sjcl.bitArray.concat( b, [ sjcl.bitArray.partial(zp,0) ] )
+        for ( ; z >= 32; z -= 32 )
+            b.push(0);
 
-        b.push( Math.floor(this._length / 0x100000000) );
-        b.push( this._length | 0 );
+        b.push( b._length & 0xffffffff );
+        b.push( (b._length >>> 32) | 0 );
 
-        while ( b.length )
-            _block.call( this, b.splice(0,16) );
+        while ( b.length ) {
+            var words = b.splice(0,16);
+            for ( var w = 0; w < 16; ++w )
+                words[w] = _cvt(words[w]);
+
+            _block.call( this, words );
+        }
 
         var h = this._h;
         this.reset();
+
+        for ( var w = 0; w < 5; ++w )
+            h[w] = _cvt(h[w]);
 
         return h;
     }
@@ -87,6 +104,12 @@ var _h0 = [ 0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0 ];
 
 var _k1 = [ 0x00000000, 0x5a827999, 0x6ed9eba1, 0x8f1bbcdc, 0xa953fd4e ];
 var _k2 = [ 0x50a28be6, 0x5c4dd124, 0x6d703ef3, 0x7a6d76e9, 0x00000000 ];
+for ( var i = 4; i >= 0; --i ) {
+    for ( var j = 1; j < 16; ++j ) {
+        _k1.splice(i,0,_k1[i]);
+        _k2.splice(i,0,_k2[i]);
+    }
+}
 
 var _r1 = [  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,
              7,  4, 13,  1, 10,  6, 15,  3, 12,  0,  9,  5,  2, 14, 11,  8,
@@ -132,6 +155,13 @@ function _f4(x,y,z) {
 
 function _rol(n,l) {
     return (n << l) | (n >>> (32-l));
+}
+
+function _cvt(n) {
+    return ( (n & 0xff <<  0) <<  24 )
+         | ( (n & 0xff <<  8) <<   8 )
+         | ( (n & 0xff << 16) >>>  8 )
+         | ( (n & 0xff << 24) >>> 24 );
 }
 
 function _block(X) {
