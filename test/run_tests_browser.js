@@ -15,6 +15,8 @@ function testCore(coreName, cb) {
     "sha256_test_brute_force.js",
     "sha1_test.js",
     "sha1_vectors.js",
+    "ripemd160_test.js",
+    "ripemd160_vectors.js",
     "hmac_test.js",
     "hmac_vectors.js",
     "pbkdf2_test.js",
