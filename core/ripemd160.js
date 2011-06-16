@@ -50,10 +50,9 @@ sjcl.hash.ripemd160.prototype = {
         if ( typeof data === "string" )
             data = sjcl.codec.utf8String.toBits(data);
 
-        var b = this._buffer = sjcl.bitArray.concat(this._buffer, data),
-            ol = this._length,
-            nl = this._length = ol + sjcl.bitArray.bitLength(data);
-        for ( var i = 512+ol & -512; i <= nl; i+= 512 ) {
+        var b = this._buffer = sjcl.bitArray.concat(this._buffer, data);
+                this._length += sjcl.bitArray.bitLength(data);
+        while ( b.length >= 16 ) {
             var words = b.splice(0,16);
             for ( var w = 0; w < 16; ++w )
                 words[w] = _cvt(words[w]);
@@ -79,10 +78,10 @@ sjcl.hash.ripemd160.prototype = {
         for ( ; z >= 32; z -= 32 )
             b.push(0);
 
-        b.push( b._length & 0xffffffff );
-        b.push( (b._length >>> 32) | 0 );
+        b.push( this._length | 0 );
+        b.push( 0 );
 
-        while ( b.length ) {
+        while ( b.length > 0 ) {
             var words = b.splice(0,16);
             for ( var w = 0; w < 16; ++w )
                 words[w] = _cvt(words[w]);
