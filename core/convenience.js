@@ -56,7 +56,7 @@
     rp.key = password;
     
     /* do the encryption */
-    p.ct = sjcl.mode[p.mode].encrypt(prp, plaintext, p.iv, p.adata, p.tag);
+    p.ct = sjcl.mode[p.mode].encrypt(prp, plaintext, p.iv, p.adata, p.ts);
     
     //return j.encode(j._subtract(p, j.defaults));
     return j.encode(p);
@@ -101,7 +101,7 @@
     prp = new sjcl.cipher[p.cipher](password);
     
     /* do the decryption */
-    ct = sjcl.mode[p.mode].decrypt(prp, p.ct, p.iv, p.adata, p.tag);
+    ct = sjcl.mode[p.mode].decrypt(prp, p.ct, p.iv, p.adata, p.ts);
     
     /* return the json data */
     j._add(rp, p);
