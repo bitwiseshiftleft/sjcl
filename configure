@@ -11,8 +11,8 @@ my %deps = ('aes'=>'sjcl',
             'codecHex'=>'bitArray',
             'codecBase64'=>'bitArray',
             'codecBytes'=>'bitArray',
-            'sha256'=>'codecString',
-            'sha1'=>'codecString',
+            'sha256'=>'codecString,bitArray',
+            'sha1'=>'codecString,bitArray',
             'ccm'=>'bitArray,aes',
             'ocb2'=>'bitArray,aes',
             'hmac'=>'sha256',
@@ -112,22 +112,23 @@ foreach $i (@targets) {
 }
 
 # reverse
-foreach $i (reverse @targets) {
+my @rtargets = reverse @targets;
+foreach $i (@rtargets) {
   if ($enabled{$i} > 0) {
     foreach $j (split /,/, $deps{$i}) {
       if ($enabled{$j} < $enabled{$i}) {
         $enabled{$j} = $enabled{$i};
+        push @rtargets, $j;
       }
     }
-    $config = "$i $config";
   }
 }
 
 open CONFIG, "> config.mk" or die "$!";
 
+$config = join " ", grep { $enabled{$_} > 0 } @targets;
+$pconfig = join "\n  ", grep { $_ ne 'sjcl' && $enabled{$_} > 0 } @targets;
 
-($pconfig = $config) =~ s/^sjcl //;
-$pconfig =~ s/ /\n  /g;
 print "Enabled components:\n  $pconfig\n";
 print "Compression: $compress\n";
 
