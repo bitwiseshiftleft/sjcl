@@ -235,14 +235,14 @@ sjcl.ecc.pointJac.prototype = {
  *
  * @constructor
  * @param {bigInt} p The prime modulus.
- * @param {bigInt} r The prime order of the curve.
+ * @param {bigInt} pMinusR The modulus minus prime order of the curve.
  * @param {bigInt} a The constant a in the equation of the curve y^2 = x^3 + ax + b (for NIST curves, a is always -3).
  * @param {bigInt} x The x coordinate of a base point of the curve.
  * @param {bigInt} y The y coordinate of a base point of the curve.
  */
-sjcl.ecc.curve = function(Field, r, a, b, x, y) {
+sjcl.ecc.curve = function(Field, pMinusR, a, b, x, y) {
   this.field = Field;
-  this.r = Field.prototype.modulus.sub(r);
+  this.r = Field.prototype.modulus.sub(pMinusR);
   this.a = new Field(a);
   this.b = new Field(b);
   this.G = new sjcl.ecc.point(this, new Field(x), new Field(y));
