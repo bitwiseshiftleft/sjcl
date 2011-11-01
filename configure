@@ -22,7 +22,7 @@ my %deps = ('aes'=>'sjcl',
             'ecc'=>'bn',
             'cbc'=>'bitArray,aes',
             'random'=>'sha256,aes',
-            'convenience'=>'ccm,pbkdf2,random');
+            'convenience'=>'ccm,pbkdf2,random,codecBase64');
             
 my $compress = "closure";
             
