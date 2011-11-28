@@ -295,36 +295,50 @@ sjcl.ecc.curves = {
 
 /* Diffie-Hellman-like public-key system */
 sjcl.ecc._dh = function(cn) {
-  sjcl.ecc[cn] = {
-    publicKey: function(curve, point) {
-      this._curve = curve;
-      if (point instanceof Array) {
-        this._point = curve.fromBits(point);
-      } else {
-        this._point = point;
-      }
-    },
-
-    secretKey: function(curve, exponent) {
-      this._curve = curve;
-      this._exponent = exponent;
-    },
-
-    generateKeys: function(curve, paranoia) {
-      if (curve === undefined) {
-        curve = 256;
-      }
-      if (typeof curve === "number") {
-        curve = sjcl.ecc.curves['c'+curve];
-        if (curve === undefined) {
-          throw new sjcl.exception.invalid("no such curve");
-        }
-      }
-      var sec = sjcl.bn.random(curve.r, paranoia), pub = curve.G.mult(sec);
-      return { pub: new sjcl.ecc[cn].publicKey(curve, pub),
-               sec: new sjcl.ecc[cn].secretKey(curve, sec) };
-    }
-  }; 
+    sjcl.ecc[cn] = {
+	publicKey: function(curve_id, curve, point) {
+			this._curve = curve;
+	    
+			if (point instanceof Array) {
+					this._point = curve.fromBits(point);
+	    } else {
+					this._point = point;
+	    }
+	    
+	    if(curve_id) {
+					this._curve_id = curve_id;
+					this.serialize = function() {
+							return {
+									'x':point.x,
+									'y':point.y,
+									'curve':curve_id
+							};
+					}
+	    }
+	},
+	
+	secretKey: function(curve, exponent) {
+	    this._curve = curve;
+	    this._exponent = exponent;
+	},
+	
+	generateKeys: function(curve, paranoia) {
+	    var curve_id;
+	    if (curve === undefined) {
+		curve = 256;
+	    }
+	    if (typeof curve === "number") {
+		curve_id = curve;
+		curve = sjcl.ecc.curves['c'+curve];
+		if (curve === undefined) {
+		    throw new sjcl.exception.invalid("no such curve");
+		}
+	    }
+	    var sec = sjcl.bn.random(curve.r, paranoia), pub = curve.G.mult(sec);
+	    return { pub: new sjcl.ecc[cn].publicKey(curve_id, curve, pub),
+		     sec: new sjcl.ecc[cn].secretKey(curve, sec) };
+	}
+    }; 
 };
 
 sjcl.ecc._dh("elGamal");
