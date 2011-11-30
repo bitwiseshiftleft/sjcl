@@ -309,8 +309,7 @@ sjcl.ecc._dh = function(cn) {
 	        this._curve_id = curve_id;
 	        this.serialize = function() {
 	            return {
-	                'x': point.x.toBits(curve_id),
-	                'y': point.y.toBits(curve_id),
+			'point': point.toBits(),
 	                'curve': curve_id
 	            };
 	        }
@@ -326,7 +325,7 @@ sjcl.ecc._dh = function(cn) {
 	        this._curve_id = curve_id;
 	        this.serialize = function() {
 	            return {
-	                'exponent': exponent.toBits(curve_id),
+	                'exponent': exponent.toBits(),
 	                'curve': curve_id
 	            };
 	        }
