@@ -297,7 +297,7 @@ sjcl.ecc.curves = {
 sjcl.ecc._dh = function(cn) {
     sjcl.ecc[cn] = {
 	publicKey: function(curve_id, curve, point) {
-    	this._curve = curve;
+	    this._curve = curve;
 
 	    if (point instanceof Array) {
 	        this._point = curve.fromBits(point);
@@ -309,8 +309,8 @@ sjcl.ecc._dh = function(cn) {
 	        this._curve_id = curve_id;
 	        this.serialize = function() {
 	            return {
-	                'x': point.x,
-	                'y': point.y,
+	                'x': point.x.toBits(curve_id),
+	                'y': point.y.toBits(curve_id),
 	                'curve': curve_id
 	            };
 	        }
@@ -319,14 +319,14 @@ sjcl.ecc._dh = function(cn) {
 
 	
 	secretKey: function(curve_id, curve, exponent) {
-    	this._curve = curve;
+	    this._curve = curve;
 	    this._exponent = exponent;
 
 	    if (curve_id) {
 	        this._curve_id = curve_id;
 	        this.serialize = function() {
 	            return {
-	                'exponent': exponent,
+	                'exponent': exponent.toBits(curve_id),
 	                'curve': curve_id
 	            };
 	        }
@@ -335,7 +335,7 @@ sjcl.ecc._dh = function(cn) {
 
 	
 	generateKeys: function(curve, paranoia) {
-    	var curve_id;
+	    var curve_id;
 	    if (curve === undefined) {
 	        curve = 256;
 	    }
