@@ -160,7 +160,7 @@
     }
     var a = str.replace(/^\{|\}$/g, '').split(/,/), out={}, i, m;
     for (i=0; i<a.length; i++) {
-      if (!(m=a[i].match(/^([a-z][a-z0-9]*):(?:(\d+)|"([a-z0-9+\/%*_.@=\-]*)")$/i))) {
+      if (!(m=a[i].match(/^(?:"?([a-z][a-z0-9]*)"?):(?:(\d+)|"([a-z0-9+\/%*_.@=\-]*)")$/i))) {
         throw new sjcl.exception.invalid("json decode: this isn't json!");
       }
       if (m[2]) {
