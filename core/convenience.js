@@ -46,6 +46,10 @@
       tmp = sjcl.misc.cachedPbkdf2(password, p);
       password = tmp.key.slice(0,p.ks/32);
       p.salt = tmp.salt;
+    } else if (sjcl.ecc && password instanceof sjcl.ecc.elGamal.publicKey) {
+      tmp = password.kem();
+      p.kemtag = tmp.tag;
+      password = tmp.key.slice(0,p.ks/32);
     }
     if (typeof plaintext === "string") {
       plaintext = sjcl.codec.utf8String.toBits(plaintext);
@@ -101,6 +105,8 @@
       tmp = sjcl.misc.cachedPbkdf2(password, p);
       password = tmp.key.slice(0,p.ks/32);
       p.salt  = tmp.salt;
+    } else if (sjcl.ecc && password instanceof sjcl.ecc.elGamal.secretKey) {
+      password = password.unkem(sjcl.codec.base64.toBits(p.kemtag)).slice(0,p.ks/32);
     }
     if (typeof adata === "string") {
       adata = sjcl.codec.utf8String.toBits(adata);
