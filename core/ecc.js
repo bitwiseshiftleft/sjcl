@@ -303,14 +303,26 @@ sjcl.ecc._dh = function(cn) {
       } else {
         this._point = point;
       }
+
+      this.get = function() {
+        var pointbits = this._point.toBits();
+        var len = sjcl.bitArray.bitLength(pointbits);
+        var x = sjcl.bitArray.bitSlice(pointbits, 0, len/2);
+        var y = sjcl.bitArray.bitSlice(pointbits, len/2);
+        return { x: x, y: y };
+      }
     },
 
     secretKey: function(curve, exponent) {
       this._curve = curve;
       this._exponent = exponent;
+
+      this.get = function() {
+        return this._exponent.toBits();
+      }
     },
 
-    generateKeys: function(curve, paranoia) {
+    generateKeys: function(curve, paranoia, sec) {
       if (curve === undefined) {
         curve = 256;
       }
@@ -320,7 +332,10 @@ sjcl.ecc._dh = function(cn) {
           throw new sjcl.exception.invalid("no such curve");
         }
       }
-      var sec = sjcl.bn.random(curve.r, paranoia), pub = curve.G.mult(sec);
+      if (sec === undefined) {
+        var sec = sjcl.bn.random(curve.r, paranoia);
+      }
+      var pub = curve.G.mult(sec);
       return { pub: new sjcl.ecc[cn].publicKey(curve, pub),
                sec: new sjcl.ecc[cn].secretKey(curve, sec) };
     }
@@ -351,10 +366,10 @@ sjcl.ecc.elGamal.secretKey.prototype = {
 sjcl.ecc._dh("ecdsa");
 
 sjcl.ecc.ecdsa.secretKey.prototype = {
-  sign: function(hash, paranoia) {
+  sign: function(hash, paranoia, kin) {
     var R = this._curve.r,
         l = R.bitLength(),
-        k = sjcl.bn.random(R.sub(1), paranoia).add(1),
+        k = (kin === undefined) ? sjcl.bn.random(R.sub(1), paranoia).add(1) : kin,
         r = this._curve.G.mult(k).x.mod(R),
         s = sjcl.bn.fromBits(hash).add(r.mul(this._exponent)).mul(k.inverseMod(R)).mod(R);
     return sjcl.bitArray.concat(r.toBits(l), s.toBits(l));
