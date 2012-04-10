@@ -67,7 +67,7 @@ TEST_SCRIPTS= $(TEST_COMMON) \
               test/hmac_vectors.js test/hmac_test.js \
               test/pbkdf2_test.js \
               test/bn_vectors.js test/bn_test.js \
-              test/ecdsa_test.js test/ecdh_test.js
+              test/ecdsa_test.js test/ecdsa_vectors.js test/ecdh_test.js
 
 TEST_SCRIPTS_OPT= $(TEST_COMMON) \
               test/srp_vectors.js test/srp_test.js

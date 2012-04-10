@@ -340,7 +340,7 @@ sjcl.bn.prototype = {
   /** Serialize to a bit array */
   toBits: function(len) {
     this.fullReduce();
-    len = len || this.exponent || this.limbs.length * this.radix;
+    len = len || this.exponent || this.bitLength();
     var i = Math.floor((len-1)/24), w=sjcl.bitArray, e = (len + 7 & -8) % this.radix || this.radix,
         out = [w.partial(e, this.getLimb(i))];
     for (i--; i >= 0; i--) {

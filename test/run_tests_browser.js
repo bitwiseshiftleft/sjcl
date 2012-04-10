@@ -21,6 +21,7 @@ function testCore(coreName, cb) {
     "bn_test.js",
     "bn_vectors.js",
     "ecdsa_test.js",
+    "ecdsa_vectors.js",
     "ecdh_test.js",
     "srp_test.js",
     "srp_vectors.js"

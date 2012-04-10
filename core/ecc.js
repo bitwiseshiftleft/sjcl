@@ -298,19 +298,33 @@ sjcl.ecc._dh = function(cn) {
   sjcl.ecc[cn] = {
     publicKey: function(curve, point) {
       this._curve = curve;
+      this._curveBitLength = curve.r.bitLength();
       if (point instanceof Array) {
         this._point = curve.fromBits(point);
       } else {
         this._point = point;
       }
+
+      this.get = function() {
+        var pointbits = this._point.toBits();
+        var len = sjcl.bitArray.bitLength(pointbits);
+        var x = sjcl.bitArray.bitSlice(pointbits, 0, len/2);
+        var y = sjcl.bitArray.bitSlice(pointbits, len/2);
+        return { x: x, y: y };
+      }
     },
 
     secretKey: function(curve, exponent) {
       this._curve = curve;
+      this._curveBitLength = curve.r.bitLength();
       this._exponent = exponent;
+
+      this.get = function() {
+        return this._exponent.toBits();
+      }
     },
 
-    generateKeys: function(curve, paranoia) {
+    generateKeys: function(curve, paranoia, sec) {
       if (curve === undefined) {
         curve = 256;
       }
@@ -320,7 +334,10 @@ sjcl.ecc._dh = function(cn) {
           throw new sjcl.exception.invalid("no such curve");
         }
       }
-      var sec = sjcl.bn.random(curve.r, paranoia), pub = curve.G.mult(sec);
+      if (sec === undefined) {
+        var sec = sjcl.bn.random(curve.r, paranoia);
+      }
+      var pub = curve.G.mult(sec);
       return { pub: new sjcl.ecc[cn].publicKey(curve, pub),
                sec: new sjcl.ecc[cn].secretKey(curve, sec) };
     }
@@ -351,27 +368,33 @@ sjcl.ecc.elGamal.secretKey.prototype = {
 sjcl.ecc._dh("ecdsa");
 
 sjcl.ecc.ecdsa.secretKey.prototype = {
-  sign: function(hash, paranoia) {
+  sign: function(hash, paranoia, kin) {
+    if (sjcl.bitArray.bitLength(hash) > this._curveBitLength) {
+      hash = sjcl.bitArray.clamp(hash, this._curveBitLength);
+    }
     var R = this._curve.r,
-        l = R.bitLength(),
-        k = sjcl.bn.random(R.sub(1), paranoia).add(1),
+        l = this._curveBitLength,
+        k = (kin === undefined) ? sjcl.bn.random(R.sub(1), paranoia).add(1) : kin,
         r = this._curve.G.mult(k).x.mod(R),
-        s = sjcl.bn.fromBits(hash).add(r.mul(this._exponent)).inverseMod(R).mul(k).mod(R);
+        s = sjcl.bn.fromBits(hash).add(r.mul(this._exponent)).mul(k.inverseMod(R)).mod(R);
     return sjcl.bitArray.concat(r.toBits(l), s.toBits(l));
   }
 };
 
 sjcl.ecc.ecdsa.publicKey.prototype = {
   verify: function(hash, rs) {
+    if (sjcl.bitArray.bitLength(hash) > this._curveBitLength) {
+      hash = sjcl.bitArray.clamp(hash, this._curveBitLength);
+    }
     var w = sjcl.bitArray,
         R = this._curve.r,
-        l = R.bitLength(),
+        l = this._curveBitLength,
         r = sjcl.bn.fromBits(w.bitSlice(rs,0,l)),
         s = sjcl.bn.fromBits(w.bitSlice(rs,l,2*l)),
-        hG = sjcl.bn.fromBits(hash).mul(s).mod(R),
-        hA = r.mul(s).mod(R),
-        r2 = this._curve.G.mult2(hG, hA, this._point).x;
-        
+        u = s.inverseMod(R),
+        hG = sjcl.bn.fromBits(hash).mul(u).mod(R),
+        hA = r.mul(u).mod(R),
+        r2 = this._curve.G.mult2(hG, hA, this._point).x.mod(R);
     if (r.equals(0) || s.equals(0) || r.greaterEquals(R) || s.greaterEquals(R) || !r2.equals(r)) {
       throw (new sjcl.exception.corrupt("signature didn't check out"));
     }
