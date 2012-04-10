@@ -144,7 +144,6 @@ sjcl.test.vector.ecdsa = {
     }
   ],
   /* Disabled since computed S values don't match */
-  /*
   "p192sha256" : [
     {
       msg: "5c868fedb8026979ebd26f1ba07c27eedf4ff6d10443505a96ecaf21ba8c4f0937b3cd23ffdc3dd429d4cd1905fb8dbcceeff1350020e18b58d2ba70887baa3a9b783ad30d3fbf210331cdd7df8d77defa398cdacdfc2e359c7ba4cae46bb74401deb417f8b912a1aa966aeeba9c39c7dd22479ae2b30719dca2f2206c5eb4b7",
@@ -282,7 +281,6 @@ sjcl.test.vector.ecdsa = {
       S: "23750f05a4148a1b551bb1bc89334bc505b8a9ed9ff5780d"
     }
   ],
-  */
   "p224sha1" : [
     {
       msg: "36c8b22986487f677c18d0972a9e2047b3afa59ec162764ec30b5b69e0630f990d4e05c273b0e5a9d42827b695fc2d64d9138b1cf4c12155894c421321a7bb970bdce0fbf0d2ae8561aad8717f2e46dfe3ff8deab4d7932356032c15130d599e26c10f2fec963031ac6938a18d664538b94dac5534ef7b599424d69be1f71c20",
@@ -420,8 +418,6 @@ sjcl.test.vector.ecdsa = {
       S: "881783cbda0827c0daed689fe088fd63931b9d07d151f660adf5717b"
     }
   ],
-  /* Disabled since computed S values don't match */
-  /*
   "p224sha256" : [
     {
       msg: "2b49de971bb0f705a3fb5914eb7638d72884a6c3550667dbfdf301adf26bde02f387fd426a31be6c9ff8bfe8690c8113c88576427f1466508458349fc86036afcfb66448b947707e791e71f558b2bf4e7e7507773aaf4e9af51eda95cbce0a0f752b216f8a54a045d47801ff410ee411a1b66a516f278327df2462fb5619470e",
@@ -559,7 +555,6 @@ sjcl.test.vector.ecdsa = {
       S: "8ef1d7b326cabee7f7ab95b7b98d3c27a069c0fd95a1599c0ccb422b"
     }
   ],
-  */
   "p256sha1" : [
     {
       msg: "a24b21762e6edb153cc11438db0e92cdf52b86b06ca97016062759c70d36d1562cc9630d7fc7c774b28b54e31ef55872b2a65df1d7ec26debb33e7d927efccf46b63de52a4f431eaca59b05d2edec4845fffc0ee150394d61f3dfecbcdbf6f5a7338d0be3f2a773451983ebaeb48f6738fc895df357e1a48a653bb355a31a1b4",

@@ -298,6 +298,7 @@ sjcl.ecc._dh = function(cn) {
   sjcl.ecc[cn] = {
     publicKey: function(curve, point) {
       this._curve = curve;
+      this._curveBitLength = curve.r.bitLength();
       if (point instanceof Array) {
         this._point = curve.fromBits(point);
       } else {
@@ -315,6 +316,7 @@ sjcl.ecc._dh = function(cn) {
 
     secretKey: function(curve, exponent) {
       this._curve = curve;
+      this._curveBitLength = curve.r.bitLength();
       this._exponent = exponent;
 
       this.get = function() {
@@ -367,8 +369,11 @@ sjcl.ecc._dh("ecdsa");
 
 sjcl.ecc.ecdsa.secretKey.prototype = {
   sign: function(hash, paranoia, kin) {
+    if (sjcl.bitArray.bitLength(hash) > this._curveBitLength) {
+      hash = sjcl.bitArray.clamp(hash, this._curveBitLength);
+    }
     var R = this._curve.r,
-        l = R.bitLength(),
+        l = this._curveBitLength,
         k = (kin === undefined) ? sjcl.bn.random(R.sub(1), paranoia).add(1) : kin,
         r = this._curve.G.mult(k).x.mod(R),
         s = sjcl.bn.fromBits(hash).add(r.mul(this._exponent)).mul(k.inverseMod(R)).mod(R);
@@ -378,9 +383,12 @@ sjcl.ecc.ecdsa.secretKey.prototype = {
 
 sjcl.ecc.ecdsa.publicKey.prototype = {
   verify: function(hash, rs) {
+    if (sjcl.bitArray.bitLength(hash) > this._curveBitLength) {
+      hash = sjcl.bitArray.clamp(hash, this._curveBitLength);
+    }
     var w = sjcl.bitArray,
         R = this._curve.r,
-        l = R.bitLength(),
+        l = this._curveBitLength,
         r = sjcl.bn.fromBits(w.bitSlice(rs,0,l)),
         s = sjcl.bn.fromBits(w.bitSlice(rs,l,2*l)),
         u = s.inverseMod(R),
