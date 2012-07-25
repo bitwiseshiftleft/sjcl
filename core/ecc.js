@@ -295,36 +295,64 @@ sjcl.ecc.curves = {
 
 /* Diffie-Hellman-like public-key system */
 sjcl.ecc._dh = function(cn) {
-  sjcl.ecc[cn] = {
-    publicKey: function(curve, point) {
-      this._curve = curve;
-      if (point instanceof Array) {
-        this._point = curve.fromBits(point);
-      } else {
-        this._point = point;
-      }
-    },
+    sjcl.ecc[cn] = {
+	publicKey: function(curve_id, curve, point) {
+	    this._curve = curve;
 
-    secretKey: function(curve, exponent) {
-      this._curve = curve;
-      this._exponent = exponent;
-    },
+	    if (point instanceof Array) {
+	        this._point = curve.fromBits(point);
+	    } else {
+	        this._point = point;
+	    }
 
-    generateKeys: function(curve, paranoia) {
-      if (curve === undefined) {
-        curve = 256;
-      }
-      if (typeof curve === "number") {
-        curve = sjcl.ecc.curves['c'+curve];
-        if (curve === undefined) {
-          throw new sjcl.exception.invalid("no such curve");
-        }
-      }
-      var sec = sjcl.bn.random(curve.r, paranoia), pub = curve.G.mult(sec);
-      return { pub: new sjcl.ecc[cn].publicKey(curve, pub),
-               sec: new sjcl.ecc[cn].secretKey(curve, sec) };
-    }
-  }; 
+	    if (curve_id) {
+	        this._curve_id = curve_id;
+	        this.serialize = function() {
+	            return {
+			'point': point.toBits(),
+	                'curve': curve_id
+	            };
+	        }
+	    }
+	},
+
+	
+	secretKey: function(curve_id, curve, exponent) {
+	    this._curve = curve;
+	    this._exponent = exponent;
+
+	    if (curve_id) {
+	        this._curve_id = curve_id;
+	        this.serialize = function() {
+	            return {
+	                'exponent': exponent.toBits(),
+	                'curve': curve_id
+	            };
+	        }
+	    }
+	},
+
+	
+	generateKeys: function(curve, paranoia) {
+	    var curve_id;
+	    if (curve === undefined) {
+	        curve = 256;
+	    }
+	    if (typeof curve === "number") {
+	        curve_id = curve;
+	        curve = sjcl.ecc.curves['c' + curve];
+	        if (curve === undefined) {
+	            throw new sjcl.exception.invalid("no such curve");
+	        }
+	    }
+	    var sec = sjcl.bn.random(curve.r, paranoia),
+	    pub = curve.G.mult(sec);
+	    return {
+	        pub: new sjcl.ecc[cn].publicKey(curve_id, curve, pub),
+	        sec: new sjcl.ecc[cn].secretKey(curve_id, curve, sec)
+	    };
+	}
+    }; 
 };
 
 sjcl.ecc._dh("elGamal");
