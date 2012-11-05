@@ -1,0 +1,5 @@
+{
+  "name": "Stanford Javascript Crypto Library",
+  "version": "1.0.0",
+  "main": ["./sjcl.js"]
+}
