@@ -31,10 +31,9 @@ sjcl.misc.hmac = function (key, Hash) {
 
 /** HMAC with the specified hash function.  Also called encrypt since it's a prf.
  * @param {bitArray|String} data The data to mac.
- * @param {Codec} [encoding] the encoding function to use.
  */
-sjcl.misc.hmac.prototype.encrypt = sjcl.misc.hmac.prototype.mac = function (data, encoding) {
-  var w = new (this._hash)(this._baseHash[0]).update(data, encoding).finalize();
+sjcl.misc.hmac.prototype.encrypt = sjcl.misc.hmac.prototype.mac = function (data) {
+  var w = new (this._hash)(this._baseHash[0]).update(data).finalize();
   return new (this._hash)(this._baseHash[1]).update(w).finalize();
 };
 
