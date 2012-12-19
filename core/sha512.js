@@ -108,17 +108,47 @@ sjcl.hash.sha512.prototype = {
    * The SHA-512 initialization vector, to be precomputed.
    * @private
    */
-  //_init:[],
+  _init:[],
+
+  /**
+   * Least significant 24 bits of SHA512 initialization values.
+   *
+   * Javascript only has 53 bits of precision, so we compute the 40 most
+   * significant bits and add the remaining 24 bits as constants.
+   *
+   * @private
+   */
+  _initr: [ 0xbcc908, 0xcaa73b, 0x94f82b, 0x1d36f1, 0xe682d1, 0x3e6c1f, 0x41bd6b, 0x7e2179 ],
+
+  /*
   _init:
   [0x6a09e667, 0xf3bcc908, 0xbb67ae85, 0x84caa73b, 0x3c6ef372, 0xfe94f82b, 0xa54ff53a, 0x5f1d36f1,
    0x510e527f, 0xade682d1, 0x9b05688c, 0x2b3e6c1f, 0x1f83d9ab, 0xfb41bd6b, 0x5be0cd19, 0x137e2179],
-
+  */
 
   /**
    * The SHA-512 hash key, to be precomputed.
    * @private
    */
-  //_key:[],
+  _key:[],
+
+  /**
+   * Least significant 24 bits of SHA512 key values.
+   * @private
+   */
+  _keyr:
+  [0x28ae22, 0xef65cd, 0x4d3b2f, 0x89dbbc, 0x48b538, 0x05d019, 0x194f9b, 0x6d8118,
+   0x030242, 0x706fbe, 0xe4b28c, 0xffb4e2, 0x7b896f, 0x1696b1, 0xc71235, 0x692694,
+   0xf14ad2, 0x4f25e3, 0x8cd5b5, 0xac9c65, 0x2b0275, 0xa6e483, 0x41fbd4, 0x1153b5,
+   0x66dfab, 0xb43210, 0xfb213f, 0xef0ee4, 0xa88fc2, 0x0aa725, 0x03826f, 0x0e6e70,
+   0xd22ffc, 0x26c926, 0xc42aed, 0x95b3df, 0xaf63de, 0x77b2a8, 0xedaee6, 0x82353b,
+   0xf10364, 0x423001, 0xf89791, 0x54be30, 0xef5218, 0x65a910, 0x71202a, 0xbbd1b8,
+   0xd2d0c8, 0x41ab53, 0x8eeb99, 0x9b48a8, 0xc95a63, 0x418acb, 0x63e373, 0xb2b8a3,
+   0xefb2fc, 0x172f60, 0xf0ab72, 0x6439ec, 0x631e28, 0x82bde9, 0xc67915, 0x72532b,
+   0x26619c, 0xc0c207, 0xe0eb1e, 0x6ed178, 0x176fba, 0xc898a6, 0xf90dae, 0x1c471b,
+   0x047d84, 0xc72493, 0xc9bebc, 0x100d4c, 0x3e42b6, 0x657e2a, 0xd6faec, 0x475817],
+
+  /*
   _key:
   [0x428a2f98, 0xd728ae22, 0x71374491, 0x23ef65cd, 0xb5c0fbcf, 0xec4d3b2f, 0xe9b5dba5, 0x8189dbbc,
    0x3956c25b, 0xf348b538, 0x59f111f1, 0xb605d019, 0x923f82a4, 0xaf194f9b, 0xab1c5ed5, 0xda6d8118,
@@ -140,8 +170,7 @@ sjcl.hash.sha512.prototype = {
    0x06f067aa, 0x72176fba, 0x0a637dc5, 0xa2c898a6, 0x113f9804, 0xbef90dae, 0x1b710b35, 0x131c471b,
    0x28db77f5, 0x23047d84, 0x32caab7b, 0x40c72493, 0x3c9ebe0a, 0x15c9bebc, 0x431d67c4, 0x9c100d4c,
    0x4cc5d4be, 0xcb3e42b6, 0x597f299c, 0xfc657e2a, 0x5fcb6fab, 0x3ad6faec, 0x6c44198c, 0x4a475817],
-
-
+  */
 
   /**
    * Function to precompute _init and _key.
@@ -150,12 +179,12 @@ sjcl.hash.sha512.prototype = {
   _precompute: function () {
     // XXX: This code is for precomputing the SHA256 constants, change for
     //      SHA512 and re-enable.
-    /*
     var i = 0, prime = 2, factor;
 
-    function frac(x) { return (x-Math.floor(x)) * 0x100000000 | 0; }
+    function frac(x)  { return (x-Math.floor(x)) * 0x100000000 | 0; }
+    function frac2(x) { return (x-Math.floor(x)) * 0x10000000000 & 0xff; }
 
-    outer: for (; i<64; prime++) {
+    outer: for (; i<80; prime++) {
       for (factor=2; factor*factor <= prime; factor++) {
         if (prime % factor === 0) {
           // not a prime
@@ -164,12 +193,13 @@ sjcl.hash.sha512.prototype = {
       }
 
       if (i<8) {
-        this._init[i] = frac(Math.pow(prime, 1/2));
+        this._init[i*2] = frac(Math.pow(prime, 1/2));
+        this._init[i*2+1] = (frac2(Math.pow(prime, 1/2)) << 24) | this._initr[i];
       }
-      this._key[i] = frac(Math.pow(prime, 1/3));
+      this._key[i*2] = frac(Math.pow(prime, 1/3));
+      this._key[i*2+1] = (frac2(Math.pow(prime, 1/3)) << 24) | this._keyr[i];
       i++;
     }
-    */
   },
 
   /**
