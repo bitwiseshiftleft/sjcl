@@ -144,7 +144,7 @@
           break;
         
         case 'object':
-          out += '"' + sjcl.codec.base64.fromBits(obj[i],1) + '"';
+          out += '"' + sjcl.codec.base64.fromBits(obj[i],0) + '"';
           break;
         
         default:
