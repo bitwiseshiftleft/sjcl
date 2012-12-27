@@ -4,7 +4,7 @@ use strict;
 
 my ($arg, $i, $j, $targ);
 
-my @targets = qw/sjcl aes bitArray codecString codecHex codecBase64 codecBytes sha256 sha1 ccm cbc ocb2 hmac pbkdf2 random convenience bn ecc srp/;
+my @targets = qw/sjcl aes bitArray codecString codecHex codecBase64 codecBytes sha256 sha512 sha1 ccm cbc ocb2 hmac pbkdf2 random convenience bn ecc srp/;
 my %deps = ('aes'=>'sjcl',
             'bitArray'=>'sjcl',
             'codecString'=>'bitArray',
@@ -12,6 +12,7 @@ my %deps = ('aes'=>'sjcl',
             'codecBase64'=>'bitArray',
             'codecBytes'=>'bitArray',
             'sha256'=>'codecString',
+            'sha512'=>'codecString',
             'sha1'=>'codecString',
             'ccm'=>'bitArray,aes',
             'ocb2'=>'bitArray,aes',

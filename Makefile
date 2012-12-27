@@ -63,6 +63,8 @@ TEST_SCRIPTS= $(TEST_COMMON) \
               test/cbc_vectors.js test/cbc_test.js  \
               test/sha256_vectors.js test/sha256_test.js \
               test/sha256_test_brute_force.js \
+              test/sha512_vectors.js test/sha512_test.js \
+              test/sha512_test_brute_force.js \
               test/sha1_vectors.js test/sha1_test.js \
               test/hmac_vectors.js test/hmac_test.js \
               test/pbkdf2_test.js \

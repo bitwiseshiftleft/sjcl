@@ -77,7 +77,7 @@ sjcl.hash.sha256.prototype = {
   
   /**
    * Complete hashing and output the hash value.
-   * @return {bitArray} The hash value, an array of 16 big-endian words.
+   * @return {bitArray} The hash value, an array of 8 big-endian words.
    */
   finalize:function () {
     var i, b = this._buffer, h = this._h;
