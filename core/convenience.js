@@ -111,6 +111,9 @@
     if (typeof adata === "string") {
       adata = sjcl.codec.utf8String.toBits(adata);
     }
+    if (typeof adata === "string") {
+      adata = sjcl.codec.utf8String.toBits(adata);
+    }
     prp = new sjcl.cipher[p.cipher](password);
     
     /* do the decryption */
@@ -261,8 +264,8 @@ sjcl.decrypt = sjcl.json.decrypt;
 sjcl.misc._pbkdf2Cache = {};
 
 /** Cached PBKDF2 key derivation.
- * @param {String} The password.  
- * @param {Object} The derivation params (iteration count and optional salt).
+ * @param {String} password The password.
+ * @param {Object} [params] The derivation params (iteration count and optional salt).
  * @return {Object} The derived data in key, the salt in salt.
  */
 sjcl.misc.cachedPbkdf2 = function (password, obj) {

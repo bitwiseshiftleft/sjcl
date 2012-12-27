@@ -10,6 +10,8 @@ function testCore(coreName, cb) {
     "cbc_vectors.js",
     "ocb2_test.js",
     "ocb2_vectors.js",
+    "gcm_test.js",
+    "gcm_vectors.js",
     "sha256_test.js",
     "sha256_vectors.js",
     "sha256_test_brute_force.js",

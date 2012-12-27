@@ -4,7 +4,8 @@ use strict;
 
 my ($arg, $i, $j, $targ);
 
-my @targets = qw/sjcl aes bitArray codecString codecHex codecBase64 codecBytes sha256 sha1 ccm cbc ocb2 hmac pbkdf2 random convenience bn ecc srp/;
+my @targets = qw/sjcl aes bitArray codecString codecHex codecBase64 codecBytes sha256 sha1 ccm cbc ocb2 gcm hmac pbkdf2 random convenience bn ecc srp/;
+my @targets = qw/sjcl aes bitArray codecString codecHex codecBase64 codecBytes sha256 sha1 ccm cbc ocb2 gcm hmac pbkdf2 random convenience bn ecc srp/;
 my %deps = ('aes'=>'sjcl',
             'bitArray'=>'sjcl',
             'codecString'=>'bitArray',
@@ -15,6 +16,7 @@ my %deps = ('aes'=>'sjcl',
             'sha1'=>'codecString',
             'ccm'=>'bitArray,aes',
             'ocb2'=>'bitArray,aes',
+            'gcm'=>'bitArray,aes',
             'hmac'=>'sha256',
             'pbkdf2'=>'hmac',
             'srp'=>'sha1,bn,bitArray',
@@ -22,7 +24,7 @@ my %deps = ('aes'=>'sjcl',
             'ecc'=>'bn',
             'cbc'=>'bitArray,aes',
             'random'=>'sha256,aes',
-            'convenience'=>'ccm,pbkdf2,random');
+            'convenience'=>'ccm,pbkdf2,random,codecBase64');
             
 my $compress = "closure";
             
@@ -30,7 +32,7 @@ my %enabled = ();
 $enabled{$_} = 0 foreach (@targets);
 
 # by default, all but codecBytes, srp, bn
-$enabled{$_} = 1 foreach (qw/aes bitArray codecString codecHex codecBase64 sha256 ccm ocb2 hmac pbkdf2 random convenience/);
+$enabled{$_} = 1 foreach (qw/aes bitArray codecString codecHex codecBase64 sha256 ccm ocb2 gcm hmac pbkdf2 random convenience/);
 
 # argument parsing
 while ($arg = shift @ARGV) {
