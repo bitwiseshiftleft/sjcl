@@ -29,7 +29,8 @@ function testCore(coreName, cb) {
     "ecdsa_vectors.js",
     "ecdh_test.js",
     "srp_test.js",
-    "srp_vectors.js"
+    "srp_vectors.js",
+    "ecc_conv.js"
   ], i;
   
   for (i=1; i<testFiles.length; i++) {
