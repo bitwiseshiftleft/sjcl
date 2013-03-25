@@ -1,4 +1,5 @@
 /**
+ * @constructor
  * Constructs a new bignum from another bignum, a number or a hex string.
  */
 sjcl.bn = function(it) {
@@ -156,12 +157,19 @@ sjcl.bn.prototype = {
   },
   
   mod: function(that) {
+    var neg = !this.greaterEquals(new sjcl.bn(0));
+    
     that = new sjcl.bn(that).normalize(); // copy before we begin
     var out = new sjcl.bn(this).normalize(), ci=0;
+    
+    if (neg) out = (new sjcl.bn(0)).subM(out).normalize();
     
     for (; out.greaterEquals(that); ci++) {
       that.doubleM();
     }
+    
+    if (neg) out = that.sub(out).normalize();
+    
     for (; ci > 0; ci--) {
       that.halveM();
       if (out.greaterEquals(that)) {
@@ -340,11 +348,12 @@ sjcl.bn.prototype = {
   /** Serialize to a bit array */
   toBits: function(len) {
     this.fullReduce();
-    len = len || this.exponent || this.limbs.length * this.radix;
+    len = len || this.exponent || this.bitLength();
     var i = Math.floor((len-1)/24), w=sjcl.bitArray, e = (len + 7 & -8) % this.radix || this.radix,
         out = [w.partial(e, this.getLimb(i))];
     for (i--; i >= 0; i--) {
-      out = w.concat(out, [w.partial(this.radix, this.getLimb(i))]);
+      out = w.concat(out, [w.partial(Math.min(this.radix,len), this.getLimb(i))]);
+      len -= this.radix;
     }
     return out;
   },
@@ -354,13 +363,14 @@ sjcl.bn.prototype = {
     this.fullReduce();
     var out = this.radix * (this.limbs.length - 1),
         b = this.limbs[this.limbs.length - 1];
-    for (; b; b >>= 1) {
+    for (; b; b >>>= 1) {
       out ++;
     }
     return out+7 & -8;
   }
 };
 
+/** @this { sjcl.bn } */
 sjcl.bn.fromBits = function(bits) {
   var Class = this, out = new Class(), words=[], w=sjcl.bitArray, t = this.prototype,
       l = Math.min(this.bitLength || 0x100000000, w.bitLength(bits)), e = l % t.radix || t.radix;
@@ -384,6 +394,7 @@ sjcl.bn.prototype.radixMask = (1 << sjcl.bn.prototype.radix) - 1;
  * i.e. a prime of the form 2^e + sum(a * 2^b),where the sum is negative and sparse.
  */
 sjcl.bn.pseudoMersennePrime = function(exponent, coeff) {
+  /** @constructor */
   function p(it) {
     this.initWith(it);
     /*if (this.limbs[this.modOffset]) {
@@ -415,7 +426,9 @@ sjcl.bn.pseudoMersennePrime = function(exponent, coeff) {
   ppr._class = p;
   ppr.modulus.cnormalize();
 
-  /** Approximate reduction mod p.  May leave a number which is negative or slightly larger than p. */
+  /** Approximate reduction mod p.  May leave a number which is negative or slightly larger than p.
+   * @this {sjcl.bn}
+   */
   ppr.reduce = function() {
     var i, k, l, mo = this.modOffset, limbs = this.limbs, aff, off = this.offset, ol = this.offset.length, fac = this.factor, ll;
 
@@ -439,6 +452,7 @@ sjcl.bn.pseudoMersennePrime = function(exponent, coeff) {
     return this;
   };
   
+  /** @this {sjcl.bn} */
   ppr._strongReduce = (ppr.fullMask === -1) ? ppr.reduce : function() {
     var limbs = this.limbs, i = limbs.length - 1, k, l;
     this.reduce();
@@ -452,7 +466,9 @@ sjcl.bn.pseudoMersennePrime = function(exponent, coeff) {
     }
   };
 
-  /** mostly constant-time, very expensive full reduction. */
+  /** mostly constant-time, very expensive full reduction.
+   * @this {sjcl.bn}
+   */
   ppr.fullReduce = function() {
     var greater, i;
     // massively above the modulus, may be negative
@@ -484,6 +500,8 @@ sjcl.bn.pseudoMersennePrime = function(exponent, coeff) {
     return this;
   };
 
+
+  /** @this {sjcl.bn} */
   ppr.inverse = function() {
     return (this.power(this.modulus.sub(2)));
   };
