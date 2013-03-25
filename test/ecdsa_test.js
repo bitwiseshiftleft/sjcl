@@ -1,4 +1,4 @@
-new sjcl.test.TestCase("ECSA test", function (cb) {
+new sjcl.test.TestCase("ECDSA test", function (cb) {
   if (!sjcl.ecc) {
     this.unimplemented();
     cb && cb();
@@ -80,6 +80,22 @@ new sjcl.test.TestCase("ECSA test", function (cb) {
       } catch (e) {
         this.fail();
       }
+    }
+
+    // sign legacy style
+    try {
+        hash = sha.hash(msgbits);
+        var sig = sec.sign(hash,0,1);
+        pub.verify(hash, sig);
+        pub.verify(hash, sig, 1);
+        try {
+          pub.verify(hash, sig, 0);
+          this.fail();
+        } catch (ee) {
+          this.pass();
+        }
+    } catch (e) {
+      this.fail(e);
     }
   }
   

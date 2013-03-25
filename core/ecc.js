@@ -298,6 +298,7 @@ sjcl.ecc._dh = function(cn) {
   sjcl.ecc[cn] = {
     publicKey: function(curve, point) {
       this._curve = curve;
+      this._curveBitLength = curve.r.bitLength();
       if (point instanceof Array) {
         this._point = curve.fromBits(point);
       } else {
@@ -315,6 +316,7 @@ sjcl.ecc._dh = function(cn) {
 
     secretKey: function(curve, exponent) {
       this._curve = curve;
+      this._curveBitLength = curve.r.bitLength();
       this._exponent = exponent;
 
       this.get = function() {
@@ -367,12 +369,15 @@ sjcl.ecc._dh("ecdsa");
 
 sjcl.ecc.ecdsa.secretKey.prototype = {
   sign: function(hash, paranoia, fakeLegacyVersion, fixedKForTesting) {
+    if (sjcl.bitArray.bitLength(hash) > this._curveBitLength) {
+      hash = sjcl.bitArray.clamp(hash, this._curveBitLength);
+    }
     var R  = this._curve.r,
         l  = R.bitLength(),
         k  = fixedKForTesting || sjcl.bn.random(R.sub(1), paranoia).add(1),
         r  = this._curve.G.mult(k).x.mod(R),
-        ss = sjcl.bn.fromBits(hash).add(r.mul(this._exponent));
-        s  = fakeLegacyVersion ?
+        ss = sjcl.bn.fromBits(hash).add(r.mul(this._exponent)),
+        s  = fakeLegacyVersion ? ss.inverseMod(R).mul(k).mod(R)
              : ss.mul(k.inverseMod(R)).mod(R);
     return sjcl.bitArray.concat(r.toBits(l), s.toBits(l));
   }
@@ -380,18 +385,21 @@ sjcl.ecc.ecdsa.secretKey.prototype = {
 
 sjcl.ecc.ecdsa.publicKey.prototype = {
   verify: function(hash, rs, fakeLegacyVersion) {
+    if (sjcl.bitArray.bitLength(hash) > this._curveBitLength) {
+      hash = sjcl.bitArray.clamp(hash, this._curveBitLength);
+    }
     var w = sjcl.bitArray,
         R = this._curve.r,
-        l = R.bitLength(),
+        l = this._curveBitLength,
         r = sjcl.bn.fromBits(w.bitSlice(rs,0,l)),
         ss = sjcl.bn.fromBits(w.bitSlice(rs,l,2*l)),
-        s = fakeLegacyVersion ? s : s.inverseMod(R),
+        s = fakeLegacyVersion ? ss : ss.inverseMod(R),
         hG = sjcl.bn.fromBits(hash).mul(s).mod(R),
         hA = r.mul(s).mod(R),
         r2 = this._curve.G.mult2(hG, hA, this._point).x;
     if (r.equals(0) || ss.equals(0) || r.greaterEquals(R) || ss.greaterEquals(R) || !r2.equals(r)) {
-      if (!fakeLegacyVersion) {
-        return verify(hash, rs, true);
+      if (fakeLegacyVersion === undefined) {
+        return this.verify(hash, rs, true);
       } else {
         throw (new sjcl.exception.corrupt("signature didn't check out"));
       }

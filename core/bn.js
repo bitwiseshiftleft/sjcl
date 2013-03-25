@@ -345,7 +345,7 @@ sjcl.bn.prototype = {
         out = [w.partial(e, this.getLimb(i))];
     for (i--; i >= 0; i--) {
       out = w.concat(out, [w.partial(Math.min(this.radix,len), this.getLimb(i))]);
-      len -= 32;
+      len -= this.radix;
     }
     return out;
   },
