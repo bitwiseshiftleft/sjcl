@@ -111,9 +111,6 @@
     if (typeof adata === "string") {
       adata = sjcl.codec.utf8String.toBits(adata);
     }
-    if (typeof adata === "string") {
-      adata = sjcl.codec.utf8String.toBits(adata);
-    }
     prp = new sjcl.cipher[p.cipher](password);
     
     /* do the decryption */
