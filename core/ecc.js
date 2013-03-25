@@ -296,6 +296,7 @@ sjcl.ecc.curves = {
 /* Diffie-Hellman-like public-key system */
 sjcl.ecc._dh = function(cn) {
   sjcl.ecc[cn] = {
+    /** @constructor */
     publicKey: function(curve, point) {
       this._curve = curve;
       this._curveBitLength = curve.r.bitLength();
@@ -314,6 +315,7 @@ sjcl.ecc._dh = function(cn) {
       }
     },
 
+    /** @constructor */
     secretKey: function(curve, exponent) {
       this._curve = curve;
       this._curveBitLength = curve.r.bitLength();
@@ -324,6 +326,7 @@ sjcl.ecc._dh = function(cn) {
       }
     },
 
+    /** @constructor */
     generateKeys: function(curve, paranoia, sec) {
       if (curve === undefined) {
         curve = 256;
