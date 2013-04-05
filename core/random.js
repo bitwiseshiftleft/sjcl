@@ -395,12 +395,21 @@ sjcl.prng.prototype = {
 sjcl.random = new sjcl.prng(6);
 
 (function(){
-  try {
+  // get cryptographically strong entropy depending on runtime environment
+  if (typeof module !== 'undefined' && module.exports) {
+    // get entropy for node.js
+    var crypto = require('crypto');
+    var buf = crypto.randomBytes(1024/8);
+    var str = new Buffer(buf).toString('utf8');
+    sjcl.random.addEntropy(str, 1024, "crypto.randomBytes");
+
+  } else if (window && window.crypto && window.crypto.getRandomValues) {
     // get cryptographically strong entropy in Webkit
     var ab = new Uint32Array(32);
     crypto.getRandomValues(ab);
     sjcl.random.addEntropy(ab, 1024, "crypto.getRandomValues");
-  } catch (e) {
+
+  } else {
     // no getRandomValues :-(
   }
 })();
