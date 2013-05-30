@@ -327,7 +327,7 @@ sjcl.prng.prototype = {
    * @param full If set, use all the entropy pools in the reseed.
    */
   _reseedFromPools: function (full) {
-    var reseedData = [], strength = 0, i;
+    var reseedData = [], strength = 0, i, cryptoRandom;
   
     this._nextReseed = reseedData[0] =
       (new Date()).valueOf() + this._MILLISECONDS_PER_RESEED;
@@ -337,6 +337,17 @@ sjcl.prng.prototype = {
        * as well toss it in the pot and stir...
        */
       reseedData.push(Math.random()*0x100000000|0);
+    }
+
+    if (typeof Uint32Array == 'function' &&
+            window.crypto && window.crypto.getRandomValues) {
+        try {
+            cryptoRandom = new Uint32Array(16);
+            window.crypto.getRandomValues(cryptoRandom);
+            for (i = 0; i < cryptoRandom.length; i++) {
+                reseedData.push(cryptoRandom[i]);
+            }
+        } catch (e) { /* expected if not implemented */ }
     }
     
     for (i=0; i<this._pools.length; i++) {
