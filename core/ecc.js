@@ -144,9 +144,9 @@ sjcl.ecc.pointJac.prototype = {
       a  = y2.mul(this.x.mul(4)),
       b  = y2.square().mul(8),
       z2 = this.z.square(),
-      c  = this.field.b.toString() == sjcl.bn(-3).toString() ?
+      c  = this.curve.a.toString() == (new sjcl.bn(-3)).toString() ?
                 this.x.sub(z2).mul(3).mul(this.x.add(z2)) :
-                this.x.square().sub(z2.square().mul(this.curve.a)),
+                this.x.square().mul(3).add(z2.square().mul(this.curve.a)),
       x  = c.square().subM(a).subM(a),
       y  = a.sub(x).mul(c).subM(b),
       z  = this.y.add(this.y).mul(this.z);
@@ -244,7 +244,7 @@ sjcl.ecc.pointJac.prototype = {
  */
 sjcl.ecc.curve = function(Field, r, a, b, x, y) {
   this.field = Field;
-  this.r = r;
+  this.r = new sjcl.bn(r)
   this.a = new Field(a);
   this.b = new Field(b);
   this.G = new sjcl.ecc.point(this, new Field(x), new Field(y));
