@@ -185,7 +185,7 @@
     }
     return out;
   },
-  
+
   /** Insert all elements of src into target, modifying and returning target.
    * @param {Object} target The object to be modified.
    * @param {Object} src The object to pull data from.
