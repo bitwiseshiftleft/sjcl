@@ -35,7 +35,7 @@ $enabled{$_} = 0 foreach (@targets);
 $enabled{$_} = 1 foreach (qw/aes bitArray codecString codecHex codecBase64 sha256 ccm ocb2 gcm hmac pbkdf2 random convenience/);
 
 # argument parsing
-while ($arg = shift @ARGV) {
+while (my $arg = shift @ARGV) {
   if ($arg =~ /^--?with-all$/) {
     foreach (@targets) {
       if ($enabled{$_} == 0) {
@@ -97,7 +97,7 @@ my $config = '';
 my $pconfig;
 
 # dependency analysis: forbidden
-foreach $i (@targets) {
+foreach my $i (@targets) {
   if ($enabled{$i} > 0) {
     foreach $j (split /,/, $deps{$i}) {
       if ($enabled{$j} == -1) {
@@ -114,7 +114,7 @@ foreach $i (@targets) {
 }
 
 # reverse
-foreach $i (reverse @targets) {
+foreach my $i (reverse @targets) {
   if ($enabled{$i} > 0) {
     foreach $j (split /,/, $deps{$i}) {
       if ($enabled{$j} < $enabled{$i}) {
