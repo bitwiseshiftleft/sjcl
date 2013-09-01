@@ -244,7 +244,7 @@ sjcl.ecc.pointJac.prototype = {
  */
 sjcl.ecc.curve = function(Field, r, a, b, x, y) {
   this.field = Field;
-  this.r = new sjcl.bn(r)
+  this.r = new sjcl.bn(r);
   this.a = new Field(a);
   this.b = new Field(b);
   this.G = new sjcl.ecc.point(this, new Field(x), new Field(y));
