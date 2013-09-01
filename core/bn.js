@@ -512,11 +512,17 @@ sjcl.bn.pseudoMersennePrime = function(exponent, coeff) {
 };
 
 // a small Mersenne prime
+var sbp = sjcl.bn.pseudoMersennePrime;
 sjcl.bn.prime = {
-  p127: sjcl.bn.pseudoMersennePrime(127, [[0,-1]]),
+  p127: sbp(127, [[0,-1]]),
 
   // Bernstein's prime for Curve25519
-  p25519: sjcl.bn.pseudoMersennePrime(255, [[0,-19]]),
+  p25519: sbp(255, [[0,-19]]),
+
+  // Koblitz primes
+  p192k: sbp(192, [[32,-1],[12,-1],[8,-1],[7,-1],[6,-1],[3,-1],[0,-1]]),
+  p224k: sbp(224, [[32,-1],[12,-1],[11,-1],[9,-1],[7,-1],[4,-1],[1,-1],[0,-1]]),
+  p256k: sbp(256, [[32,-1],[9,-1],[8,-1],[7,-1],[6,-1],[4,-1],[0,-1]]),
 
   // NIST primes
   p192: sjcl.bn.pseudoMersennePrime(192, [[0,-1],[64,-1]]),
