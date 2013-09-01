@@ -525,11 +525,11 @@ sjcl.bn.prime = {
   p256k: sbp(256, [[32,-1],[9,-1],[8,-1],[7,-1],[6,-1],[4,-1],[0,-1]]),
 
   // NIST primes
-  p192: sjcl.bn.pseudoMersennePrime(192, [[0,-1],[64,-1]]),
-  p224: sjcl.bn.pseudoMersennePrime(224, [[0,1],[96,-1]]),
-  p256: sjcl.bn.pseudoMersennePrime(256, [[0,-1],[96,1],[192,1],[224,-1]]),
-  p384: sjcl.bn.pseudoMersennePrime(384, [[0,-1],[32,1],[96,-1],[128,-1]]),
-  p521: sjcl.bn.pseudoMersennePrime(521, [[0,-1]])
+  p192: sbp(192, [[0,-1],[64,-1]]),
+  p224: sbp(224, [[0,1],[96,-1]]),
+  p256: sbp(256, [[0,-1],[96,1],[192,1],[224,-1]]),
+  p384: sbp(384, [[0,-1],[32,1],[96,-1],[128,-1]]),
+  p521: sbp(521, [[0,-1]])
 };
 
 sjcl.bn.random = function(modulus, paranoia) {
