@@ -298,8 +298,8 @@ sjcl.ecc.curves = {
     "0xfffffffffffffffffffffffe26f2fc170f69466a74defd8d",
     0,
     3,
-    '0xdb4ff10ec057e9ae26b07d0280b7f4341da5d1b1eae06c7d',
-    '0x9b2f2f6d9c5628a7844163d015be86344082aa88d95e2f9d'),
+    "0xdb4ff10ec057e9ae26b07d0280b7f4341da5d1b1eae06c7d",
+    "0x9b2f2f6d9c5628a7844163d015be86344082aa88d95e2f9d"),
 
   k224: new sjcl.ecc.curve(
     sjcl.bn.prime.p224k,
