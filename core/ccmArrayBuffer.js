@@ -9,15 +9,13 @@ sjcl.arrayBuffer = sjcl.arrayBuffer || {}
 
 //patch arraybuffers if they don't exist
 if (typeof(ArrayBuffer) === 'undefined') {
-  //I honestly didn't want to use an eval but here is the problem
-  //
-  //If I do var ArrayBuffer = function(){}
-  //Then ArrayBuffer will be set to undefined because some js implementations set all vars to undefined at the beginning
-  //
-  //If I do ArrayBuffer = function(){}
-  //That breaks in strict mode because I'm declaring a variable  w/o var 
-  eval("ArrayBuffer = function(){}; DataView = function(){}")
+  (function(globals){
+      "use strict";
+      globals.ArrayBuffer = function(){};
+      globals.DataView = function(){};
+  }(this));
 }
+
 
 sjcl.arrayBuffer.ccm = {
   mode: "ccm",
