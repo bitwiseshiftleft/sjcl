@@ -34,15 +34,29 @@ sjcl.misc.hmac = function (key, Hash) {
  * @param {bitArray|String} data The data to mac.
  */
 sjcl.misc.hmac.prototype.encrypt = sjcl.misc.hmac.prototype.mac = function (data) {
-  this.update(data);
-  return this.digest(data);
+  if (!this._updated) {
+    this.update(data);
+    return this.digest(data);
+  } else {
+    throw new sjcl.exception.invalid("encrypt on already updated hmac called!");
+  }
+};
+
+sjcl.misc.hmac.prototype.reset = function () {
+  this._resultHash = new this._hash(this._baseHash[0]);
+  this._updated = false;
 };
 
 sjcl.misc.hmac.prototype.update = function (data) {
+  this._updated = true;
   this._resultHash.update(data);
 };
 
 sjcl.misc.hmac.prototype.digest = function () {
   var w = this._resultHash.finalize();
-  return new (this._hash)(this._baseHash[1]).update(w).finalize();
+  var result = new (this._hash)(this._baseHash[1]).update(w).finalize();
+
+  this.reset();
+
+  return result;
 };
