@@ -292,6 +292,30 @@ sjcl.ecc.curves = {
     "0x3617de4a96262c6f5d9e98bf9292dc29f8f41dbd289a147ce9da3113b5f0b8c00a60b1ce1d7e819d7a431d7c90ea0e5f")
 };
 
+sjcl.ecc.curveName = function (curve) {
+  var curcurve;
+  for (curcurve in sjcl.ecc.curves) {
+    if (sjcl.ecc.curves.hasOwnProperty(curcurve)) {
+      if (sjcl.ecc.curves[curcurve] === curve) {
+        return curcurve;
+      }
+    }
+  }
+
+  throw new sjcl.exception.invalid("no such curve");
+};
+
+sjcl.ecc.deserialize = function (key) {
+  if (!key || !key.curve) { throw new sjcl.exception.invalid("invalid serialization"); }
+  var constructor = sjcl.ecc[key.type];
+  if (!constructor || !constructor.publicKey) { throw new sjcl.exception.invalid("unknown key type"); }
+  if (key.secret) {
+    if (!key.exponent) { throw new sjcl.exception.invalid("invalid point"); }
+  } else {
+    if (!key.point || !key.point.x || !key.point.y) { throw new sjcl.exception.invalid("invalid point"); }
+    
+  }
+};
 
 /* Diffie-Hellman-like public-key system */
 sjcl.ecc._dh = function(cn) {
@@ -306,13 +330,23 @@ sjcl.ecc._dh = function(cn) {
         this._point = point;
       }
 
+      this.serialize = function () {
+        var curveName = sjcl.ecc.curveName(curve);
+        return {
+          type: cn,
+          secretKey: false,
+          point: sjcl.codec.hex.fromBits(this._point.toBits()),
+          curve: curveName
+        };
+      };
+
       this.get = function() {
         var pointbits = this._point.toBits();
         var len = sjcl.bitArray.bitLength(pointbits);
         var x = sjcl.bitArray.bitSlice(pointbits, 0, len/2);
         var y = sjcl.bitArray.bitSlice(pointbits, len/2);
         return { x: x, y: y };
-      }
+      };
     },
 
     /** @constructor */
@@ -321,9 +355,20 @@ sjcl.ecc._dh = function(cn) {
       this._curveBitLength = curve.r.bitLength();
       this._exponent = exponent;
 
+      this.serialize = function () {
+        var exponent = this.get();
+        var curveName = sjcl.ecc.curveName(curve);
+        return {
+          type: cn,
+          secretKey: true,
+          exponent: sjcl.codec.hex.fromBits(exponent),
+          curve: curveName
+        };
+      };
+
       this.get = function() {
         return this._exponent.toBits();
-      }
+      };
     },
 
     /** @constructor */
