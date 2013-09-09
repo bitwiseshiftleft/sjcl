@@ -12,7 +12,7 @@
  * This is the method specified by RSA's PKCS #5 standard.
  *
  * @param {bitArray|String} password  The password.
- * @param {bitArray} salt The salt.  Should have lots of entropy.
+ * @param {bitArray|String} salt The salt.  Should have lots of entropy.
  * @param {Number} [count=1000] The number of iterations.  Higher numbers make the function slower but more secure.
  * @param {Number} [length] The length of the derived key.  Defaults to the
                             output size of the hash function.
@@ -28,6 +28,10 @@ sjcl.misc.pbkdf2 = function (password, salt, count, length, Prff) {
   
   if (typeof password === "string") {
     password = sjcl.codec.utf8String.toBits(password);
+  }
+  
+  if (typeof salt === "string") {
+    salt = sjcl.codec.utf8String.toBits(salt);
   }
   
   Prff = Prff || sjcl.misc.hmac;
