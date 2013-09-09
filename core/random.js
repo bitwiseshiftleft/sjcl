@@ -396,11 +396,23 @@ sjcl.random = new sjcl.prng(6);
 
 (function(){
   try {
-    // get cryptographically strong entropy in Webkit
-    var ab = new Uint32Array(32);
-    crypto.getRandomValues(ab);
-    sjcl.random.addEntropy(ab, 1024, "crypto.getRandomValues");
+    // get cryptographically strong entropy depending on runtime environment
+    if (typeof module !== 'undefined' && module.exports) {
+      // get entropy for node.js
+      var crypt = require('crypto');
+      var buf = crypt.randomBytes(1024/8);
+      sjcl.random.addEntropy(buf, 1024, "crypto.randomBytes");
+
+    } else if (window && window.crypto && window.crypto.getRandomValues) {
+      // get cryptographically strong entropy in Webkit
+      var ab = new Uint32Array(32);
+      window.crypto.getRandomValues(ab);
+      sjcl.random.addEntropy(ab, 1024, "crypto.getRandomValues");
+
+    } else {
+      // no getRandomValues :-(
+    }
   } catch (e) {
-    // no getRandomValues :-(
+    //we do not want the library to fail due to randomness not being maintained.
   }
 })();
