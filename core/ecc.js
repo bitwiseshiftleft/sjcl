@@ -306,14 +306,22 @@ sjcl.ecc.curveName = function (curve) {
 };
 
 sjcl.ecc.deserialize = function (key) {
-  if (!key || !key.curve) { throw new sjcl.exception.invalid("invalid serialization"); }
-  var constructor = sjcl.ecc[key.type];
-  if (!constructor || !constructor.publicKey) { throw new sjcl.exception.invalid("unknown key type"); }
-  if (key.secret) {
-    if (!key.exponent) { throw new sjcl.exception.invalid("invalid point"); }
+  var types = ["elGamal", "ecdsa"];
+
+  if (!key || !key.curve || !sjcl.ecc.curves[key.curve]) { throw new sjcl.exception.invalid("invalid serialization"); }
+  if (types.indexOf(key.type) === -1) { throw new sjcl.exception.invalid("invalid type"); }
+
+  var curve = sjcl.ecc.curves[key.curve];
+
+  if (key.secretKey) {
+    if (!key.exponent) { throw new sjcl.exception.invalid("invalid exponent"); }
+    var exponent = new sjcl.bn(key.exponent);
+    return new sjcl.ecc[key.type].secretKey(curve, exponent);
   } else {
-    if (!key.point || !key.point.x || !key.point.y) { throw new sjcl.exception.invalid("invalid point"); }
+    if (!key.point) { throw new sjcl.exception.invalid("invalid point"); }
     
+    var point = curve.fromBits(sjcl.codec.hex.toBits(key.point));
+    return new sjcl.ecc[key.type].publicKey(curve, point);
   }
 };
 
