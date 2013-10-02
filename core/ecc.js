@@ -355,23 +355,22 @@ sjcl.ecc._dh = function(cn) {
 
     /** @constructor */
     generateKeys: function(curve, paranoia, sec) {
-      if (curve === undefined) {
-        curve = 256;
-      }
+      curve = curve || 256;
+      paranoia = paranoia || 0;
+
       if (typeof curve === "number") {
         curve = sjcl.ecc.curves['c'+curve];
         if (curve === undefined) {
           throw new sjcl.exception.invalid("no such curve");
         }
       }
-      if (sec === undefined) {
-        var sec = sjcl.bn.random(curve.r, paranoia);
-      }
+      sec = sec || sjcl.bn.random(curve.r, paranoia);
+
       var pub = curve.G.mult(sec);
       return { pub: new sjcl.ecc[cn].publicKey(curve, pub),
                sec: new sjcl.ecc[cn].secretKey(curve, sec) };
     }
-  }; 
+  };
 };
 
 sjcl.ecc._dh("elGamal");
