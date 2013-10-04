@@ -20,7 +20,15 @@ sjcl.codec.arrayBuffer = {
     var out, i, ol, tmp, smallest;
     padding = padding==undefined  ? true : padding
     padding_count = padding_count || 8
+
     ol = sjcl.bitArray.bitLength(arr)/8
+
+    //check to make sure the bitLength is divisible by 8, if it isn't 
+    //we can't do anything since arraybuffers work with bytes, not bits
+    if ( sjcl.bitArray.bitLength(arr)%8 !== 0 ) {
+      throw new sjcl.exception.invalid("Invalid bit size, must be divisble by 8 to fit in an arraybuffer correctly")
+    }
+
     if (padding && ol%padding_count !== 0){
       ol += padding_count - (ol%padding_count)
     }

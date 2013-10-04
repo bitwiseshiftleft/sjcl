@@ -83,6 +83,7 @@ test: sjcl.js $(TEST_SCRIPTS) test/run_tests_rhino.js
 	@rhino -O -1 -w test/run_tests_rhino.js $< $(TEST_SCRIPTS)
 	@rhino -O 9 -w test/run_tests_rhino.js $< $(TEST_SCRIPTS_OPT)
 	phantomjs test/ccm_arraybuffer_test.js
+	phantomjs test/codec_arraybuffer_test.js
 
 	
 
