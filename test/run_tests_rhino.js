@@ -7,5 +7,8 @@ for (var i=0; i<arguments.length; i++) {
   if (!file.match(/^-/)) load(file);
 }
 
-sjcl.test.run();
-
+sjcl.test.run(undefined, function(){
+  if(!browserUtil.allPassed) {
+    throw "All tests complete, but some failed!";
+  }
+});
