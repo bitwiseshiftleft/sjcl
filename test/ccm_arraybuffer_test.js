@@ -6,6 +6,9 @@ sjcl.test = {}
 sjcl.test.vector = {}
 require("./ccm_vectors.js")
 
+console.log("Running CCM using ArrayBuffer tests")
+var start_time = +(new Date())
+
 //This ccm implementation is only defined for IV Lengths of 8 bytes
 var applicable_tests = sjcl.test.vector.ccm.filter(function(test){
   return test.iv.length === 16 
@@ -27,21 +30,20 @@ applicable_tests.map(function(tv, index){
     sjcl.arrayBuffer.ccm.compat_encrypt(aes, pt, iv, ad, tlen), ct
   )
 
-  console.log("Running: ",len+"-ccm-encrypt #", index, "Pass?:", pass_e)
-
   pass_d = sjcl.bitArray.equal(
     sjcl.arrayBuffer.ccm.compat_decrypt(aes, ct, iv, ad, tlen), pt
   )
 
-  console.log("Running: ",len+"-ccm-decrypt #", index, "Pass?:", pass_d)
-
   if (!(pass_e && pass_d)){
-    throw("Failed at: "+i)
+    console.log("Failed at : ",len+"-ccm #", index, "Pass?:", pass_d)
+    phantom.exit(1);
   }
 
   return pass_e && pass_d;
 
 })
 
-phantom.exit()
+var total_time = parseInt(+(new Date())-start_time)
+console.log("  + passed all",applicable_tests.length,"tests. ("+ total_time, "ms)")
+phantom.exit();
 

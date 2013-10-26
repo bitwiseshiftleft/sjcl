@@ -1,6 +1,9 @@
 //Run using phantomjs, since rhino doesn't support array buffers, and node has an issue with create dataviews with a bytelength of 0
 sjcl = require("../sjcl.js")
 
+console.log("Running ArrayBuffer Codec tests")
+var start_time = +(new Date())
+
 //This ccm implementation is only defined for IV Lengths of 8 bytes
 var test_bytes = []
 
@@ -11,6 +14,7 @@ var zeropad_hex = function(number){
   }
   return hex
 }
+
 
 for (var i = 0; i <= 0xffff; i++){
   test_bytes.push(zeropad_hex(i))
@@ -25,9 +29,13 @@ test_bytes.map(function(test_byte, index){
 
   if (roundTripHex !== test_byte){
     console.error("Failed test, expected ",roundTripHex,"to be",test_byte)
-    throw("Failed at: "+i)
+    console.error("Failed at: "+i)
+    phantom.exit(1)
   }
 })
+
+var total_time = parseInt(+(new Date())-start_time)
+console.log("  + passed all",test_bytes.length,"tests. ("+ total_time, "ms)")
 
 phantom.exit()
 
