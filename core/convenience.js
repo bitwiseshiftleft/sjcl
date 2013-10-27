@@ -130,32 +130,30 @@
    * @throws {sjcl.exception.bug} if a parameter has an unsupported type.
    */
   encode: function (obj) {
-    var i, out='{', comma='';
-    for (i in obj) {
-      if (obj.hasOwnProperty(i)) {
-        if (!i.match(/^[a-z0-9]+$/i)) {
-          throw new sjcl.exception.invalid("json encode: invalid property name");
-        }
-        out += comma + '"' + i + '":';
-        comma = ',';
-        
-        switch (typeof obj[i]) {
-        case 'number':
-        case 'boolean':
-          out += obj[i];
-          break;
-          
-        case 'string':
-          out += '"' + escape(obj[i]) + '"';
-          break;
-        
-        case 'object':
-          out += '"' + sjcl.codec.base64.fromBits(obj[i],0) + '"';
-          break;
-        
-        default:
-          throw new sjcl.exception.bug("json encode: unsupported type");
-        }
+    var i, out='{', comma='', keys = Object.keys(obj);
+    for (i=0; i<keys.length; i++) {
+      if (!keys[i].match(/^[a-z0-9]+$/i)) {
+        throw new sjcl.exception.invalid("json encode: invalid property name");
+      }
+      out += comma + '"' + keys[i] + '":';
+      comma = ',';
+
+      switch (typeof obj[keys[i]]) {
+      case 'number':
+      case 'boolean':
+        out += obj[keys[i]];
+        break;
+
+      case 'string':
+        out += '"' + escape(obj[keys[i]]) + '"';
+        break;
+
+      case 'object':
+        out += '"' + sjcl.codec.base64.fromBits(obj[keys[i]],0) + '"';
+        break;
+
+      default:
+        throw new sjcl.exception.bug("json encode: unsupported type");
       }
     }
     return out+'}';
@@ -196,14 +194,12 @@
   _add: function (target, src, requireSame) {
     if (target === undefined) { target = {}; }
     if (src === undefined) { return target; }
-    var i;
-    for (i in src) {
-      if (src.hasOwnProperty(i)) {
-        if (requireSame && target[i] !== undefined && target[i] !== src[i]) {
-          throw new sjcl.exception.invalid("required parameter overridden");
-        }
-        target[i] = src[i];
+    var i, keys = Object.keys(src);
+    for (i=0; i<keys.length; i++) {
+      if (requireSame && target[keys[i]] !== undefined && target[keys[i]] !== src[keys[i]]) {
+        throw new sjcl.exception.invalid("required parameter overridden");
       }
+      target[keys[i]] = src[keys[i]];
     }
     return target;
   },
@@ -212,14 +208,14 @@
    * @private
    */
   _subtract: function (plus, minus) {
-    var out = {}, i;
-    
-    for (i in plus) {
-      if (plus.hasOwnProperty(i) && plus[i] !== minus[i]) {
-        out[i] = plus[i];
+    var out = {}, i, keys = Object.keys(plus);
+
+    for (i=0; i<keys.length; i++) {
+      if (plus[keys[i]] !== minus[keys[i]]) {
+        out[keys[i]] = plus[keys[i]];
       }
     }
-    
+
     return out;
   },
   
