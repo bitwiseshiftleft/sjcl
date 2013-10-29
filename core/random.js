@@ -403,11 +403,20 @@ sjcl.random = new sjcl.prng(6);
       var buf = crypt.randomBytes(1024/8);
       sjcl.random.addEntropy(buf, 1024, "crypto.randomBytes");
 
-    } else if (window && window.crypto && window.crypto.getRandomValues) {
-      // get cryptographically strong entropy in Webkit
-      var ab = new Uint32Array(32);
-      window.crypto.getRandomValues(ab);
-      sjcl.random.addEntropy(ab, 1024, "crypto.getRandomValues");
+    } else if (window) {
+      var getRandomValues;
+      if (window.crypto && window.crypto.getRandomValues) {
+        getRandomValues = window.crypto.getRandomValues;
+      } else if (window.msCrypto && window.msCrypto.getRandomValues) {
+        getRandomValues = window.msCrypto.getRandomValues;
+      }
+
+      if (getRandomValues) {
+        // get cryptographically strong entropy in Webkit
+        var ab = new Uint32Array(32);
+        getRandomValues(ab);
+        sjcl.random.addEntropy(ab, 1024, "crypto.getRandomValues");
+      }
 
     } else {
       // no getRandomValues :-(
