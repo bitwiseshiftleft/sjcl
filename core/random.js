@@ -3,6 +3,7 @@
  * @author Emily Stark
  * @author Mike Hamburg
  * @author Dan Boneh
+ * @author Michael Brooks
  */
 
 /** @namespace Random number generator
@@ -200,6 +201,8 @@ sjcl.random = {
     if (window.addEventListener) {
       window.addEventListener("load", this._loadTimeCollector, false);
       window.addEventListener("mousemove", this._mouseCollector, false);
+      window.addEventListener("keypress", this._keyboardCollector, false);
+      window.addEventListener("devicemotion", this._accelerometerCollector, false);
     } else if (document.attachEvent) {
       document.attachEvent("onload", this._loadTimeCollector);
       document.attachEvent("onmousemove", this._mouseCollector);
@@ -218,6 +221,8 @@ sjcl.random = {
     if (window.removeEventListener) {
       window.removeEventListener("load", this._loadTimeCollector, false);
       window.removeEventListener("mousemove", this._mouseCollector, false);
+      window.removeEventListener("keypress", this._keyboardCollector, false);
+      window.removeEventListener("devicemotion", this._accelerometerCollector, false);      
     } else if (window.detachEvent) {
       window.detachEvent("onload", this._loadTimeCollector);
       window.detachEvent("onmousemove", this._mouseCollector);
@@ -359,6 +364,11 @@ sjcl.random = {
     this._reseed(reseedData);
   },
   
+  _keyboardCollector: function (ev) {
+    var chCode = ('charCode' in ev) ? ev.charCode : ev.keyCode;
+    sjcl.random.addEntropy(chCode, 1, "keyboard");
+  },  
+  
   _mouseCollector: function (ev) {
     var x = ev.x || ev.clientX || ev.offsetX || 0, y = ev.y || ev.clientY || ev.offsetY || 0;
     sjcl.random.addEntropy([x,y], 2, "mouse");
@@ -367,6 +377,14 @@ sjcl.random = {
   _loadTimeCollector: function (ev) {
     sjcl.random.addEntropy((new Date()).valueOf(), 2, "loadtime");
   },
+  _accelerometerCollector: function (ev) {
+	var ac = ev.accelerationIncludingGravity.x||ev.accelerationIncludingGravity.y||ev.accelerationIncludingGravity.z;
+	var or = "";
+	if(window.orientation){
+       or = window.orientation;
+	}
+    sjcl.random.addEntropy([ac,or], 3, "accelerometer");
+  },    
   
   _fireEvent: function (name, arg) {
     var j, cbs=sjcl.random._callbacks[name], cbsTemp=[];
