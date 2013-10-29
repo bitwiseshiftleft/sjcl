@@ -370,6 +370,10 @@ sjcl.prng.prototype = {
   
   _loadTimeCollector: function (ev) {
     sjcl.random.addEntropy((new Date()).valueOf(), 2, "loadtime");
+    if (window && window.performance && typeof window.performance.now === "function") {
+      //how much entropy do we want to add here?
+      sjcl.random.addEntropy(window.performance.now(), 0, "loadtime");
+    }
   },
   
   _fireEvent: function (name, arg) {
