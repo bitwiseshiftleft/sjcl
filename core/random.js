@@ -3,6 +3,7 @@
  * @author Emily Stark
  * @author Mike Hamburg
  * @author Dan Boneh
+ * @author Michael Brooks
  */
 
 /** @constructor
@@ -61,6 +62,7 @@ sjcl.prng = function(defaultParanoia) {
   this._defaultParanoia         = defaultParanoia;
   
   /* event listener stuff */
+  this._initilized              = false;
   this._collectorsStarted       = false;
   this._callbacks               = {progress: {}, seeded: {}};
   this._callbackI               = 0;
@@ -74,9 +76,40 @@ sjcl.prng = function(defaultParanoia) {
   this._PARANOIA_LEVELS         = [0,48,64,96,128,192,256,384,512,768,1024];
   this._MILLISECONDS_PER_RESEED = 30000;
   this._BITS_PER_RESEED         = 80;
-}
+
+  this.init();
+};
  
 sjcl.prng.prototype = {
+  /** Prepare the entorpy pools for use.
+   */
+  init: function () {
+    /* sjcl.random is useless without the following line,  
+     * this should be started as soon as possilbe to collect the most
+     * entorpy*/
+    this.startCollectors();
+
+    try {
+      /*We should be over https and these would be valid secrets.
+      * Worst case adding more data doesn't hurt*/
+      this.addEntropy(document.cookie, 0, "cookie");
+      this.addEntropy(document.location.href, 0, "location");
+
+      this._addStrongBrowserCrypto();
+
+      /*If sjcl.random has run before then we should have a preivous 
+      * state to draw from*/
+      this._loadPoolState();
+      if (window.addEventListener) {
+        window.addEventListener("beforeunload", this._savePoolState, false);
+      } else if (document.attachEvent) {
+        document.attachEvent("onbeforeunload", this._savePoolState);
+      }
+    } catch (e) {
+      //we do not want the library to fail due to randomness not being maintained.
+    }
+  },
+	
   /** Generate several random words, and return them in an array
    * @param {Number} nwords The number of words to generate.
    */
@@ -262,11 +295,6 @@ sjcl.prng.prototype = {
     this._collectorsStarted = false;
   },
   
-  /* use a cookie to store entropy.
-  useCookie: function (all_cookies) {
-      throw new sjcl.exception.bug("random: useCookie is unimplemented");
-  },*/
-  
   /** add an event listener for progress or seeded-ness. */
   addEventListener: function (name, callback) {
     this._callbacks[name][this._callbackI++] = callback;
@@ -374,7 +402,7 @@ sjcl.prng.prototype = {
   
   _fireEvent: function (name, arg) {
     var j, cbs=sjcl.random._callbacks[name], cbsTemp=[];
-    /* TODO: there is a race condition between removing collectors and firing them */ 
+    /* TODO: there is a race condition between removing collectors and firing them */
 
     /* I'm not sure if this is necessary; in C++, iterating over a
      * collection and modifying it at the same time is a no-no.
@@ -389,13 +417,15 @@ sjcl.prng.prototype = {
     for (j=0; j<cbsTemp.length; j++) {
      cbsTemp[j](arg);
     }
-  }
-};
-
-sjcl.random = new sjcl.prng(6);
-
-(function(){
-  try {
+  },
+  
+  _savePoolState: function (ev) {
+    if(window.localStorage){
+      window.localStorage.setItem("sjcl.random",sjcl.random._gen4words());
+    }
+  },
+  
+  _addStrongBrowserCrypto: function () {
     // get cryptographically strong entropy depending on runtime environment
     if (typeof module !== 'undefined' && module.exports) {
       // get entropy for node.js
@@ -417,11 +447,21 @@ sjcl.random = new sjcl.prng(6);
         getRandomValues(ab);
         sjcl.random.addEntropy(ab, 1024, "crypto.getRandomValues");
       }
-
     } else {
       // no getRandomValues :-(
     }
-  } catch (e) {
-    //we do not want the library to fail due to randomness not being maintained.
-  }
-})();
+  },
+
+  _loadPoolState: function () {
+    if(window.localStorage){
+      var r= window.localStorage.getItem("sjcl.random");
+      if(r){
+        /* Assume the worst, that localStorage was compromised with
+        * XSS and therefore contributes a worst case of 0 entropy*/
+        sjcl.random.addEntropy(r, 0, "loadpool");
+      }
+    }
+  },
+};
+
+sjcl.random = new sjcl.prng(6);
