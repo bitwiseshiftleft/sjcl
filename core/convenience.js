@@ -15,13 +15,13 @@
    * @param {String} plaintext The data to encrypt.
    * @param {Object} [params] The parameters including tag, iv and salt.
    * @param {Object} [rp] A returned version with filled-in parameters.
-   * @return {String} The ciphertext.
+   * @return {Object} The cipher raw data.
    * @throws {sjcl.exception.invalid} if a parameter is invalid.
    */
-  encrypt: function (password, plaintext, params, rp) {
+  _encrypt: function (password, plaintext, params, rp) {
     params = params || {};
     rp = rp || {};
-    
+
     var j = sjcl.json, p = j._add({ iv: sjcl.random.randomWords(4,0) },
                                   j.defaults), tmp, prp, adata;
     j._add(p, params);
@@ -32,7 +32,7 @@
     if (typeof p.iv === "string") {
       p.iv = sjcl.codec.base64.toBits(p.iv);
     }
-    
+
     if (!sjcl.mode[p.mode] ||
         !sjcl.cipher[p.cipher] ||
         (typeof password === "string" && p.iter <= 100) ||
@@ -41,7 +41,7 @@
         (p.iv.length < 2 || p.iv.length > 4)) {
       throw new sjcl.exception.invalid("json encrypt: invalid parameters");
     }
-    
+
     if (typeof password === "string") {
       tmp = sjcl.misc.cachedPbkdf2(password, p);
       password = tmp.key.slice(0,p.ks/32);
@@ -58,39 +58,52 @@
       adata = sjcl.codec.utf8String.toBits(adata);
     }
     prp = new sjcl.cipher[p.cipher](password);
-    
+
     /* return the json data */
     j._add(rp, p);
     rp.key = password;
-    
+
     /* do the encryption */
     p.ct = sjcl.mode[p.mode].encrypt(prp, plaintext, p.iv, adata, p.ts);
-    
+
     //return j.encode(j._subtract(p, j.defaults));
+    return p;
+  },
+
+  /** Simple encryption function.
+   * @param {String|bitArray} password The password or key.
+   * @param {String} plaintext The data to encrypt.
+   * @param {Object} [params] The parameters including tag, iv and salt.
+   * @param {Object} [rp] A returned version with filled-in parameters.
+   * @return {String} The ciphertext serialized data.
+   * @throws {sjcl.exception.invalid} if a parameter is invalid.
+   */
+  encrypt: function (password, plaintext, params, rp) {
+    var j = sjcl.json, p = j._encrypt.apply(j, arguments);
     return j.encode(p);
   },
-  
+
   /** Simple decryption function.
    * @param {String|bitArray} password The password or key.
-   * @param {String} ciphertext The ciphertext to decrypt.
+   * @param {Object} ciphertext The cipher raw data to decrypt.
    * @param {Object} [params] Additional non-default parameters.
    * @param {Object} [rp] A returned object with filled parameters.
    * @return {String} The plaintext.
    * @throws {sjcl.exception.invalid} if a parameter is invalid.
    * @throws {sjcl.exception.corrupt} if the ciphertext is corrupt.
    */
-  decrypt: function (password, ciphertext, params, rp) {
+  _decrypt: function (password, ciphertext, params, rp) {
     params = params || {};
     rp = rp || {};
-    
-    var j = sjcl.json, p = j._add(j._add(j._add({},j.defaults),j.decode(ciphertext)), params, true), ct, tmp, prp, adata=p.adata;
+
+    var j = sjcl.json, p = j._add(j._add(j._add({},j.defaults),ciphertext), params, true), ct, tmp, prp, adata=p.adata;
     if (typeof p.salt === "string") {
       p.salt = sjcl.codec.base64.toBits(p.salt);
     }
     if (typeof p.iv === "string") {
       p.iv = sjcl.codec.base64.toBits(p.iv);
     }
-    
+
     if (!sjcl.mode[p.mode] ||
         !sjcl.cipher[p.cipher] ||
         (typeof password === "string" && p.iter <= 100) ||
@@ -100,7 +113,7 @@
         (p.iv.length < 2 || p.iv.length > 4)) {
       throw new sjcl.exception.invalid("json decrypt: invalid parameters");
     }
-    
+
     if (typeof password === "string") {
       tmp = sjcl.misc.cachedPbkdf2(password, p);
       password = tmp.key.slice(0,p.ks/32);
@@ -112,15 +125,29 @@
       adata = sjcl.codec.utf8String.toBits(adata);
     }
     prp = new sjcl.cipher[p.cipher](password);
-    
+
     /* do the decryption */
     ct = sjcl.mode[p.mode].decrypt(prp, p.ct, p.iv, adata, p.ts);
-    
+
     /* return the json data */
     j._add(rp, p);
     rp.key = password;
-    
+
     return sjcl.codec.utf8String.fromBits(ct);
+  },
+
+  /** Simple decryption function.
+   * @param {String|bitArray} password The password or key.
+   * @param {String} ciphertext The ciphertext to decrypt.
+   * @param {Object} [params] Additional non-default parameters.
+   * @param {Object} [rp] A returned object with filled parameters.
+   * @return {String} The plaintext.
+   * @throws {sjcl.exception.invalid} if a parameter is invalid.
+   * @throws {sjcl.exception.corrupt} if the ciphertext is corrupt.
+   */
+  decrypt: function (password, ciphertext, params, rp) {
+    var j = sjcl.json;
+    return j._decrypt(password, j.decode(ciphertext), params, rp);
   },
   
   /** Encode a flat structure into a JSON string.
