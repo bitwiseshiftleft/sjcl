@@ -274,15 +274,15 @@ sjcl.prng.prototype = {
   
   /** remove an event listener for progress or seeded-ness */
   removeEventListener: function (name, cb) {
-    var i, j, k, cbs=this._callbacks[name], jsTemp=[], keys = Object.keys(cbs);
-  
+    var i, j, cbs=this._callbacks[name], jsTemp=[];
+
     /* I'm not sure if this is necessary; in C++, iterating over a
      * collection and modifying it at the same time is a no-no.
      */
 
-    for (k=0; k<keys.length; k++) {
-      if (cbs[keys[k]] === cb) {
-        jsTemp.push(keys[k]);
+    for (j in cbs) {
+      if (cbs.hasOwnProperty(j) && cbs[j] === cb) {
+        jsTemp.push(j);
       }
     }
 
@@ -371,21 +371,23 @@ sjcl.prng.prototype = {
   _loadTimeCollector: function (ev) {
     sjcl.random.addEntropy((new Date()).valueOf(), 2, "loadtime");
   },
-  
+
   _fireEvent: function (name, arg) {
-    var i, j, cbs=sjcl.random._callbacks[name], cbsTemp=[], keys = Object.keys(cbs);
-    /* TODO: there is a race condition between removing collectors and firing them */ 
+    var j, cbs=sjcl.random._callbacks[name], cbsTemp=[];
+    /* TODO: there is a race condition between removing collectors and firing them */
 
     /* I'm not sure if this is necessary; in C++, iterating over a
      * collection and modifying it at the same time is a no-no.
      */
-  
-    for (i=0; i<keys.length; i++) {
-      cbsTemp.push(cbs[keys[i]]);
+
+    for (j in cbs) {
+      if (cbs.hasOwnProperty(j)) {
+        cbsTemp.push(cbs[j]);
+      }
     }
 
     for (j=0; j<cbsTemp.length; j++) {
-     cbsTemp[j](arg);
+      cbsTemp[j](arg);
     }
   }
 };
