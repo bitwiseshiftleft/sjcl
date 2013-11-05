@@ -5637,7 +5637,7 @@ Copyright (c) 2002 Douglas Crockford  (www.JSLint.com) Rhino Edition
         print("jslint: Couldn't open file '" + a[0] + "'.");
         quit(1);
     }
-    if (!JSLINT(input, {bitwise: true, eqeqeq: true, immed: true,
+    if (!JSLINT(input, {predef: ["module", "require", "Uint32Array"], bitwise: true, eqeqeq: true, immed: true,
             newcap: true, nomen: true, onevar: true, plusplus: true,
             regexp: true, rhino: true, undef: true, white: true})) {
         for (i = 0; i < JSLINT.errors.length; i += 1) {

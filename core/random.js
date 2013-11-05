@@ -123,7 +123,7 @@ sjcl.prng.prototype = {
       i, tmp,
       t = (new Date()).valueOf(),
       robin = this._robins[source],
-      oldReady = this.isReady(), err = 0;
+      oldReady = this.isReady(), err = 0, objName;
       
     id = this._collectorIds[source];
     if (id === undefined) { id = this._collectorIds[source] = this._collectorIdNext ++; }
@@ -141,7 +141,7 @@ sjcl.prng.prototype = {
       break;
       
     case "object":
-      var objName = Object.prototype.toString.call(data);
+      objName = Object.prototype.toString.call(data);
       if (objName === "[object Uint32Array]") {
         tmp = [];
         for (i = 0; i < data.length; i++) {
@@ -153,7 +153,7 @@ sjcl.prng.prototype = {
           err = 1;
         }
         for (i=0; i<data.length && !err; i++) {
-          if (typeof(data[i]) != "number") {
+          if (typeof(data[i]) !== "number") {
             err = 1;
           }
         }
@@ -285,7 +285,7 @@ sjcl.prng.prototype = {
      */
   
     for (j in cbs) {
-	if (cbs.hasOwnProperty(j) && cbs[j] === cb) {
+      if (cbs.hasOwnProperty(j) && cbs[j] === cb) {
         jsTemp.push(j);
       }
     }
@@ -410,15 +410,15 @@ sjcl.random = new sjcl.prng(6);
 
 (function(){
   try {
+    var buf, crypt, getRandomValues, ab;
     // get cryptographically strong entropy depending on runtime environment
     if (typeof module !== 'undefined' && module.exports) {
       // get entropy for node.js
-      var crypt = require('crypto');
-      var buf = crypt.randomBytes(1024/8);
+      crypt = require('crypto');
+      buf = crypt.randomBytes(1024/8);
       sjcl.random.addEntropy(buf, 1024, "crypto.randomBytes");
 
     } else if (window) {
-      var getRandomValues;
       if (window.crypto && window.crypto.getRandomValues) {
         getRandomValues = window.crypto.getRandomValues;
       } else if (window.msCrypto && window.msCrypto.getRandomValues) {
@@ -427,7 +427,7 @@ sjcl.random = new sjcl.prng(6);
 
       if (getRandomValues) {
         // get cryptographically strong entropy in Webkit
-        var ab = new Uint32Array(32);
+        ab = new Uint32Array(32);
         getRandomValues(ab);
         sjcl.random.addEntropy(ab, 1024, "crypto.getRandomValues");
       }
@@ -438,4 +438,4 @@ sjcl.random = new sjcl.prng(6);
   } catch (e) {
     //we do not want the library to fail due to randomness not being maintained.
   }
-})();
+}());

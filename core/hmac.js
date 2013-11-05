@@ -53,8 +53,7 @@ sjcl.misc.hmac.prototype.update = function (data) {
 };
 
 sjcl.misc.hmac.prototype.digest = function () {
-  var w = this._resultHash.finalize();
-  var result = new (this._hash)(this._baseHash[1]).update(w).finalize();
+  var w = this._resultHash.finalize(), result = new (this._hash)(this._baseHash[1]).update(w).finalize();
 
   this.reset();
 
