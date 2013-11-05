@@ -366,11 +366,11 @@ sjcl.prng.prototype = {
   _mouseCollector: function (ev) {
     var x = ev.x || ev.clientX || ev.offsetX || 0, y = ev.y || ev.clientY || ev.offsetY || 0;
     sjcl.random.addEntropy([x,y], 2, "mouse");
-    this._addTimeToEntropy(0);
+    this._addCurrentTimeToEntropy(0);
   },
   
   _loadTimeCollector: function () {
-    this._addTimeToEntropy(2);
+    this._addCurrentTimeToEntropy(2);
   },
 
   _addCurrentTimeToEntropy: function (estimatedEntropy) {
