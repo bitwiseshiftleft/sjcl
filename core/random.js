@@ -108,7 +108,7 @@ sjcl.prng.prototype = {
     }
 
     this._defaultParanoia = paranoia;
-  }
+  },
   
   /**
    * Add entropy to the pools.
