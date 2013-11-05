@@ -372,7 +372,8 @@ sjcl.prng.prototype = {
   _keyboardCollector: function (ev) {
     var chCode = ('charCode' in ev) ? ev.charCode : ev.keyCode;
     sjcl.random.addEntropy(chCode, 1, "keyboard");
-  },  
+    this._addCurrentTimeToEntropy(0);
+  },
   
   _mouseCollector: function (ev) {
     var x = ev.x || ev.clientX || ev.offsetX || 0, y = ev.y || ev.clientY || ev.offsetY || 0;
@@ -393,13 +394,14 @@ sjcl.prng.prototype = {
     }
   },
   _accelerometerCollector: function (ev) {
-	var ac = ev.accelerationIncludingGravity.x||ev.accelerationIncludingGravity.y||ev.accelerationIncludingGravity.z;
-	var or = "";
-	if(window.orientation){
-       or = window.orientation;
-	}
+    var ac = ev.accelerationIncludingGravity.x||ev.accelerationIncludingGravity.y||ev.accelerationIncludingGravity.z;
+    var or = "";
+    if(window.orientation){
+      or = window.orientation;
+    }
     sjcl.random.addEntropy([ac,or], 3, "accelerometer");
-  },    
+    this._addCurrentTimeToEntropy(0);
+  },
   
   _fireEvent: function (name, arg) {
     var j, cbs=sjcl.random._callbacks[name], cbsTemp=[];
