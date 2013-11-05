@@ -74,7 +74,7 @@ sjcl.prng = function(defaultParanoia) {
   this._PARANOIA_LEVELS         = [0,48,64,96,128,192,256,384,512,768,1024];
   this._MILLISECONDS_PER_RESEED = 30000;
   this._BITS_PER_RESEED         = 80;
-}
+};
  
 sjcl.prng.prototype = {
   /** Generate several random words, and return them in an array
@@ -366,19 +366,25 @@ sjcl.prng.prototype = {
   _mouseCollector: function (ev) {
     var x = ev.x || ev.clientX || ev.offsetX || 0, y = ev.y || ev.clientY || ev.offsetY || 0;
     sjcl.random.addEntropy([x,y], 2, "mouse");
+    this._addTimeToEntropy(0);
   },
   
-  _loadTimeCollector: function (ev) {
-    sjcl.random.addEntropy((new Date()).valueOf(), 2, "loadtime");
+  _loadTimeCollector: function () {
+    this._addTimeToEntropy(2);
+  },
+
+  _addCurrentTimeToEntropy: function (estimatedEntropy) {
     if (window && window.performance && typeof window.performance.now === "function") {
       //how much entropy do we want to add here?
-      sjcl.random.addEntropy(window.performance.now(), 0, "loadtime");
+      sjcl.random.addEntropy(window.performance.now(), estimatedEntropy, "loadtime");
+    } else {
+      sjcl.random.addEntropy((new Date()).valueOf(), estimatedEntropy, "loadtime");
     }
   },
   
   _fireEvent: function (name, arg) {
     var j, cbs=sjcl.random._callbacks[name], cbsTemp=[];
-    /* TODO: there is a race condition between removing collectors and firing them */ 
+    /* TODO: there is a race condition between removing collectors and firing them */
 
     /* I'm not sure if this is necessary; in C++, iterating over a
      * collection and modifying it at the same time is a no-no.
