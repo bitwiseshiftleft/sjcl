@@ -27,7 +27,7 @@ sjcl.keyexchange.srp = {
    */
   makeVerifier: function(I, P, s, group) {
     var x;
-    x = this.makeX(I, P, s);
+    x = sjcl.keyexchange.srp.makeX(I, P, s);
     x = sjcl.bn.fromBits(x);
     return group.g.powermod(x, group.N);
   },
@@ -52,8 +52,8 @@ sjcl.keyexchange.srp = {
    */
   knownGroup:function(i) {
     if (typeof i !== "string") { i = i.toString(); }
-    if (!this._didInitKnownGroups) { this._initKnownGroups(); }
-    return this._knownGroups[i];
+    if (!sjcl.keyexchange.srp._didInitKnownGroups) { sjcl.keyexchange.srp._initKnownGroups(); }
+    return sjcl.keyexchange.srp._knownGroups[i];
   },
 
   /**
@@ -63,13 +63,13 @@ sjcl.keyexchange.srp = {
   _didInitKnownGroups: false,
   _initKnownGroups:function() {
     var i, size, group;
-    for (i=0; i < this._knownGroupSizes.length; i++) {
-      size = this._knownGroupSizes[i].toString();
-      group = this._knownGroups[size];
+    for (i=0; i < sjcl.keyexchange.srp._knownGroupSizes.length; i++) {
+      size = sjcl.keyexchange.srp._knownGroupSizes[i].toString();
+      group = sjcl.keyexchange.srp._knownGroups[size];
       group.N = new sjcl.bn(group.N);
       group.g = new sjcl.bn(group.g);
     }
-    this._didInitKnownGroups = true;
+    sjcl.keyexchange.srp._didInitKnownGroups = true;
   },
 
   _knownGroupSizes: [1024, 1536, 2048],

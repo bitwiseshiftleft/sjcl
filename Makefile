@@ -54,7 +54,7 @@ lint: core.js core/*.js test/*.js browserTest/*.js lint/coding_guidelines.pl
 	lint/coding_guidelines.pl core/*.js test/*.js browserTest/*.js
 
 
-TEST_COMMON=  browserTest/rhinoUtil.js test/test.js
+TEST_COMMON=  browserTest/nodeUtil.js test/test.js
 
 TEST_SCRIPTS= $(TEST_COMMON) \
               test/aes_vectors.js test/aes_test.js \
@@ -70,18 +70,13 @@ TEST_SCRIPTS= $(TEST_COMMON) \
               test/hmac_vectors.js test/hmac_test.js \
               test/pbkdf2_test.js \
               test/bn_vectors.js test/bn_test.js \
-              test/ecdsa_test.js test/ecdh_test.js
-
-TEST_SCRIPTS_OPT= $(TEST_COMMON) \
+              test/ecdsa_test.js test/ecdsa_vectors.js test/ecdh_test.js \
               test/srp_vectors.js test/srp_test.js
 
-# Rhino fails at -O 0.  Probably because the big files full of test vectors blow the
-# bytecode limit. So, run most tests with -O -1. But modular exponentiation is
-# currently very slow (on Rhino), so run the SRP test with optimizations on.
+# Run all tests in node.js.
 
-test: sjcl.js $(TEST_SCRIPTS) test/run_tests_rhino.js
-	@rhino -O -1 -w test/run_tests_rhino.js $< $(TEST_SCRIPTS)
-	@rhino -O 9 -w test/run_tests_rhino.js $< $(TEST_SCRIPTS_OPT)
+test: sjcl.js $(TEST_SCRIPTS) test/run_tests_node.js
+	node test/run_tests_node.js $< $(TEST_SCRIPTS)
 
 tidy:
 	find . -name '*~' -delete

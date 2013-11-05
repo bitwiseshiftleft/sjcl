@@ -26,9 +26,11 @@ function testCore(coreName, cb) {
     "bn_test.js",
     "bn_vectors.js",
     "ecdsa_test.js",
+    "ecdsa_vectors.js",
     "ecdh_test.js",
     "srp_test.js",
-    "srp_vectors.js"
+    "srp_vectors.js",
+    "ecc_conv.js"
   ], i;
   
   for (i=1; i<testFiles.length; i++) {

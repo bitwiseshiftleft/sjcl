@@ -6,7 +6,8 @@
  * @author Michael Brooks
  */
 
-/** @namespace Random number generator
+/** @constructor
+ * @class Random number generator
  *
  * @description
  * <p>
@@ -40,7 +41,43 @@
  * look for improvements in future versions.
  * </p>
  */
-sjcl.random = {
+sjcl.prng = function(defaultParanoia) {
+  
+  /* private */
+  this._pools                   = [new sjcl.hash.sha256()];
+  this._poolEntropy             = [0];
+  this._reseedCount             = 0;
+  this._robins                  = {};
+  this._eventId                 = 0;
+  
+  this._collectorIds            = {};
+  this._collectorIdNext         = 0;
+  
+  this._strength                = 0;
+  this._poolStrength            = 0;
+  this._nextReseed              = 0;
+  this._key                     = [0,0,0,0,0,0,0,0];
+  this._counter                 = [0,0,0,0];
+  this._cipher                  = undefined;
+  this._defaultParanoia         = defaultParanoia;
+  
+  /* event listener stuff */
+  this._collectorsStarted       = false;
+  this._callbacks               = {progress: {}, seeded: {}};
+  this._callbackI               = 0;
+  
+  /* constants */
+  this._NOT_READY               = 0;
+  this._READY                   = 1;
+  this._REQUIRES_RESEED         = 2;
+
+  this._MAX_WORDS_PER_BURST     = 65536;
+  this._PARANOIA_LEVELS         = [0,48,64,96,128,192,256,384,512,768,1024];
+  this._MILLISECONDS_PER_RESEED = 30000;
+  this._BITS_PER_RESEED         = 80;
+};
+ 
+sjcl.prng.prototype = {
   /** Generate several random words, and return them in an array
    * @param {Number} nwords The number of words to generate.
    */
@@ -261,39 +298,6 @@ sjcl.random = {
     }
   },
   
-  /* private */
-  _pools                   : [new sjcl.hash.sha256()],
-  _poolEntropy             : [0],
-  _reseedCount             : 0,
-  _robins                  : {},
-  _eventId                 : 0,
-  
-  _collectorIds            : {},
-  _collectorIdNext         : 0,
-  
-  _strength                : 0,
-  _poolStrength            : 0,
-  _nextReseed              : 0,
-  _key                     : [0,0,0,0,0,0,0,0],
-  _counter                 : [0,0,0,0],
-  _cipher                  : undefined,
-  _defaultParanoia         : 6,
-  
-  /* event listener stuff */
-  _collectorsStarted       : false,
-  _callbacks               : {progress: {}, seeded: {}},
-  _callbackI               : 0,
-  
-  /* constants */
-  _NOT_READY               : 0,
-  _READY                   : 1,
-  _REQUIRES_RESEED         : 2,
-
-  _MAX_WORDS_PER_BURST     : 65536,
-  _PARANOIA_LEVELS         : [0,48,64,96,128,192,256,384,512,768,1024],
-  _MILLISECONDS_PER_RESEED : 30000,
-  _BITS_PER_RESEED         : 80,
-  
   /** Generate 4 random words, no reseed, no gate.
    * @private
    */
@@ -373,10 +377,20 @@ sjcl.random = {
   _mouseCollector: function (ev) {
     var x = ev.x || ev.clientX || ev.offsetX || 0, y = ev.y || ev.clientY || ev.offsetY || 0;
     sjcl.random.addEntropy([x,y], 2, "mouse");
+    this._addTimeToEntropy(0);
   },
   
-  _loadTimeCollector: function (ev) {
-    sjcl.random.addEntropy((new Date()).valueOf(), 2, "loadtime");
+  _loadTimeCollector: function () {
+    this._addTimeToEntropy(2);
+  },
+
+  _addCurrentTimeToEntropy: function (estimatedEntropy) {
+    if (window && window.performance && typeof window.performance.now === "function") {
+      //how much entropy do we want to add here?
+      sjcl.random.addEntropy(window.performance.now(), estimatedEntropy, "loadtime");
+    } else {
+      sjcl.random.addEntropy((new Date()).valueOf(), estimatedEntropy, "loadtime");
+    }
   },
   _accelerometerCollector: function (ev) {
 	var ac = ev.accelerationIncludingGravity.x||ev.accelerationIncludingGravity.y||ev.accelerationIncludingGravity.z;
@@ -389,7 +403,7 @@ sjcl.random = {
   
   _fireEvent: function (name, arg) {
     var j, cbs=sjcl.random._callbacks[name], cbsTemp=[];
-    /* TODO: there is a race condition between removing collectors and firing them */ 
+    /* TODO: there is a race condition between removing collectors and firing them */
 
     /* I'm not sure if this is necessary; in C++, iterating over a
      * collection and modifying it at the same time is a no-no.
@@ -407,13 +421,36 @@ sjcl.random = {
   }
 };
 
+sjcl.random = new sjcl.prng(6);
+
 (function(){
   try {
-    // get cryptographically strong entropy in Webkit
-    var ab = new Uint32Array(32);
-    crypto.getRandomValues(ab);
-    sjcl.random.addEntropy(ab, 1024, "crypto.getRandomValues");
+    // get cryptographically strong entropy depending on runtime environment
+    if (typeof module !== 'undefined' && module.exports) {
+      // get entropy for node.js
+      var crypt = require('crypto');
+      var buf = crypt.randomBytes(1024/8);
+      sjcl.random.addEntropy(buf, 1024, "crypto.randomBytes");
+
+    } else if (window) {
+      var getRandomValues;
+      if (window.crypto && window.crypto.getRandomValues) {
+        getRandomValues = window.crypto.getRandomValues;
+      } else if (window.msCrypto && window.msCrypto.getRandomValues) {
+        getRandomValues = window.msCrypto.getRandomValues;
+      }
+
+      if (getRandomValues) {
+        // get cryptographically strong entropy in Webkit
+        var ab = new Uint32Array(32);
+        getRandomValues(ab);
+        sjcl.random.addEntropy(ab, 1024, "crypto.getRandomValues");
+      }
+
+    } else {
+      // no getRandomValues :-(
+    }
   } catch (e) {
-    // no getRandomValues :-(
+    //we do not want the library to fail due to randomness not being maintained.
   }
 })();

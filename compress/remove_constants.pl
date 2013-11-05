@@ -13,8 +13,8 @@
 my $script = join '', <>;
 
 # remove comments
-$script =~ s=/\*([^\*]|\*+[^\/])*\*/==g;
-$script =~ s=//.*==g;
+#$script =~ s=/\*([^\*]|\*+[^\/])*\*/==g;
+#$script =~ s=//.*==g;
 
 sub preserve {
   my $stuff = shift;

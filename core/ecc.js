@@ -144,7 +144,9 @@ sjcl.ecc.pointJac.prototype = {
       a  = y2.mul(this.x.mul(4)),
       b  = y2.square().mul(8),
       z2 = this.z.square(),
-      c  = this.x.sub(z2).mul(3).mul(this.x.add(z2)),
+      c  = this.curve.a.toString() == (new sjcl.bn(-3)).toString() ?
+                this.x.sub(z2).mul(3).mul(this.x.add(z2)) :
+                this.x.square().mul(3).add(z2.square().mul(this.curve.a)),
       x  = c.square().subM(a).subM(a),
       y  = a.sub(x).mul(c).subM(b),
       z  = this.y.add(this.y).mul(this.z);
@@ -242,7 +244,7 @@ sjcl.ecc.pointJac.prototype = {
  */
 sjcl.ecc.curve = function(Field, r, a, b, x, y) {
   this.field = Field;
-  this.r = Field.prototype.modulus.sub(r);
+  this.r = new sjcl.bn(r);
   this.a = new Field(a);
   this.b = new Field(b);
   this.G = new sjcl.ecc.point(this, new Field(x), new Field(y));
@@ -261,7 +263,7 @@ sjcl.ecc.curve.prototype.fromBits = function (bits) {
 sjcl.ecc.curves = {
   c192: new sjcl.ecc.curve(
     sjcl.bn.prime.p192,
-    "0x662107c8eb94364e4b2dd7ce",
+    "0xffffffffffffffffffffffff99def836146bc9b1b4d22831",
     -3,
     "0x64210519e59c80e70fa7e9ab72243049feb8deecc146b9b1",
     "0x188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012",
@@ -269,7 +271,7 @@ sjcl.ecc.curves = {
 
   c224: new sjcl.ecc.curve(
     sjcl.bn.prime.p224,
-    "0xe95c1f470fc1ec22d6baa3a3d5c4",
+    "0xffffffffffffffffffffffffffff16a2e0b8f03e13dd29455c5c2a3d",
     -3,
     "0xb4050a850c04b3abf54132565044b0b7d7bfd8ba270b39432355ffb4",
     "0xb70e0cbd6bb4bf7f321390b94a03c1d356c21122343280d6115c1d21",
@@ -277,7 +279,7 @@ sjcl.ecc.curves = {
 
   c256: new sjcl.ecc.curve(
     sjcl.bn.prime.p256,
-    "0x4319055358e8617b0c46353d039cdaae",
+    "0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551",
     -3,
     "0x5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b",
     "0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296",
@@ -285,46 +287,90 @@ sjcl.ecc.curves = {
 
   c384: new sjcl.ecc.curve(
     sjcl.bn.prime.p384,
-    "0x389cb27e0bc8d21fa7e5f24cb74f58851313e696333ad68c",
+    "0xffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973",
     -3,
     "0xb3312fa7e23ee7e4988e056be3f82d19181d9c6efe8141120314088f5013875ac656398d8a2ed19d2a85c8edd3ec2aef",
     "0xaa87ca22be8b05378eb1c71ef320ad746e1d3b628ba79b9859f741e082542a385502f25dbf55296c3a545e3872760ab7",
-    "0x3617de4a96262c6f5d9e98bf9292dc29f8f41dbd289a147ce9da3113b5f0b8c00a60b1ce1d7e819d7a431d7c90ea0e5f")
+    "0x3617de4a96262c6f5d9e98bf9292dc29f8f41dbd289a147ce9da3113b5f0b8c00a60b1ce1d7e819d7a431d7c90ea0e5f"),
+
+  k192: new sjcl.ecc.curve(
+    sjcl.bn.prime.p192k,
+    "0xfffffffffffffffffffffffe26f2fc170f69466a74defd8d",
+    0,
+    3,
+    "0xdb4ff10ec057e9ae26b07d0280b7f4341da5d1b1eae06c7d",
+    "0x9b2f2f6d9c5628a7844163d015be86344082aa88d95e2f9d"),
+
+  k224: new sjcl.ecc.curve(
+    sjcl.bn.prime.p224k,
+    "0x010000000000000000000000000001dce8d2ec6184caf0a971769fb1f7",
+    0,
+    5,
+    "0xa1455b334df099df30fc28a169a467e9e47075a90f7e650eb6b7a45c",
+    "0x7e089fed7fba344282cafbd6f7e319f7c0b0bd59e2ca4bdb556d61a5"),
+
+  k256: new sjcl.ecc.curve(
+    sjcl.bn.prime.p256k,
+    "0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141",
+    0,
+    7,
+    "0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+    "0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8")
+
 };
 
 
 /* Diffie-Hellman-like public-key system */
 sjcl.ecc._dh = function(cn) {
   sjcl.ecc[cn] = {
+    /** @constructor */
     publicKey: function(curve, point) {
       this._curve = curve;
+      this._curveBitLength = curve.r.bitLength();
       if (point instanceof Array) {
         this._point = curve.fromBits(point);
       } else {
         this._point = point;
       }
+
+      this.get = function() {
+        var pointbits = this._point.toBits();
+        var len = sjcl.bitArray.bitLength(pointbits);
+        var x = sjcl.bitArray.bitSlice(pointbits, 0, len/2);
+        var y = sjcl.bitArray.bitSlice(pointbits, len/2);
+        return { x: x, y: y };
+      }
     },
 
+    /** @constructor */
     secretKey: function(curve, exponent) {
       this._curve = curve;
+      this._curveBitLength = curve.r.bitLength();
       this._exponent = exponent;
+
+      this.get = function() {
+        return this._exponent.toBits();
+      }
     },
 
-    generateKeys: function(curve, paranoia) {
-      if (curve === undefined) {
-        curve = 256;
-      }
+    /** @constructor */
+    generateKeys: function(curve, paranoia, sec) {
+      curve = curve || 256;
+      paranoia = paranoia || 0;
+
       if (typeof curve === "number") {
         curve = sjcl.ecc.curves['c'+curve];
         if (curve === undefined) {
           throw new sjcl.exception.invalid("no such curve");
         }
       }
-      var sec = sjcl.bn.random(curve.r, paranoia), pub = curve.G.mult(sec);
+      sec = sec || sjcl.bn.random(curve.r, paranoia);
+
+      var pub = curve.G.mult(sec);
       return { pub: new sjcl.ecc[cn].publicKey(curve, pub),
                sec: new sjcl.ecc[cn].secretKey(curve, sec) };
     }
-  }; 
+  };
 };
 
 sjcl.ecc._dh("elGamal");
@@ -351,29 +397,41 @@ sjcl.ecc.elGamal.secretKey.prototype = {
 sjcl.ecc._dh("ecdsa");
 
 sjcl.ecc.ecdsa.secretKey.prototype = {
-  sign: function(hash, paranoia) {
-    var R = this._curve.r,
-        l = R.bitLength(),
-        k = sjcl.bn.random(R.sub(1), paranoia).add(1),
-        r = this._curve.G.mult(k).x.mod(R),
-        s = sjcl.bn.fromBits(hash).add(r.mul(this._exponent)).inverseMod(R).mul(k).mod(R);
+  sign: function(hash, paranoia, fakeLegacyVersion, fixedKForTesting) {
+    if (sjcl.bitArray.bitLength(hash) > this._curveBitLength) {
+      hash = sjcl.bitArray.clamp(hash, this._curveBitLength);
+    }
+    var R  = this._curve.r,
+        l  = R.bitLength(),
+        k  = fixedKForTesting || sjcl.bn.random(R.sub(1), paranoia).add(1),
+        r  = this._curve.G.mult(k).x.mod(R),
+        ss = sjcl.bn.fromBits(hash).add(r.mul(this._exponent)),
+        s  = fakeLegacyVersion ? ss.inverseMod(R).mul(k).mod(R)
+             : ss.mul(k.inverseMod(R)).mod(R);
     return sjcl.bitArray.concat(r.toBits(l), s.toBits(l));
   }
 };
 
 sjcl.ecc.ecdsa.publicKey.prototype = {
-  verify: function(hash, rs) {
+  verify: function(hash, rs, fakeLegacyVersion) {
+    if (sjcl.bitArray.bitLength(hash) > this._curveBitLength) {
+      hash = sjcl.bitArray.clamp(hash, this._curveBitLength);
+    }
     var w = sjcl.bitArray,
         R = this._curve.r,
-        l = R.bitLength(),
+        l = this._curveBitLength,
         r = sjcl.bn.fromBits(w.bitSlice(rs,0,l)),
-        s = sjcl.bn.fromBits(w.bitSlice(rs,l,2*l)),
+        ss = sjcl.bn.fromBits(w.bitSlice(rs,l,2*l)),
+        s = fakeLegacyVersion ? ss : ss.inverseMod(R),
         hG = sjcl.bn.fromBits(hash).mul(s).mod(R),
         hA = r.mul(s).mod(R),
         r2 = this._curve.G.mult2(hG, hA, this._point).x;
-        
-    if (r.equals(0) || s.equals(0) || r.greaterEquals(R) || s.greaterEquals(R) || !r2.equals(r)) {
-      throw (new sjcl.exception.corrupt("signature didn't check out"));
+    if (r.equals(0) || ss.equals(0) || r.greaterEquals(R) || ss.greaterEquals(R) || !r2.equals(r)) {
+      if (fakeLegacyVersion === undefined) {
+        return this.verify(hash, rs, true);
+      } else {
+        throw (new sjcl.exception.corrupt("signature didn't check out"));
+      }
     }
     return true;
   }

@@ -1,4 +1,5 @@
 /* Official HMAC test vectors. */
+//Nilos: http://tools.ietf.org/html/draft-nystrom-smime-hmac-sha-02 for
 sjcl.test.vector.hmac = [
 { key:  "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
   data: "4869205468657265",

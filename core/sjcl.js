@@ -42,25 +42,25 @@ var sjcl = {
   
   /** @namespace Exceptions. */
   exception: {
-    /** @class Ciphertext is corrupt. */
+    /** @constructor Ciphertext is corrupt. */
     corrupt: function(message) {
       this.toString = function() { return "CORRUPT: "+this.message; };
       this.message = message;
     },
     
-    /** @class Invalid parameter. */
+    /** @constructor Invalid parameter. */
     invalid: function(message) {
       this.toString = function() { return "INVALID: "+this.message; };
       this.message = message;
     },
     
-    /** @class Bug or missing feature in SJCL. */
+    /** @constructor Bug or missing feature in SJCL. @constructor */
     bug: function(message) {
       this.toString = function() { return "BUG: "+this.message; };
       this.message = message;
     },
 
-    /** @class Something isn't ready. */
+    /** @constructor Something isn't ready. */
     notReady: function(message) {
       this.toString = function() { return "NOT READY: "+this.message; };
       this.message = message;
