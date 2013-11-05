@@ -206,6 +206,7 @@ sjcl.random = {
     } else if (document.attachEvent) {
       document.attachEvent("onload", this._loadTimeCollector);
       document.attachEvent("onmousemove", this._mouseCollector);
+      document.attachEvent("keypress", this._keyboardCollector);
     }
     else {
       throw new sjcl.exception.bug("can't attach event");
