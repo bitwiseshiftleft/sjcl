@@ -95,7 +95,7 @@ sjcl.prng.prototype = {
       this.addEntropy(document.cookie, 0, "cookie");
       this.addEntropy(document.location.href, 0, "location");
 
-      this._addStrongBrowserCrypto();
+      this._addStrongPlatformCrypto();
 
       /*If sjcl.random has run before then we should have a preivous 
       * state to draw from*/
@@ -111,6 +111,7 @@ sjcl.prng.prototype = {
   },
 	
   /** Generate several random words, and return them in an array
+   * A word is 32 bits long (4 bytes)
    * @param {Number} nwords The number of words to generate.
    */
   randomWords: function (nwords, paranoia) {
@@ -420,12 +421,27 @@ sjcl.prng.prototype = {
   },
   
   _savePoolState: function (ev) {
-    if(window.localStorage){
-      window.localStorage.setItem("sjcl.random",sjcl.random._gen4words());
-    }
+    try {
+      if(window && window.localStorage){
+        window.localStorage.setItem("sjcl.random",sjcl.random._gen4words());
+      }
+    } catch (e) {}
   },
-  
-  _addStrongBrowserCrypto: function () {
+
+  _loadPoolState: function () {
+    try {
+      if(window && window.localStorage){
+        var r= window.localStorage.getItem("sjcl.random");
+        if(r){
+          /* Assume the worst, that localStorage was compromised with
+          * XSS and therefore contributes a worst case of 0 entropy*/
+          sjcl.random.addEntropy(r, 0, "loadpool");
+        }
+      }
+    } catch (e) {}
+  },
+
+  _addStrongPlatformCrypto: function () {
     // get cryptographically strong entropy depending on runtime environment
     if (typeof module !== 'undefined' && module.exports) {
       // get entropy for node.js
@@ -450,18 +466,7 @@ sjcl.prng.prototype = {
     } else {
       // no getRandomValues :-(
     }
-  },
-
-  _loadPoolState: function () {
-    if(window.localStorage){
-      var r= window.localStorage.getItem("sjcl.random");
-      if(r){
-        /* Assume the worst, that localStorage was compromised with
-        * XSS and therefore contributes a worst case of 0 entropy*/
-        sjcl.random.addEntropy(r, 0, "loadpool");
-      }
-    }
-  },
+  }
 };
 
 sjcl.random = new sjcl.prng(6);
