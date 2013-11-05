@@ -260,7 +260,7 @@ sjcl.prng.prototype = {
       window.removeEventListener("load", this._loadTimeCollector, false);
       window.removeEventListener("mousemove", this._mouseCollector, false);
       window.removeEventListener("keypress", this._keyboardCollector, false);
-      window.removeEventListener("devicemotion", this._accelerometerCollector, false);      
+      window.removeEventListener("devicemotion", this._accelerometerCollector, false);
     } else if (window.detachEvent) {
       window.detachEvent("onload", this._loadTimeCollector);
       window.detachEvent("onmousemove", this._mouseCollector);
@@ -369,10 +369,8 @@ sjcl.prng.prototype = {
     this._reseed(reseedData);
   },
   
-  _keyboardCollector: function (ev) {
-    var chCode = ('charCode' in ev) ? ev.charCode : ev.keyCode;
-    sjcl.random.addEntropy(chCode, 1, "keyboard");
-    this._addCurrentTimeToEntropy(0);
+  _keyboardCollector: function () {
+    this._addCurrentTimeToEntropy(1);
   },
   
   _mouseCollector: function (ev) {
