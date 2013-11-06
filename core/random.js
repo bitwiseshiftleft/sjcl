@@ -7,8 +7,8 @@
 
 /** @constructor
  * @class Random number generator
- *
  * @description
+ * <b>Use sjcl.random as a singleton for this class!</b>
  * <p>
  * This random number generator is a derivative of Ferguson and Schneier's
  * generator Fortuna.  It collects entropy from various events into several
@@ -77,7 +77,8 @@ sjcl.prng = function(defaultParanoia) {
 };
  
 sjcl.prng.prototype = {
-  /** Generate several random words, and return them in an array
+  /** Generate several random words, and return them in an array.
+   * A word consists of 32 bits (4 bytes)
    * @param {Number} nwords The number of words to generate.
    */
   randomWords: function (nwords, paranoia) {
@@ -406,6 +407,9 @@ sjcl.prng.prototype = {
   }
 };
 
+/** an instance for the prng.
+* @see sjcl.prng
+*/
 sjcl.random = new sjcl.prng(6);
 
 (function(){
