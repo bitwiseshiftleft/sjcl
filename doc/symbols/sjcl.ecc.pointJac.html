@@ -4,7 +4,7 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="generator" content="JsDoc Toolkit" />
 		
-		<title>JsDoc Reference - sjcl.hash.sha256</title>
+		<title>JsDoc Reference - sjcl.ecc.pointJac</title>
 		<link href="../css/default.css" type="text/css" rel="stylesheet" media="all" />
 	</head>
 
@@ -107,7 +107,7 @@
 			<div class="innerContent">
 				<h1 class="classTitle">
 					
-					Class <span>sjcl.hash.sha256</span>
+					Class <span>sjcl.ecc.pointJac</span>
 				</h1>
 
 				<p class="description summary">
@@ -115,16 +115,16 @@
 					
 					
 				
-					Secure Hash Algorithm, 256 bits.
 					
 					
-						<br /><em>Defined in: </em> <a href="../symbols/src/core_sha256.js.html">sha256.js</a>.
+					
+						<br /><em>Defined in: </em> <a href="../symbols/src/core_ecc.js.html">ecc.js</a>.
 					
 				</p>
 
 				
 					<div class="props">
-						<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class sjcl.hash.sha256.">
+						<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class sjcl.ecc.pointJac.">
 							<caption>Class Summary</caption>
 							<thead>
 								<tr>
@@ -137,9 +137,9 @@
 									<td class="attributes">&nbsp;</td>
 									<td class="nameDescription" >
 										<div class="fixedFont">
-											<b><a href="../symbols/sjcl.hash.sha256.html#constructor">sjcl.hash.sha256</a></b>(hash)
+											<b><a href="../symbols/sjcl.ecc.pointJac.html#constructor">sjcl.ecc.pointJac</a></b>(x, y, z, curve)
 										</div>
-										<div class="description">Context for a SHA-256 operation in progress.</div>
+										<div class="description">Represents a point on a curve in Jacobian coordinates.</div>
 									</td>
 								</tr>
 							</tbody>
@@ -147,38 +147,6 @@
 					</div>
 				
 
-				
-					
-					
-						<div class="props">
-							<table class="summaryTable" cellspacing="0" summary="A summary of the fields documented in the class sjcl.hash.sha256.">
-								<caption>Field Summary</caption>
-								
-								<thead>
-									<tr>
-										<th scope="col">Field Attributes</th>
-										<th scope="col">Field Name and Description</th>
-									</tr>
-								</thead>
-								
-								<tbody>
-									
-										<tr>
-											<td class="attributes">&lt;constant&gt; &nbsp;</td>
-											<td class="nameDescription">
-												<div class="fixedFont">
-												<b><a href="../symbols/sjcl.hash.sha256.html#blockSize">blockSize</a></b>
-												</div>
-												<div class="description">The hash's block size, in bits.</div>
-											</td>
-										</tr>
-									
-								</tbody>
-							</table>
-						</div>
-					
-					
-					
 				
 
 	<!--
@@ -188,7 +156,7 @@
 					
 					
 						<div class="props">
-							<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class sjcl.hash.sha256.">
+							<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class sjcl.ecc.pointJac.">
 								<caption>Method Summary</caption>
 								
 								<thead>
@@ -203,36 +171,45 @@
 										<tr>
 											<td class="attributes">&nbsp;</td>
 											<td class="nameDescription">
-												<div class="fixedFont"><b><a href="../symbols/sjcl.hash.sha256.html#finalize">finalize</a></b>()
+												<div class="fixedFont"><b><a href="../symbols/sjcl.ecc.pointJac.html#add">add</a></b>(S, T)
 												</div>
-												<div class="description">Complete hashing and output the hash value.</div>
-											</td>
-										</tr>
-									
-										<tr>
-											<td class="attributes">&lt;static&gt; &nbsp;</td>
-											<td class="nameDescription">
-												<div class="fixedFont">sjcl.hash.sha256.<b><a href="../symbols/sjcl.hash.sha256.html#.hash">hash</a></b>(data)
-												</div>
-												<div class="description">Hash a string or an array of words.</div>
+												<div class="description">Adds S and T and returns the result in Jacobian coordinates.</div>
 											</td>
 										</tr>
 									
 										<tr>
 											<td class="attributes">&nbsp;</td>
 											<td class="nameDescription">
-												<div class="fixedFont"><b><a href="../symbols/sjcl.hash.sha256.html#reset">reset</a></b>()
+												<div class="fixedFont"><b><a href="../symbols/sjcl.ecc.pointJac.html#doubl">doubl</a></b>()
 												</div>
-												<div class="description">Reset the hash state.</div>
+												<div class="description">doubles this point.</div>
 											</td>
 										</tr>
 									
 										<tr>
 											<td class="attributes">&nbsp;</td>
 											<td class="nameDescription">
-												<div class="fixedFont"><b><a href="../symbols/sjcl.hash.sha256.html#update">update</a></b>(data)
+												<div class="fixedFont"><b><a href="../symbols/sjcl.ecc.pointJac.html#mult">mult</a></b>(k, affine)
 												</div>
-												<div class="description">Input several words to the hash.</div>
+												<div class="description">Multiply this point by k and return the answer in Jacobian coordinates.</div>
+											</td>
+										</tr>
+									
+										<tr>
+											<td class="attributes">&nbsp;</td>
+											<td class="nameDescription">
+												<div class="fixedFont"><b><a href="../symbols/sjcl.ecc.pointJac.html#mult2">mult2</a></b>(k, affine, k2, affine)
+												</div>
+												<div class="description">Multiply this point by k, added to affine2*k2, and return the answer in Jacobian coordinates.</div>
+											</td>
+										</tr>
+									
+										<tr>
+											<td class="attributes">&nbsp;</td>
+											<td class="nameDescription">
+												<div class="fixedFont"><b><a href="../symbols/sjcl.ecc.pointJac.html#toAffine">toAffine</a></b>()
+												</div>
+												<div class="description">Returns a copy of this point converted to affine coordinates.</div>
 											</td>
 										</tr>
 									
@@ -262,11 +239,12 @@
 							</div>
 							
 							<div class="fixedFont">
-								<b>sjcl.hash.sha256</b>(hash)
+								<b>sjcl.ecc.pointJac</b>(x, y, z, curve)
 							</div>
 							
 							<div class="description">
-								Context for a SHA-256 operation in progress.
+								Represents a point on a curve in Jacobian coordinates. Coordinates can be specified as bigInts or strings (which
+will be converted to bigInts).
 								
 							</div>
 							
@@ -277,10 +255,28 @@
 									<dt class="heading">Parameters:</dt>
 									
 										<dt>
-											 <b>hash</b>
+											<span class="light fixedFont">{bigInt/string}</span>  <b>x</b>
 											
 										</dt>
-										<dd></dd>
+										<dd>The x coordinate.</dd>
+									
+										<dt>
+											<span class="light fixedFont">{bigInt/string}</span>  <b>y</b>
+											
+										</dt>
+										<dd>The y coordinate.</dd>
+									
+										<dt>
+											<span class="light fixedFont">{bigInt/string}</span>  <b>z</b>
+											
+										</dt>
+										<dd>The z coordinate.</dd>
+									
+										<dt>
+											<span class="light fixedFont">{<a href="../symbols/sjcl.ecc.curve.html">sjcl.ecc.curve</a>}</span>  <b>curve</b>
+											
+										</dt>
+										<dd>The curve that this point lies on.</dd>
 									
 								</dl>
 							
@@ -294,42 +290,6 @@
 	#### FIELD DETAILS
 	-->
 				
-					<div class="details props">
-						<div class="innerProps">
-
-							<div class="sectionTitle">
-								Field Detail
-							</div>
-							
-							
-								<a name="blockSize"></a>
-								
-								<div class="fixedFont heading">
-									<span class='lighter'>
-									&lt;constant&gt; 
-									</span>
-									
-									
-									
-									<b>blockSize</b>							
-								</div>
-								
-								<div class="description">
-									The hash's block size, in bits.
-									
-									
-									
-								</div>
-								
-								
-
-								
-								
-								
-							
-						</div>
-					</div>
-				
 
 	<!--
 	#### METHOD DETAILS
@@ -342,69 +302,20 @@
 							</div>
 							
 							
-								<a name="finalize"></a>
+								<a name="add"></a>
 								
 								<div class="fixedFont heading">
 									<span class='lighter'>
 									
 									</span>
 									
-									<span class="light">{bitArray}</span>
+									<span class="light">{<a href="../symbols/sjcl.ecc.pointJac.html">sjcl.ecc.pointJac</a>}</span>
 									
-									<b>finalize</b>()
+									<b>add</b>(S, T)
 								</div>
 								
 								<div class="description">
-									Complete hashing and output the hash value.
-									
-									
-									
-									
-								</div>
-								
-								
-								
-								
-								
-								
-									<dl class="detailList nomargin">
-									
-										
-										
-										
-										
-										
-										
-										
-											<dt class="heading">Returns:</dt>
-											
-												<dd><span class="light fixedFont">{bitArray}</span> The hash value, an array of 8 big-endian words.</dd>
-											
-										
-										
-										
-										
-										
-									
-									</dl>
-								
-
-								<div class="hr"></div>
-							
-								<a name=".hash"></a>
-								
-								<div class="fixedFont heading">
-									<span class='lighter'>
-									&lt;static&gt; 
-									</span>
-									
-									<span class="light">{bitArray}</span>
-									
-									<span class="light">sjcl.hash.sha256.</span><b>hash</b>(data)
-								</div>
-								
-								<div class="description">
-									Hash a string or an array of words.
+									Adds S and T and returns the result in Jacobian coordinates. Note that S must be in Jacobian coordinates and T must be in affine coordinates.
 									
 									
 									
@@ -418,10 +329,16 @@
 										<dt class="heading">Parameters:</dt>
 										
 											<dt>
-												<span class="light fixedFont">{bitArray|String}</span> <b>data</b>
+												<span class="light fixedFont">{<a href="../symbols/sjcl.ecc.pointJac.html">sjcl.ecc.pointJac</a>}</span> <b>S</b>
 												
 											</dt>
-											<dd>the data to hash.</dd>
+											<dd>One of the points to add, in Jacobian coordinates.</dd>
+										
+											<dt>
+												<span class="light fixedFont">{<a href="../symbols/sjcl.ecc.point.html">sjcl.ecc.point</a>}</span> <b>T</b>
+												
+											</dt>
+											<dd>The other point to add, in affine coordinates.</dd>
 										
 									</dl>
 								
@@ -438,7 +355,7 @@
 										
 											<dt class="heading">Returns:</dt>
 											
-												<dd><span class="light fixedFont">{bitArray}</span> The hash value, an array of 16 big-endian words.</dd>
+												<dd><span class="light fixedFont">{<a href="../symbols/sjcl.ecc.pointJac.html">sjcl.ecc.pointJac</a>}</span> The sum of the two points, in Jacobian coordinates.</dd>
 											
 										
 										
@@ -451,20 +368,20 @@
 
 								<div class="hr"></div>
 							
-								<a name="reset"></a>
+								<a name="doubl"></a>
 								
 								<div class="fixedFont heading">
 									<span class='lighter'>
 									
 									</span>
 									
+									<span class="light">{<a href="../symbols/sjcl.ecc.pointJac.html">sjcl.ecc.pointJac</a>}</span>
 									
-									
-									<b>reset</b>()
+									<b>doubl</b>()
 								</div>
 								
 								<div class="description">
-									Reset the hash state.
+									doubles this point.
 									
 									
 									
@@ -487,7 +404,7 @@
 										
 											<dt class="heading">Returns:</dt>
 											
-												<dd>this</dd>
+												<dd><span class="light fixedFont">{<a href="../symbols/sjcl.ecc.pointJac.html">sjcl.ecc.pointJac</a>}</span> The doubled point.</dd>
 											
 										
 										
@@ -500,20 +417,20 @@
 
 								<div class="hr"></div>
 							
-								<a name="update"></a>
+								<a name="mult"></a>
 								
 								<div class="fixedFont heading">
 									<span class='lighter'>
 									
 									</span>
 									
+									<span class="light">{<a href="../symbols/sjcl.ecc.pointJac.html">sjcl.ecc.pointJac</a>}</span>
 									
-									
-									<b>update</b>(data)
+									<b>mult</b>(k, affine)
 								</div>
 								
 								<div class="description">
-									Input several words to the hash.
+									Multiply this point by k and return the answer in Jacobian coordinates.
 									
 									
 									
@@ -527,10 +444,16 @@
 										<dt class="heading">Parameters:</dt>
 										
 											<dt>
-												<span class="light fixedFont">{bitArray|String}</span> <b>data</b>
+												<span class="light fixedFont">{bigInt}</span> <b>k</b>
 												
 											</dt>
-											<dd>the data to hash.</dd>
+											<dd>The coefficient to multiply by.</dd>
+										
+											<dt>
+												<span class="light fixedFont">{<a href="../symbols/sjcl.ecc.point.html">sjcl.ecc.point</a>}</span> <b>affine</b>
+												
+											</dt>
+											<dd>This point in affine coordinates.</dd>
 										
 									</dl>
 								
@@ -547,7 +470,134 @@
 										
 											<dt class="heading">Returns:</dt>
 											
-												<dd>this</dd>
+												<dd><span class="light fixedFont">{<a href="../symbols/sjcl.ecc.pointJac.html">sjcl.ecc.pointJac</a>}</span> The result of the multiplication, in Jacobian coordinates.</dd>
+											
+										
+										
+										
+										
+										
+									
+									</dl>
+								
+
+								<div class="hr"></div>
+							
+								<a name="mult2"></a>
+								
+								<div class="fixedFont heading">
+									<span class='lighter'>
+									
+									</span>
+									
+									<span class="light">{<a href="../symbols/sjcl.ecc.pointJac.html">sjcl.ecc.pointJac</a>}</span>
+									
+									<b>mult2</b>(k, affine, k2, affine)
+								</div>
+								
+								<div class="description">
+									Multiply this point by k, added to affine2*k2, and return the answer in Jacobian coordinates.
+									
+									
+									
+									
+								</div>
+								
+								
+								
+								
+									<dl class="detailList params">
+										<dt class="heading">Parameters:</dt>
+										
+											<dt>
+												<span class="light fixedFont">{bigInt}</span> <b>k</b>
+												
+											</dt>
+											<dd>The coefficient to multiply this by.</dd>
+										
+											<dt>
+												<span class="light fixedFont">{<a href="../symbols/sjcl.ecc.point.html">sjcl.ecc.point</a>}</span> <b>affine</b>
+												
+											</dt>
+											<dd>This point in affine coordinates.</dd>
+										
+											<dt>
+												<span class="light fixedFont">{bigInt}</span> <b>k2</b>
+												
+											</dt>
+											<dd>The coefficient to multiply affine2 this by.</dd>
+										
+											<dt>
+												<span class="light fixedFont">{<a href="../symbols/sjcl.ecc.point.html">sjcl.ecc.point</a>}</span> <b>affine</b>
+												
+											</dt>
+											<dd>The other point in affine coordinates.</dd>
+										
+									</dl>
+								
+								
+								
+									<dl class="detailList nomargin">
+									
+										
+										
+										
+										
+										
+										
+										
+											<dt class="heading">Returns:</dt>
+											
+												<dd><span class="light fixedFont">{<a href="../symbols/sjcl.ecc.pointJac.html">sjcl.ecc.pointJac</a>}</span> The result of the multiplication and addition, in Jacobian coordinates.</dd>
+											
+										
+										
+										
+										
+										
+									
+									</dl>
+								
+
+								<div class="hr"></div>
+							
+								<a name="toAffine"></a>
+								
+								<div class="fixedFont heading">
+									<span class='lighter'>
+									
+									</span>
+									
+									<span class="light">{<a href="../symbols/sjcl.ecc.point.html">sjcl.ecc.point</a>}</span>
+									
+									<b>toAffine</b>()
+								</div>
+								
+								<div class="description">
+									Returns a copy of this point converted to affine coordinates.
+									
+									
+									
+									
+								</div>
+								
+								
+								
+								
+								
+								
+									<dl class="detailList nomargin">
+									
+										
+										
+										
+										
+										
+										
+										
+											<dt class="heading">Returns:</dt>
+											
+												<dd><span class="light fixedFont">{<a href="../symbols/sjcl.ecc.point.html">sjcl.ecc.point</a>}</span> The converted point.</dd>
 											
 										
 										
