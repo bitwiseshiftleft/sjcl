@@ -302,7 +302,7 @@ sjcl.prng.prototype = {
     return function () {
       func.apply(that, arguments);
     };
-  }
+  },
 
   /** Generate 4 random words, no reseed, no gate.
    * @private
