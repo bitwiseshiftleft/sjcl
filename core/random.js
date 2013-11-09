@@ -240,11 +240,11 @@ sjcl.prng.prototype = {
     if (this._collectorsStarted) { return; }
   
     if (window.addEventListener) {
-      window.addEventListener("load", this._loadTimeCollector, false);
-      window.addEventListener("mousemove", this._mouseCollector, false);
+      window.addEventListener("load", this._bind(this._loadTimeCollector), false);
+      window.addEventListener("mousemove", this._bind(this._mouseCollector), false);
     } else if (document.attachEvent) {
-      document.attachEvent("onload", this._loadTimeCollector);
-      document.attachEvent("onmousemove", this._mouseCollector);
+      document.attachEvent("onload", this._bind(this._loadTimeCollector));
+      document.attachEvent("onmousemove", this._bind(this._mouseCollector));
     }
     else {
       throw new sjcl.exception.bug("can't attach event");
@@ -297,6 +297,13 @@ sjcl.prng.prototype = {
     }
   },
   
+  _bind: function (func) {
+    var that = this;
+    return function () {
+      func.apply(that, arguments);
+    };
+  }
+
   /** Generate 4 random words, no reseed, no gate.
    * @private
    */
