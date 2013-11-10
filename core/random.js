@@ -8,8 +8,8 @@
 
 /** @constructor
  * @class Random number generator
- *
  * @description
+ * <b>Use sjcl.random as a singleton for this class!</b>
  * <p>
  * This random number generator is a derivative of Ferguson and Schneier's
  * generator Fortuna.  It collects entropy from various events into several
@@ -78,7 +78,8 @@ sjcl.prng = function(defaultParanoia) {
 };
  
 sjcl.prng.prototype = {
-  /** Generate several random words, and return them in an array
+  /** Generate several random words, and return them in an array.
+   * A word consists of 32 bits (4 bytes)
    * @param {Number} nwords The number of words to generate.
    */
   randomWords: function (nwords, paranoia) {
@@ -103,7 +104,11 @@ sjcl.prng.prototype = {
     return out.slice(0,nwords);
   },
   
-  setDefaultParanoia: function (paranoia) {
+  setDefaultParanoia: function (paranoia, allowZeroParanoia) {
+    if (paranoia === 0 && allowZeroParanoia !== "Setting paranoia=0 will ruin your security; use it only for testing") {
+      throw "Setting paranoia=0 will ruin your security; use it only for testing";
+    }
+
     this._defaultParanoia = paranoia;
   },
   
@@ -120,7 +125,7 @@ sjcl.prng.prototype = {
       i, tmp,
       t = (new Date()).valueOf(),
       robin = this._robins[source],
-      oldReady = this.isReady(), err = 0;
+      oldReady = this.isReady(), err = 0, objName;
       
     id = this._collectorIds[source];
     if (id === undefined) { id = this._collectorIds[source] = this._collectorIdNext ++; }
@@ -138,7 +143,7 @@ sjcl.prng.prototype = {
       break;
       
     case "object":
-      var objName = Object.prototype.toString.call(data);
+      objName = Object.prototype.toString.call(data);
       if (objName === "[object Uint32Array]") {
         tmp = [];
         for (i = 0; i < data.length; i++) {
@@ -150,7 +155,7 @@ sjcl.prng.prototype = {
           err = 1;
         }
         for (i=0; i<data.length && !err; i++) {
-          if (typeof(data[i]) != "number") {
+          if (typeof(data[i]) !== "number") {
             err = 1;
           }
         }
@@ -235,17 +240,23 @@ sjcl.prng.prototype = {
   startCollectors: function () {
     if (this._collectorsStarted) { return; }
   
-    if (window.addEventListener) {
-      window.addEventListener("load", this._loadTimeCollector, false);
-      window.addEventListener("mousemove", this._mouseCollector, false);
-      window.addEventListener("keypress", this._keyboardCollector, false);
-      window.addEventListener("devicemotion", this._accelerometerCollector, false);
-    } else if (document.attachEvent) {
-      document.attachEvent("onload", this._loadTimeCollector);
-      document.attachEvent("onmousemove", this._mouseCollector);
-      document.attachEvent("keypress", this._keyboardCollector);
+    this._eventListener = {
+      loadTimeCollector: this._bind(this._loadTimeCollector),
+      mouseCollector: this._bind(this._mouseCollector),
+      keyboardCollector: this._bind(this._keyboardCollector),
+      accelerometerCollector: this._bind(this._accelerometerCollector)
     }
-    else {
+
+    if (window.addEventListener) {
+      window.addEventListener("load", this._eventListener.loadTimeCollector, false);
+      window.addEventListener("mousemove", this._eventListener.mouseCollector, false);
+      window.addEventListener("keypress", this._eventListener.keyboardCollector, false);
+      window.addEventListener("devicemotion", this._eventListener.accelerometerCollector, false);
+    } else if (document.attachEvent) {
+      document.attachEvent("onload", this._eventListener.loadTimeCollector);
+      document.attachEvent("onmousemove", this._eventListener.mouseCollector);
+      document.attachEvent("keypress", this._eventListener.keyboardCollector);
+    } else {
       throw new sjcl.exception.bug("can't attach event");
     }
   
@@ -257,14 +268,16 @@ sjcl.prng.prototype = {
     if (!this._collectorsStarted) { return; }
   
     if (window.removeEventListener) {
-      window.removeEventListener("load", this._loadTimeCollector, false);
-      window.removeEventListener("mousemove", this._mouseCollector, false);
-      window.removeEventListener("keypress", this._keyboardCollector, false);
-      window.removeEventListener("devicemotion", this._accelerometerCollector, false);
-    } else if (window.detachEvent) {
-      window.detachEvent("onload", this._loadTimeCollector);
-      window.detachEvent("onmousemove", this._mouseCollector);
+      window.removeEventListener("load", this._eventListener.loadTimeCollector, false);
+      window.removeEventListener("mousemove", this._eventListener.mouseCollector, false);
+      window.removeEventListener("keypress", this._eventListener.keyboardCollector, false);
+      window.removeEventListener("devicemotion", this._eventListener.accelerometerCollector, false);
+    } else if (document.detachEvent) {
+      document.detachEvent("onload", this._eventListener.loadTimeCollector);
+      document.detachEvent("onmousemove", this._eventListener.mouseCollector);
+      document.detachEvent("keypress", this._eventListener.keyboardCollector);
     }
+
     this._collectorsStarted = false;
   },
   
@@ -287,7 +300,7 @@ sjcl.prng.prototype = {
      */
   
     for (j in cbs) {
-	if (cbs.hasOwnProperty(j) && cbs[j] === cb) {
+      if (cbs.hasOwnProperty(j) && cbs[j] === cb) {
         jsTemp.push(j);
       }
     }
@@ -298,6 +311,13 @@ sjcl.prng.prototype = {
     }
   },
   
+  _bind: function (func) {
+    var that = this;
+    return function () {
+      func.apply(that, arguments);
+    };
+  },
+
   /** Generate 4 random words, no reseed, no gate.
    * @private
    */
@@ -421,19 +441,22 @@ sjcl.prng.prototype = {
   }
 };
 
+/** an instance for the prng.
+* @see sjcl.prng
+*/
 sjcl.random = new sjcl.prng(6);
 
 (function(){
   try {
+    var buf, crypt, getRandomValues, ab;
     // get cryptographically strong entropy depending on runtime environment
     if (typeof module !== 'undefined' && module.exports) {
       // get entropy for node.js
-      var crypt = require('crypto');
-      var buf = crypt.randomBytes(1024/8);
+      crypt = require('crypto');
+      buf = crypt.randomBytes(1024/8);
       sjcl.random.addEntropy(buf, 1024, "crypto.randomBytes");
 
     } else if (window) {
-      var getRandomValues;
       if (window.crypto && window.crypto.getRandomValues) {
         getRandomValues = window.crypto.getRandomValues;
       } else if (window.msCrypto && window.msCrypto.getRandomValues) {
@@ -442,7 +465,7 @@ sjcl.random = new sjcl.prng(6);
 
       if (getRandomValues) {
         // get cryptographically strong entropy in Webkit
-        var ab = new Uint32Array(32);
+        ab = new Uint32Array(32);
         getRandomValues(ab);
         sjcl.random.addEntropy(ab, 1024, "crypto.getRandomValues");
       }
@@ -453,4 +476,4 @@ sjcl.random = new sjcl.prng(6);
   } catch (e) {
     //we do not want the library to fail due to randomness not being maintained.
   }
-})();
+}());
