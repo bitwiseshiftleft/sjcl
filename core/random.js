@@ -239,12 +239,17 @@ sjcl.prng.prototype = {
   startCollectors: function () {
     if (this._collectorsStarted) { return; }
   
+    this._eventListener = {
+      loadTimeCollector: this._bind(this._loadTimeCollector),
+      mouseCollector: this._bind(this._mouseCollector)
+    }
+
     if (window.addEventListener) {
-      window.addEventListener("load", this._bind(this._loadTimeCollector), false);
-      window.addEventListener("mousemove", this._bind(this._mouseCollector), false);
+      window.addEventListener("load", this._eventListener.loadTimeCollector, false);
+      window.addEventListener("mousemove", this._eventListener.mouseCollector, false);
     } else if (document.attachEvent) {
-      document.attachEvent("onload", this._bind(this._loadTimeCollector));
-      document.attachEvent("onmousemove", this._bind(this._mouseCollector));
+      document.attachEvent("onload", this._eventListener.loadTimeCollector);
+      document.attachEvent("onmousemove", this._eventListener.mouseCollector);
     }
     else {
       throw new sjcl.exception.bug("can't attach event");
@@ -258,11 +263,11 @@ sjcl.prng.prototype = {
     if (!this._collectorsStarted) { return; }
   
     if (window.removeEventListener) {
-      window.removeEventListener("load", this._loadTimeCollector, false);
-      window.removeEventListener("mousemove", this._mouseCollector, false);
+      window.removeEventListener("load", this._eventListener.loadTimeCollector, false);
+      window.removeEventListener("mousemove", this._eventListener.mouseCollector, false);
     } else if (window.detachEvent) {
-      window.detachEvent("onload", this._loadTimeCollector);
-      window.detachEvent("onmousemove", this._mouseCollector);
+      window.detachEvent("onload", this._eventListener.loadTimeCollector);
+      window.detachEvent("onmousemove", this._eventListener.mouseCollector);
     }
     this._collectorsStarted = false;
   },
