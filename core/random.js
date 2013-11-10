@@ -3,6 +3,7 @@
  * @author Emily Stark
  * @author Mike Hamburg
  * @author Dan Boneh
+ * @author Michael Brooks
  */
 
 /** @constructor
@@ -241,17 +242,21 @@ sjcl.prng.prototype = {
   
     this._eventListener = {
       loadTimeCollector: this._bind(this._loadTimeCollector),
-      mouseCollector: this._bind(this._mouseCollector)
+      mouseCollector: this._bind(this._mouseCollector),
+      keyboardCollector: this._bind(this._keyboardCollector),
+      accelerometerCollector: this._bind(this._accelerometerCollector)
     }
 
     if (window.addEventListener) {
       window.addEventListener("load", this._eventListener.loadTimeCollector, false);
       window.addEventListener("mousemove", this._eventListener.mouseCollector, false);
+      window.addEventListener("keypress", this._eventListener.keyboardCollector, false);
+      window.addEventListener("devicemotion", this._eventListener.accelerometerCollector, false);
     } else if (document.attachEvent) {
       document.attachEvent("onload", this._eventListener.loadTimeCollector);
       document.attachEvent("onmousemove", this._eventListener.mouseCollector);
-    }
-    else {
+      document.attachEvent("keypress", this._eventListener.keyboardCollector);
+    } else {
       throw new sjcl.exception.bug("can't attach event");
     }
   
@@ -265,10 +270,14 @@ sjcl.prng.prototype = {
     if (window.removeEventListener) {
       window.removeEventListener("load", this._eventListener.loadTimeCollector, false);
       window.removeEventListener("mousemove", this._eventListener.mouseCollector, false);
-    } else if (window.detachEvent) {
-      window.detachEvent("onload", this._eventListener.loadTimeCollector);
-      window.detachEvent("onmousemove", this._eventListener.mouseCollector);
+      window.removeEventListener("keypress", this._eventListener.keyboardCollector, false);
+      window.removeEventListener("devicemotion", this._eventListener.accelerometerCollector, false);
+    } else if (document.detachEvent) {
+      document.detachEvent("onload", this._eventListener.loadTimeCollector);
+      document.detachEvent("onmousemove", this._eventListener.mouseCollector);
+      document.detachEvent("keypress", this._eventListener.keyboardCollector);
     }
+
     this._collectorsStarted = false;
   },
   
@@ -380,6 +389,10 @@ sjcl.prng.prototype = {
     this._reseed(reseedData);
   },
   
+  _keyboardCollector: function () {
+    this._addCurrentTimeToEntropy(1);
+  },
+  
   _mouseCollector: function (ev) {
     var x = ev.x || ev.clientX || ev.offsetX || 0, y = ev.y || ev.clientY || ev.offsetY || 0;
     sjcl.random.addEntropy([x,y], 2, "mouse");
@@ -397,6 +410,15 @@ sjcl.prng.prototype = {
     } else {
       sjcl.random.addEntropy((new Date()).valueOf(), estimatedEntropy, "loadtime");
     }
+  },
+  _accelerometerCollector: function (ev) {
+    var ac = ev.accelerationIncludingGravity.x||ev.accelerationIncludingGravity.y||ev.accelerationIncludingGravity.z;
+    var or = "";
+    if(window.orientation){
+      or = window.orientation;
+    }
+    sjcl.random.addEntropy([ac,or], 3, "accelerometer");
+    this._addCurrentTimeToEntropy(0);
   },
   
   _fireEvent: function (name, arg) {
