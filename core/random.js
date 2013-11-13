@@ -62,6 +62,7 @@ sjcl.prng = function(defaultParanoia) {
   this._defaultParanoia         = defaultParanoia;
   
   /* event listener stuff */
+  this._initilized              = false;
   this._collectorsStarted       = false;
   this._callbacks               = {progress: {}, seeded: {}};
   this._callbackI               = 0;
@@ -75,11 +76,60 @@ sjcl.prng = function(defaultParanoia) {
   this._PARANOIA_LEVELS         = [0,48,64,96,128,192,256,384,512,768,1024];
   this._MILLISECONDS_PER_RESEED = 30000;
   this._BITS_PER_RESEED         = 80;
+
+  this.init();
 };
  
 sjcl.prng.prototype = {
-  /** Generate several random words, and return them in an array.
-   * A word consists of 32 bits (4 bytes)
+  /** Prepare the entorpy pools for use.
+   */
+  init: function () {
+    try {
+      if (typeof document !== "undefined") {
+        /*We should be over https and these would be valid secrets.
+        * Worst case adding more data doesn't hurt*/
+        this.addEntropy(document.cookie, 0, "cookie");
+        this.addEntropy(document.location.href, 0, "location");
+      }
+
+      /*If sjcl.random has run before then we should have a preivous 
+      * state to draw from*/
+      this._loadPoolState();
+      if (typeof window !== "undefined" && window.addEventListener) {
+        window.addEventListener("beforeunload", this._savePoolState, false);
+      } else if (typeof document !== "undefined" && document.attachEvent) {
+        document.attachEvent("onbeforeunload", this._savePoolState);
+      }
+    } catch (e) {
+      console.log("There was an error when loading pool state.")
+      console.log(e);
+    }
+
+
+    try {
+      this._addStrongPlatformCrypto();
+    } catch (e) {
+      //we do not want the library to fail due to browsers behaving weird regarding window.crypto.
+      console.log("There was an error collecting entropy from the platform:");
+      console.log(e);
+    }
+
+    try {
+      /* sjcl.random is useless without the following line,  
+       * this should be started as soon as possilbe to collect the most
+       * entropy*/
+      this.startCollectors();
+    } catch (e) {
+      /*if startCollectors fails, we might want to throw an error.
+       *on the other hand this might just not be available in the current
+       *environment */
+      console.log("There was a bug starting the collectors.");
+      console.log(e);
+    }
+  },
+	
+  /** Generate several random words, and return them in an array
+   * A word is 32 bits long (4 bytes)
    * @param {Number} nwords The number of words to generate.
    */
   randomWords: function (nwords, paranoia) {
@@ -245,19 +295,17 @@ sjcl.prng.prototype = {
       mouseCollector: this._bind(this._mouseCollector),
       keyboardCollector: this._bind(this._keyboardCollector),
       accelerometerCollector: this._bind(this._accelerometerCollector)
-    }
+    };
 
-    if (window.addEventListener) {
+    if (typeof window !== "undefined" && window.addEventListener) {
       window.addEventListener("load", this._eventListener.loadTimeCollector, false);
       window.addEventListener("mousemove", this._eventListener.mouseCollector, false);
       window.addEventListener("keypress", this._eventListener.keyboardCollector, false);
       window.addEventListener("devicemotion", this._eventListener.accelerometerCollector, false);
-    } else if (document.attachEvent) {
+    } else if (typeof document !== "undefined" && document.attachEvent) {
       document.attachEvent("onload", this._eventListener.loadTimeCollector);
       document.attachEvent("onmousemove", this._eventListener.mouseCollector);
       document.attachEvent("keypress", this._eventListener.keyboardCollector);
-    } else {
-      throw new sjcl.exception.bug("can't attach event");
     }
   
     this._collectorsStarted = true;
@@ -267,12 +315,12 @@ sjcl.prng.prototype = {
   stopCollectors: function () {
     if (!this._collectorsStarted) { return; }
   
-    if (window.removeEventListener) {
+    if (typeof window !== "undefined" && window.removeEventListener) {
       window.removeEventListener("load", this._eventListener.loadTimeCollector, false);
       window.removeEventListener("mousemove", this._eventListener.mouseCollector, false);
       window.removeEventListener("keypress", this._eventListener.keyboardCollector, false);
       window.removeEventListener("devicemotion", this._eventListener.accelerometerCollector, false);
-    } else if (document.detachEvent) {
+    } else if (document && document.detachEvent) {
       document.detachEvent("onload", this._eventListener.loadTimeCollector);
       document.detachEvent("onmousemove", this._eventListener.mouseCollector);
       document.detachEvent("keypress", this._eventListener.keyboardCollector);
@@ -280,11 +328,6 @@ sjcl.prng.prototype = {
 
     this._collectorsStarted = false;
   },
-  
-  /* use a cookie to store entropy.
-  useCookie: function (all_cookies) {
-      throw new sjcl.exception.bug("random: useCookie is unimplemented");
-  },*/
   
   /** add an event listener for progress or seeded-ness. */
   addEventListener: function (name, callback) {
@@ -404,7 +447,7 @@ sjcl.prng.prototype = {
   },
 
   _addCurrentTimeToEntropy: function (estimatedEntropy) {
-    if (window && window.performance && typeof window.performance.now === "function") {
+    if (typeof window !== "undefined" && window.performance && typeof window.performance.now === "function") {
       //how much entropy do we want to add here?
       sjcl.random.addEntropy(window.performance.now(), estimatedEntropy, "loadtime");
     } else {
@@ -438,17 +481,31 @@ sjcl.prng.prototype = {
     for (j=0; j<cbsTemp.length; j++) {
       cbsTemp[j](arg);
     }
-  }
-};
+  },
+  
+  _savePoolState: function () {
+    try {
+      if(window && window.localStorage){
+        window.localStorage.setItem("sjcl.random",sjcl.random._gen4words());
+      }
+    } catch (e) {}
+  },
 
-/** an instance for the prng.
-* @see sjcl.prng
-*/
-sjcl.random = new sjcl.prng(6);
+  _loadPoolState: function () {
+    try {
+      if(window && window.localStorage){
+        var r= window.localStorage.getItem("sjcl.random");
+        if(r){
+          /* Assume the worst, that localStorage was compromised with
+          * XSS and therefore contributes a worst case of 0 entropy*/
+          sjcl.random.addEntropy(r, 0, "loadpool");
+        }
+      }
+    } catch (e) {}
+  },
 
-(function(){
-  try {
-    var buf, crypt, getRandomValues, ab;
+  _addStrongPlatformCrypto: function () {
+    var buf, crypt, ab;
     // get cryptographically strong entropy depending on runtime environment
     if (typeof module !== 'undefined' && module.exports) {
       // get entropy for node.js
@@ -456,7 +513,7 @@ sjcl.random = new sjcl.prng(6);
       buf = crypt.randomBytes(1024/8);
       sjcl.random.addEntropy(buf, 1024, "crypto.randomBytes");
 
-    } else if (window && Uint32Array) {
+    } else if (typeof window !== "undefined" && Uint32Array) {
       ab = new Uint32Array(32);
       if (window.crypto && window.crypto.getRandomValues) {
         window.crypto.getRandomValues(ab);
@@ -466,15 +523,14 @@ sjcl.random = new sjcl.prng(6);
         return;
       }
 
-      // get cryptographically strong entropy in Webkit
       sjcl.random.addEntropy(ab, 1024, "crypto.getRandomValues");
-
     } else {
       // no getRandomValues :-(
     }
-  } catch (e) {
-    console.log("There was an error collecting entropy from the browser:");
-    console.log(e);
-    //we do not want the library to fail due to randomness not being maintained.
   }
-}());
+};
+
+/** an instance for the prng.
+* @see sjcl.prng
+*/
+sjcl.random = new sjcl.prng(6);
