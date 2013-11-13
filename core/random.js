@@ -1,4 +1,3 @@
-"use strict";
 /** @fileOverview Random number generator.
  *
  * @author Emily Stark
