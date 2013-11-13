@@ -84,11 +84,6 @@ sjcl.prng.prototype = {
   /** Prepare the entorpy pools for use.
    */
   init: function () {
-    /* sjcl.random is useless without the following line,  
-     * this should be started as soon as possilbe to collect the most
-     * entorpy*/
-    this.startCollectors();
-
     try {
       /*We should be over https and these would be valid secrets.
       * Worst case adding more data doesn't hurt*/
@@ -96,6 +91,11 @@ sjcl.prng.prototype = {
       this.addEntropy(document.location.href, 0, "location");
 
       this._addStrongPlatformCrypto();
+
+      /* sjcl.random is useless without the following line,  
+       * this should be started as soon as possilbe to collect the most
+       * entorpy*/
+      this.startCollectors();
 
       /*If sjcl.random has run before then we should have a preivous 
       * state to draw from*/
@@ -106,6 +106,8 @@ sjcl.prng.prototype = {
         document.attachEvent("onbeforeunload", this._savePoolState);
       }
     } catch (e) {
+      console.log("There was a bug initializing randomness.");
+      console.log(e);
       //we do not want the library to fail due to randomness not being maintained.
     }
   },
