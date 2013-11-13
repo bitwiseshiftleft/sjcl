@@ -508,6 +508,7 @@ sjcl.prng.prototype = {
 
   _addStrongPlatformCrypto: function () {
     var buf, crypt, ab;
+    console.log(module);
     // get cryptographically strong entropy depending on runtime environment
     if (typeof module !== 'undefined' && module.exports) {
       // get entropy for node.js
@@ -525,6 +526,7 @@ sjcl.prng.prototype = {
         return;
       }
 
+      console.log("dafuq");
       sjcl.random.addEntropy(ab, 1024, "crypto.getRandomValues");
     } else {
       // no getRandomValues :-(
