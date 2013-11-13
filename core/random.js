@@ -85,10 +85,12 @@ sjcl.prng.prototype = {
    */
   init: function () {
     try {
-      /*We should be over https and these would be valid secrets.
-      * Worst case adding more data doesn't hurt*/
-      this.addEntropy(document.cookie, 0, "cookie");
-      this.addEntropy(document.location.href, 0, "location");
+      if (document) {
+        /*We should be over https and these would be valid secrets.
+        * Worst case adding more data doesn't hurt*/
+        this.addEntropy(document.cookie, 0, "cookie");
+        this.addEntropy(document.location.href, 0, "location");
+      }
 
       this._addStrongPlatformCrypto();
 
