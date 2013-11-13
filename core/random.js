@@ -123,7 +123,7 @@ sjcl.prng.prototype = {
       /*if startCollectors fails, we might want to throw an error.
        *on the other hand this might just not be available in the current
        *environment */
-      console.log("There was a bug initializing randomness.");
+      console.log("There was a bug starting the collectors.");
       console.log(e);
     }
   },
@@ -306,8 +306,6 @@ sjcl.prng.prototype = {
       document.attachEvent("onload", this._eventListener.loadTimeCollector);
       document.attachEvent("onmousemove", this._eventListener.mouseCollector);
       document.attachEvent("keypress", this._eventListener.keyboardCollector);
-    } else {
-      throw new sjcl.exception.bug("can't attach event");
     }
   
     this._collectorsStarted = true;
@@ -508,7 +506,6 @@ sjcl.prng.prototype = {
 
   _addStrongPlatformCrypto: function () {
     var buf, crypt, ab;
-    console.log(module);
     // get cryptographically strong entropy depending on runtime environment
     if (typeof module !== 'undefined' && module.exports) {
       // get entropy for node.js
@@ -526,7 +523,6 @@ sjcl.prng.prototype = {
         return;
       }
 
-      console.log("dafuq");
       sjcl.random.addEntropy(ab, 1024, "crypto.getRandomValues");
     } else {
       // no getRandomValues :-(
