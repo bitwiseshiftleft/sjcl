@@ -279,12 +279,12 @@ sjcl.prng.prototype = {
       accelerometerCollector: this._bind(this._accelerometerCollector)
     };
 
-    if (window.addEventListener) {
+    if (window && window.addEventListener) {
       window.addEventListener("load", this._eventListener.loadTimeCollector, false);
       window.addEventListener("mousemove", this._eventListener.mouseCollector, false);
       window.addEventListener("keypress", this._eventListener.keyboardCollector, false);
       window.addEventListener("devicemotion", this._eventListener.accelerometerCollector, false);
-    } else if (document.attachEvent) {
+    } else if (document && document.attachEvent) {
       document.attachEvent("onload", this._eventListener.loadTimeCollector);
       document.attachEvent("onmousemove", this._eventListener.mouseCollector);
       document.attachEvent("keypress", this._eventListener.keyboardCollector);
@@ -299,12 +299,12 @@ sjcl.prng.prototype = {
   stopCollectors: function () {
     if (!this._collectorsStarted) { return; }
   
-    if (window.removeEventListener) {
+    if (window && window.removeEventListener) {
       window.removeEventListener("load", this._eventListener.loadTimeCollector, false);
       window.removeEventListener("mousemove", this._eventListener.mouseCollector, false);
       window.removeEventListener("keypress", this._eventListener.keyboardCollector, false);
       window.removeEventListener("devicemotion", this._eventListener.accelerometerCollector, false);
-    } else if (document.detachEvent) {
+    } else if (document && document.detachEvent) {
       document.detachEvent("onload", this._eventListener.loadTimeCollector);
       document.detachEvent("onmousemove", this._eventListener.mouseCollector);
       document.detachEvent("keypress", this._eventListener.keyboardCollector);
@@ -489,34 +489,34 @@ sjcl.prng.prototype = {
   },
 
   _addStrongPlatformCrypto: function () {
-  try {
-    var buf, crypt, ab;
-    // get cryptographically strong entropy depending on runtime environment
-    if (typeof module !== 'undefined' && module.exports) {
-      // get entropy for node.js
-      crypt = require('crypto');
-      buf = crypt.randomBytes(1024/8);
-      sjcl.random.addEntropy(buf, 1024, "crypto.randomBytes");
+    try {
+      var buf, crypt, ab;
+      // get cryptographically strong entropy depending on runtime environment
+      if (typeof module !== 'undefined' && module.exports) {
+        // get entropy for node.js
+        crypt = require('crypto');
+        buf = crypt.randomBytes(1024/8);
+        sjcl.random.addEntropy(buf, 1024, "crypto.randomBytes");
 
-    } else if (window && Uint32Array) {
-      ab = new Uint32Array(32);
-      if (window.crypto && window.crypto.getRandomValues) {
-        window.crypto.getRandomValues(ab);
-      } else if (window.msCrypto && window.msCrypto.getRandomValues) {
-        window.msCrypto.getRandomValues(ab);
+      } else if (window && Uint32Array) {
+        ab = new Uint32Array(32);
+        if (window.crypto && window.crypto.getRandomValues) {
+          window.crypto.getRandomValues(ab);
+        } else if (window.msCrypto && window.msCrypto.getRandomValues) {
+          window.msCrypto.getRandomValues(ab);
+        } else {
+          return;
+        }
+
+        sjcl.random.addEntropy(ab, 1024, "crypto.getRandomValues");
       } else {
-        return;
+        // no getRandomValues :-(
       }
-
-      sjcl.random.addEntropy(ab, 1024, "crypto.getRandomValues");
-    } else {
-      // no getRandomValues :-(
+    } catch (e) {
+      console.log("There was an error collecting entropy from the browser:");
+      console.log(e);
+      //we do not want the library to fail due to randomness not being maintained.
     }
-  } catch (e) {
-    console.log("There was an error collecting entropy from the browser:");
-    console.log(e);
-    //we do not want the library to fail due to randomness not being maintained.
-  }
   }
 };
 
