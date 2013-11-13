@@ -92,13 +92,6 @@ sjcl.prng.prototype = {
         this.addEntropy(document.location.href, 0, "location");
       }
 
-      this._addStrongPlatformCrypto();
-
-      /* sjcl.random is useless without the following line,  
-       * this should be started as soon as possilbe to collect the most
-       * entorpy*/
-      this.startCollectors();
-
       /*If sjcl.random has run before then we should have a preivous 
       * state to draw from*/
       this._loadPoolState();
@@ -108,9 +101,30 @@ sjcl.prng.prototype = {
         document.attachEvent("onbeforeunload", this._savePoolState);
       }
     } catch (e) {
+      console.log("There was an error when loading pool state.")
+      console.log(e);
+    }
+
+
+    try {
+      this._addStrongPlatformCrypto();
+    } catch (e) {
+      //we do not want the library to fail due to browsers behaving weird regarding window.crypto.
+      console.log("There was an error collecting entropy from the platform:");
+      console.log(e);
+    }
+
+    try {
+      /* sjcl.random is useless without the following line,  
+       * this should be started as soon as possilbe to collect the most
+       * entropy*/
+      this.startCollectors();
+    } catch (e) {
+      /*if startCollectors fails, we might want to throw an error.
+       *on the other hand this might just not be available in the current
+       *environment */
       console.log("There was a bug initializing randomness.");
       console.log(e);
-      //we do not want the library to fail due to randomness not being maintained.
     }
   },
 	
@@ -493,33 +507,27 @@ sjcl.prng.prototype = {
   },
 
   _addStrongPlatformCrypto: function () {
-    try {
-      var buf, crypt, ab;
-      // get cryptographically strong entropy depending on runtime environment
-      if (typeof module !== 'undefined' && module.exports) {
-        // get entropy for node.js
-        crypt = require('crypto');
-        buf = crypt.randomBytes(1024/8);
-        sjcl.random.addEntropy(buf, 1024, "crypto.randomBytes");
+    var buf, crypt, ab;
+    // get cryptographically strong entropy depending on runtime environment
+    if (typeof module !== 'undefined' && module.exports) {
+      // get entropy for node.js
+      crypt = require('crypto');
+      buf = crypt.randomBytes(1024/8);
+      sjcl.random.addEntropy(buf, 1024, "crypto.randomBytes");
 
-      } else if (window && Uint32Array) {
-        ab = new Uint32Array(32);
-        if (window.crypto && window.crypto.getRandomValues) {
-          window.crypto.getRandomValues(ab);
-        } else if (window.msCrypto && window.msCrypto.getRandomValues) {
-          window.msCrypto.getRandomValues(ab);
-        } else {
-          return;
-        }
-
-        sjcl.random.addEntropy(ab, 1024, "crypto.getRandomValues");
+    } else if (window && Uint32Array) {
+      ab = new Uint32Array(32);
+      if (window.crypto && window.crypto.getRandomValues) {
+        window.crypto.getRandomValues(ab);
+      } else if (window.msCrypto && window.msCrypto.getRandomValues) {
+        window.msCrypto.getRandomValues(ab);
       } else {
-        // no getRandomValues :-(
+        return;
       }
-    } catch (e) {
-      console.log("There was an error collecting entropy from the browser:");
-      console.log(e);
-      //we do not want the library to fail due to randomness not being maintained.
+
+      sjcl.random.addEntropy(ab, 1024, "crypto.getRandomValues");
+    } else {
+      // no getRandomValues :-(
     }
   }
 };
