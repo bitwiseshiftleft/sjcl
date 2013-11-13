@@ -85,7 +85,7 @@ sjcl.prng.prototype = {
    */
   init: function () {
     try {
-      if (document) {
+      if (typeof document !== "undefined") {
         /*We should be over https and these would be valid secrets.
         * Worst case adding more data doesn't hurt*/
         this.addEntropy(document.cookie, 0, "cookie");
@@ -95,9 +95,9 @@ sjcl.prng.prototype = {
       /*If sjcl.random has run before then we should have a preivous 
       * state to draw from*/
       this._loadPoolState();
-      if (window.addEventListener) {
+      if (typeof window !== "undefined" && window.addEventListener) {
         window.addEventListener("beforeunload", this._savePoolState, false);
-      } else if (document.attachEvent) {
+      } else if (typeof document !== "undefined" && document.attachEvent) {
         document.attachEvent("onbeforeunload", this._savePoolState);
       }
     } catch (e) {
@@ -297,12 +297,12 @@ sjcl.prng.prototype = {
       accelerometerCollector: this._bind(this._accelerometerCollector)
     };
 
-    if (window && window.addEventListener) {
+    if (typeof window !== "undefined" && window.addEventListener) {
       window.addEventListener("load", this._eventListener.loadTimeCollector, false);
       window.addEventListener("mousemove", this._eventListener.mouseCollector, false);
       window.addEventListener("keypress", this._eventListener.keyboardCollector, false);
       window.addEventListener("devicemotion", this._eventListener.accelerometerCollector, false);
-    } else if (document && document.attachEvent) {
+    } else if (typeof document !== "undefined" && document.attachEvent) {
       document.attachEvent("onload", this._eventListener.loadTimeCollector);
       document.attachEvent("onmousemove", this._eventListener.mouseCollector);
       document.attachEvent("keypress", this._eventListener.keyboardCollector);
@@ -317,7 +317,7 @@ sjcl.prng.prototype = {
   stopCollectors: function () {
     if (!this._collectorsStarted) { return; }
   
-    if (window && window.removeEventListener) {
+    if (typeof window !== "undefined" && window.removeEventListener) {
       window.removeEventListener("load", this._eventListener.loadTimeCollector, false);
       window.removeEventListener("mousemove", this._eventListener.mouseCollector, false);
       window.removeEventListener("keypress", this._eventListener.keyboardCollector, false);
@@ -449,7 +449,7 @@ sjcl.prng.prototype = {
   },
 
   _addCurrentTimeToEntropy: function (estimatedEntropy) {
-    if (window && window.performance && typeof window.performance.now === "function") {
+    if (typeof window !== "undefined" && window.performance && typeof window.performance.now === "function") {
       //how much entropy do we want to add here?
       sjcl.random.addEntropy(window.performance.now(), estimatedEntropy, "loadtime");
     } else {
@@ -515,7 +515,7 @@ sjcl.prng.prototype = {
       buf = crypt.randomBytes(1024/8);
       sjcl.random.addEntropy(buf, 1024, "crypto.randomBytes");
 
-    } else if (window && Uint32Array) {
+    } else if (typeof window !== "undefined" && Uint32Array) {
       ab = new Uint32Array(32);
       if (window.crypto && window.crypto.getRandomValues) {
         window.crypto.getRandomValues(ab);
