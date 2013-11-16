@@ -1,6 +1,6 @@
 browserUtil = {};
 
-browserUtil.isRhino = (typeof(window) === 'undefined');
+browserUtil.isNodeJS = (typeof(window) === 'undefined');
 
 /**
  * Pause (for the graphics to update and the script timer to clear), then run the

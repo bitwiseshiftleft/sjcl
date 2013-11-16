@@ -1,5 +1,5 @@
 browserUtil = {
-  isRhino: true,
+  isNodeJS: true,
   
   pauseAndThen: function (cb) { cb(); },
   
@@ -30,15 +30,15 @@ browserUtil = {
   },
   
   write: function(type, message) {
-    print(message);
+    console.log(message);
     return { update: function (type2, message2) {
-      if (type2 === 'pass') { print("  + " + message2); }
-      else if (type2 === 'unimplemented') { print("  ? " + message2); }
-      else { print("  - " + message2); }
+      if (type2 === 'pass') { console.log("  + " + message2); }
+      else if (type2 === 'unimplemented') { console.log("  ? " + message2); }
+      else { console.log("  - " + message2); }
     }};
   },
   
-  writeNewline: function () { print(""); },
+  writeNewline: function () { console.log(""); },
   
   status: function(message) {}
 };

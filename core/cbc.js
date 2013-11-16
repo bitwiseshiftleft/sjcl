@@ -5,18 +5,18 @@
  * @author Dan Boneh
  */
 
-/** @namespace
- * Dangerous: CBC mode with PKCS#5 padding.
- *
- * @author Emily Stark
- * @author Mike Hamburg
- * @author Dan Boneh
- */
 if (sjcl.beware === undefined) {
   sjcl.beware = {};
 }
 sjcl.beware["CBC mode is dangerous because it doesn't protect message integrity."
 ] = function() {
+  /** @namespace
+   * Dangerous: CBC mode with PKCS#5 padding.
+   *
+   * @author Emily Stark
+   * @author Mike Hamburg
+   * @author Dan Boneh
+   */
   sjcl.mode.cbc = {
     /** The name of the mode.
      * @constant
@@ -100,7 +100,7 @@ sjcl.beware["CBC mode is dangerous because it doesn't protect message integrity.
 
       /* check and remove the pad */
       bi = output[i-1] & 255;
-      if (bi == 0 || bi > 16) {
+      if (bi === 0 || bi > 16) {
         throw new sjcl.exception.corrupt("pkcs#5 padding corrupt");
       }
       bo = bi * 0x1010101;
