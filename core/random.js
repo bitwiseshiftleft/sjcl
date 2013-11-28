@@ -449,8 +449,19 @@ sjcl.random = new sjcl.prng(6);
 (function(){
   try {
     var buf, crypt, getRandomValues, ab;
+    
+    // function for getting nodejs crypto module. catches and ignores errors.
+    function getCryptoModule() {
+      try {
+        return require('crypto');
+      }
+      catch (e) {
+        return null;
+      }
+    }
+
     // get cryptographically strong entropy depending on runtime environment
-    if (typeof module !== 'undefined' && module.exports && (crypt = require('crypto')) && crypt.randomBytes) {
+    if (typeof module !== 'undefined' && module.exports && (crypt = getCryptoModule()) && crypt.randomBytes) {
       buf = crypt.randomBytes(1024/8);
       sjcl.random.addEntropy(buf, 1024, "crypto.randomBytes");
 
