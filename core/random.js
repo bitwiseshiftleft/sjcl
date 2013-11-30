@@ -413,11 +413,15 @@ sjcl.prng.prototype = {
   },
   _accelerometerCollector: function (ev) {
     var ac = ev.accelerationIncludingGravity.x||ev.accelerationIncludingGravity.y||ev.accelerationIncludingGravity.z;
-    var or = "";
     if(window.orientation){
-      or = window.orientation;
+      var or = window.orientation;
+      if (typeof or === "number") {
+        sjcl.random.addEntropy(or, 1, "accelerometer");
+      }
     }
-    sjcl.random.addEntropy([ac,or], 3, "accelerometer");
+    if (ac) {
+      sjcl.random.addEntropy(ac, 2, "accelerometer");
+    }
     this._addCurrentTimeToEntropy(0);
   },
 
