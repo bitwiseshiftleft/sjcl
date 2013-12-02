@@ -482,8 +482,7 @@ sjcl.random = new sjcl.prng(6);
       // no getRandomValues :-(
     }
   } catch (e) {
-    console.log("There was an error collecting entropy from the browser:");
-    console.log(e);
+    console.log("There was an error collecting entropy: " + e.toString());
     //we do not want the library to fail due to randomness not being maintained.
   }
 }());
