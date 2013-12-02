@@ -447,18 +447,18 @@ sjcl.prng.prototype = {
 sjcl.random = new sjcl.prng(6);
 
 (function(){
+  // function for getting nodejs crypto module. catches and ignores errors.
+  function getCryptoModule() {
+    try {
+      return require('crypto');
+    }
+    catch (e) {
+      return null;
+    }
+  }
+
   try {
     var buf, crypt, getRandomValues, ab;
-    
-    // function for getting nodejs crypto module. catches and ignores errors.
-    function getCryptoModule() {
-      try {
-        return require('crypto');
-      }
-      catch (e) {
-        return null;
-      }
-    }
 
     // get cryptographically strong entropy depending on runtime environment
     if (typeof module !== 'undefined' && module.exports && (crypt = getCryptoModule()) && crypt.randomBytes) {
