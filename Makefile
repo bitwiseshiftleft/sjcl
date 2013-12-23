@@ -64,6 +64,7 @@ TEST_SCRIPTS= $(TEST_COMMON) \
               test/cbc_vectors.js test/cbc_test.js  \
               test/gcm_vectors.js test/gcm_test.js  \
               test/salsa20_vectors.js test/salsa20_test.js  \
+              test/chacha_vectors.js test/chacha_test.js  \
               test/sha256_vectors.js test/sha256_test.js \
               test/sha256_test_brute_force.js \
               test/sha512_vectors.js test/sha512_test.js \
