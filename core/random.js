@@ -456,6 +456,7 @@ sjcl.random = new sjcl.prng(6);
     // get cryptographically strong entropy depending on runtime environment
     if (typeof module !== 'undefined' && module.exports && (crypt = require('crypto')) && crypt.randomBytes) {
       buf = crypt.randomBytes(1024/8);
+      buf = new Uint32Array(new Uint8Array(buf).buffer);
       sjcl.random.addEntropy(buf, 1024, "crypto.randomBytes");
 
     } else if (window && Uint32Array) {
