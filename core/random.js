@@ -114,7 +114,7 @@ sjcl.prng.prototype = {
   
   /**
    * Add entropy to the pools.
-   * @param data The entropic value.  Should be a 32-bit integer, array of 32-bit integers, SlowBuffer byte array, or string
+   * @param data The entropic value.  Should be a 32-bit integer, array of 32-bit integers, or string
    * @param {Number} estimatedEntropy The estimated entropy of data, in bits
    * @param {String} source The source of the entropy, eg "mouse"
    */
@@ -144,49 +144,20 @@ sjcl.prng.prototype = {
       
     case "object":
       objName = Object.prototype.toString.call(data);
-
-      switch(objName) {
-        case "[object Uint32Array]": {
-          tmp = [];
-          for (i = 0; i < data.length; i++) {
-            tmp.push(data[i]);
-          }
-          data = tmp;
-          break;
+      if (objName === "[object Uint32Array]") {
+        tmp = [];
+        for (i = 0; i < data.length; i++) {
+          tmp.push(data[i]);
         }
-
-        case "[object Array]": {
-          for (i=0; i<data.length && !err; i++) {
-            if (typeof(data[i]) !== "number") {
-              err = 1;
-            }
-          }
-          break;
-        }
-
-        case "[object SlowBuffer]": {
-          // node's SlowBuffer contains single bytes.
-          // convert them to 32-bit integer array
-          if (data.length % 4 !== 0) {
-            // not a multiple of 4 bytes
-            err = 1
-          } else {
-            tmp = [];
-            for (i = 0; i < data.length; i += 4) {
-              // convert 4 bytes to 1 little-endian 32-bit integer
-              tmp.push(data[i] |
-                (data[i+1] << 8) |
-                (data[i+2] << 16) |
-                (data[i+3] << 24));
-            }
-            data = tmp;
-          }
-          break;
-        }
-
-        default: {
+        data = tmp;
+      } else {
+        if (objName !== "[object Array]") {
           err = 1;
-          break;
+        }
+        for (i=0; i<data.length && !err; i++) {
+          if (typeof(data[i]) !== "number") {
+            err = 1;
+          }
         }
       }
       if (!err) {
