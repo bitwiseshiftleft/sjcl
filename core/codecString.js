@@ -17,7 +17,7 @@ sjcl.codec.utf8String = {
       out += String.fromCharCode(tmp >>> 24);
       tmp <<= 8;
     }
-    return decodeURIComponent(escape(out));
+    return decodeURIComponent(encodeURIComponent(out));
   },
   
   /** Convert from a UTF-8 string to a bitArray. */
