@@ -451,11 +451,23 @@ sjcl.prng.prototype = {
 sjcl.random = new sjcl.prng(6);
 
 (function(){
+  // function for getting nodejs crypto module. catches and ignores errors.
+  function getCryptoModule() {
+    try {
+      return require('crypto');
+    }
+    catch (e) {
+      return null;
+    }
+  }
+
   try {
     var buf, crypt, getRandomValues, ab;
+
     // get cryptographically strong entropy depending on runtime environment
-    if (typeof module !== 'undefined' && module.exports && (crypt = require('crypto')) && crypt.randomBytes) {
+    if (typeof module !== 'undefined' && module.exports && (crypt = getCryptoModule()) && crypt.randomBytes) {
       buf = crypt.randomBytes(1024/8);
+      buf = new Uint32Array(new Uint8Array(buf).buffer);
       sjcl.random.addEntropy(buf, 1024, "crypto.randomBytes");
 
     } else if (window && Uint32Array) {
@@ -475,8 +487,10 @@ sjcl.random = new sjcl.prng(6);
       // no getRandomValues :-(
     }
   } catch (e) {
-    console.log("There was an error collecting entropy from the browser:");
-    console.log(e);
-    //we do not want the library to fail due to randomness not being maintained.
+    if (typeof window !== 'undefined' && window.console) {
+      console.log("There was an error collecting entropy from the browser:");
+      console.log(e);
+      //we do not want the library to fail due to randomness not being maintained.
+    }
   }
 }());
