@@ -374,7 +374,6 @@ sjcl.ecc.basicKey = {
 sjcl.ecc.basicKey.generateKeys = function(cn) {
   return function generateKeys(curve, paranoia, sec) {
     curve = curve || 256;
-    paranoia = paranoia || 0;
 
     if (typeof curve === "number") {
       curve = sjcl.ecc.curves['c'+curve];
