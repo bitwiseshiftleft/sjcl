@@ -3,6 +3,7 @@
  * @author Emily Stark
  * @author Mike Hamburg
  * @author Dan Boneh
+ * @author Stefan Bühler
  */
 
 /** @namespace Arrays of bits, encoded as arrays of Numbers.
@@ -38,8 +39,10 @@ sjcl.bitArray = {
    * @return {bitArray} The requested slice.
    */
   bitSlice: function (a, bstart, bend) {
-    a = sjcl.bitArray._shiftRight(a.slice(bstart/32), 32 - (bstart & 31)).slice(1);
-    return (bend === undefined) ? a : sjcl.bitArray.clamp(a, bend-bstart);
+    // only slice the part of the input that is actually needed
+    a = a.slice(bstart/32, undefined === bend ? a.length : Math.ceil(bend / 32));
+    sjcl.bitArray.shiftLeftM(a, bstart & 31);
+    return (undefined === bend ? a : sjcl.bitArray.clampM(a, bend - bstart));
   },
 
   /**
@@ -73,13 +76,17 @@ sjcl.bitArray = {
     if (a1.length === 0 || a2.length === 0) {
       return a1.concat(a2);
     }
-    
-    var last = a1[a1.length-1], shift = sjcl.bitArray.getPartial(last);
-    if (shift === 32) {
-      return a1.concat(a2);
-    } else {
-      return sjcl.bitArray._shiftRight(a2, shift, last|0, a1.slice(0,a1.length-1));
+
+    var a = a1.concat(a2), last1 = a1[a1.length-1], last2 = a2[a2.length-1],
+      shift = 32 - sjcl.bitArray.getPartial(last1),
+      last = sjcl.bitArray.getPartial(last2) - shift;
+    // shift second part to the left by what is missing in last1, add carry at the end of the first part */
+    a[a1.length-1] |= sjcl.bitArray._shiftLeftM(a, shift, a1.length, a.length);
+    // set partial length on last byte. if < 0 all bits were shifted out of the last word, drop it
+    if (last <= 0) {
+      a.pop();
     }
+    return sjcl.bitArray._clampLastM(a, last & 31);
   },
 
   /**
@@ -95,32 +102,40 @@ sjcl.bitArray = {
   },
 
   /**
+   * Truncate an array inplace.
+   * @param {bitArray} a The array.
+   * @param {Number} len The length to truncate to, in bits.
+   * @return {bitArray} The array, truncated to len bits.
+   */
+  clampM: function (a, len) {
+    if (a.length * 32 <= len) { return a; }
+    a.splice(Math.ceil(len / 32), a.length);
+    return sjcl.bitArray._clampLastM(a, len & 31);
+  },
+
+  /**
    * Truncate an array.
    * @param {bitArray} a The array.
    * @param {Number} len The length to truncate to, in bits.
    * @return {bitArray} A new array, truncated to len bits.
    */
   clamp: function (a, len) {
-    if (a.length * 32 < len) { return a; }
     a = a.slice(0, Math.ceil(len / 32));
-    var l = a.length;
-    len = len & 31;
-    if (l > 0 && len) {
-      a[l-1] = sjcl.bitArray.partial(len, a[l-1] & 0x80000000 >> (len-1), 1);
-    }
-    return a;
+    return sjcl.bitArray._clampLastM(a, len & 31);
   },
 
   /**
    * Make a partial word for a bit array.
-   * @param {Number} len The number of bits in the word.
+   * @param {Number} len The number of bits in the word (1-32).
    * @param {Number} x The bits.
    * @param {Number} [0] _end Pass 1 if x has already been shifted to the high side.
    * @return {Number} The partial word.
    */
   partial: function (len, x, _end) {
-    if (len === 32) { return x; }
-    return (_end ? x|0 : x << (32-len)) + len * 0x10000000000;
+    if (len === 32) { return x|0; }
+    var mask = 0x80000000 >> (len-1);
+    x = mask & (_end ? x : x << (32 - len));
+    return x + len * 0x10000000000;
   },
 
   /**
@@ -149,35 +164,65 @@ sjcl.bitArray = {
     return (x === 0);
   },
 
-  /** Shift an array right.
-   * @param {bitArray} a The array to shift.
-   * @param {Number} shift The number of bits to shift.
-   * @param {Number} [carry=0] A byte to carry in
-   * @param {bitArray} [out=[]] An array to prepend to the output.
+  /** Sets partial length on last word.
+   * @param {bitArray} a The array to modify.
+   * @param {Number} len The partial length to set (0-32; 0 is intepreted as 32).
+   * @return {bitArray} The modified array.
    * @private
    */
-  _shiftRight: function (a, shift, carry, out) {
-    var i, last2=0, shift2;
-    if (out === undefined) { out = []; }
-    
-    for (; shift >= 32; shift -= 32) {
-      out.push(carry);
-      carry = 0;
+  _clampLastM: function(a, len) {
+    len &= 31;
+    if (a.length > 0 && len > 0) {
+      a[a.length-1] = sjcl.bitArray.partial(len, a[a.length-1], 1);
     }
-    if (shift === 0) {
-      return out.concat(a);
-    }
-    
-    for (i=0; i<a.length; i++) {
-      out.push(carry | a[i]>>>shift);
-      carry = a[i] << (32-shift);
-    }
-    last2 = a.length ? a[a.length-1] : 0;
-    shift2 = sjcl.bitArray.getPartial(last2);
-    out.push(sjcl.bitArray.partial(shift+shift2 & 31, (shift + shift2 > 32) ? carry : out.pop(),1));
-    return out;
+    return a;
   },
-  
+
+  /** Shift an array left inplace. Doesn't set any partial information.
+   * @param {bitArray} a The array to shift.
+   * @param {Number} shift The number of bits to shift (0-31)
+   * @param {Number} start Array index of first word to shift in array
+   * @param {Number} end Array index of the word after the last word to shift
+   * @param {Number} [carry=0] A word to shift in from the right (using "shift" low bits)
+   * @return {Number} The word shifted out on the left (using "shift" low bits)
+   * @private
+   */
+  _shiftLeftM: function(a, shiftL, start, end, carry) {
+    var i, t, shiftR;
+    if (0 === shiftL) {
+      return 0;
+    }
+    shiftR = 32 - shiftL;
+    for (i = end; i-- > start; ) {
+      t = a[i];
+      a[i] = (t << shiftL) | carry;
+      carry = t >>> shiftR;
+    }
+    return 0|carry; // carry is an "unsigned" word. make it a signed word.
+  },
+
+  /** Shift an array left inplace, dropping the first [shift] bits
+   * @param {bitArray} a The array to shift.
+   * @param {Number} shift The number of bits to shift
+   * @return {bitArray} The shifted array.
+   */
+  shiftLeftM: function(a, shiftL) {
+    if (shiftL >= 32) {
+      a.splice(0, Math.floor(shiftL / 32));
+    }
+    shiftL &= 31;
+    if (0 === a.length || 0 === shiftL) {
+      return a;
+    }
+    var last = sjcl.bitArray.getPartial(a[a.length-1]);
+    sjcl.bitArray._shiftLeftM(a, shiftL, 0, a.length);
+    last = last - shiftL;
+    if (last <= 0) {
+      a.pop();
+    }
+    return sjcl.bitArray._clampLastM(a, last & 31);
+  },
+
   /** xor a block of 4 words together.
    * @private
    */

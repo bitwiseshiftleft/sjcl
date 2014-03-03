@@ -87,6 +87,10 @@
         this.require(bitlen === tv[0][j].length, "bitstring length");
         a1 = sjcl.bitArray.bitSlice(a, t, t + bitlen);
         this.require(sjcl.bitArray.equal(b[j], a1), "slice after concat: [" + b[j] + "] == [" + a1 + "]");
+        a1 = sjcl.bitArray.clampM(sjcl.bitArray.shiftLeftM(a.slice(0, a.length), t), bitlen);
+        this.require(sjcl.bitArray.equal(b[j], a1), "shiftLeftM+clampM after concat: [" + b[j] + "] == [" + a1 + "]");
+        a1 = sjcl.bitArray.clamp(sjcl.bitArray.shiftLeftM(a.slice(0, a.length), t), bitlen);
+        this.require(sjcl.bitArray.equal(b[j], a1), "shiftLeftM+clamp after concat: [" + b[j] + "] == [" + a1 + "]");
         t += bitlen;
       }
     }
