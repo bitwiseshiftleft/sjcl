@@ -94,4 +94,22 @@
     cb && cb();
   });
 
+  new sjcl.test.TestCase("bitArray byteswap", function (cb) {
+    if (!sjcl.bitArray) {
+      this.unimplemented();
+      cb && cb();
+      return;
+    }
+
+    var i, kat = sjcl.test.vector.bitArray.byteswap, tv, a;
+    for (i=0; i<kat.length; i++) {
+      tv = kat[i];
+
+      a = tv[1];
+      this.require(sjcl.bitArray.equal(tv[0], sjcl.bitArray.byteswapM(a.slice(0, a.length))));
+    }
+
+    cb && cb();
+  });
+
 })();
