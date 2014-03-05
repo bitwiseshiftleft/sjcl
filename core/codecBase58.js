@@ -10,7 +10,7 @@ sjcl.codec.base58 = {
           c = sjcl.codec.base58._chars;
 
       while (x.greaterEquals(1)) {
-        var result = this._divmod58(x),
+        var result = sjcl.codec.base58._divmod58(x),
             x = result.q,
             charIndex = result.n.getLimb(0);
 
@@ -32,9 +32,9 @@ sjcl.codec.base58 = {
   },
 
   toBits: function(str) {
-    var powersOf58 = this._powersOf58(str.length);
-    var value = new sjcl.bn(), i, c = sjcl.codec.base58._chars, bitCount = 0;
-    for (i=0; i<str.length; i++) {
+    var powersOf58 = sjcl.codec.base58._powersOf58(str.length);
+    var value = new sjcl.bn(), i, c = sjcl.codec.base58._chars, bitCount = 0, x, pos, addend;
+    for (var i=0; i<str.length; i++) {
       x   = c.indexOf(str.charAt(i));
       pos = str.length - i - 1;
       if (x < 0) {
@@ -99,7 +99,7 @@ sjcl.codec.base58 = {
       new sjcl.bn(1)
     ];
 
-    for (i=1;i<=maxPower;i++) {
+    for (var i=1;i<=maxPower;i++) {
       var result = (new sjcl.bn(58)).mul(out[i-1]);
       out.push(result);
     }
