@@ -9,7 +9,7 @@
 sjcl.codec.hex = {
   /** Convert from a bitArray to a hex string. */
   fromBits: function (arr) {
-    var out = "", i, x;
+    var out = "", i;
     for (i=0; i<arr.length; i++) {
       out += ((arr[i]|0)+0xF00000000000).toString(16).substr(4);
     }
