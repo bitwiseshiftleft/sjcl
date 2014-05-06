@@ -58,7 +58,7 @@ TEST_COMMON=  browserTest/nodeUtil.js test/test.js
 
 TEST_SCRIPTS= $(TEST_COMMON) \
               test/aes_vectors.js test/aes_test.js \
-              test/bitArray_vectors.js test/bitArray_test.js \
+              test/bitArray_vectors.js test/bitArray_test.js test/bitArrayLE_test.js \
               test/ocb2_vectors.js test/ocb2_test.js  \
               test/ccm_vectors.js test/ccm_test.js  \
               test/cbc_vectors.js test/cbc_test.js  \
