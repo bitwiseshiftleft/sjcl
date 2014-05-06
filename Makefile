@@ -77,6 +77,7 @@ TEST_SCRIPTS= $(TEST_COMMON) \
               test/sha256_test_brute_force.js \
               test/sha512_vectors.js test/sha512_test.js \
               test/sha512_test_brute_force.js \
+              test/sha3_vectors.js test/sha3_test.js \
               test/srp_vectors.js test/srp_test.js
 
 # Run all tests in node.js.
