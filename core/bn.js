@@ -19,7 +19,7 @@ sjcl.bn.prototype = {
    * Initializes this with it, either as a bn, a number, or a hex string.
    */
   initWith: function(it) {
-    var i=0, k, n, l;
+    var i=0, k;
     switch(typeof it) {
     case "object":
       this.limbs = it.limbs.slice(0);
@@ -328,7 +328,7 @@ sjcl.bn.prototype = {
       carry = (l-m)*ipv;
     }
     if (carry === -1) {
-      limbs[i-1] -= this.placeVal;
+      limbs[i-1] -= pv;
     }
     return this;
   },
@@ -435,7 +435,7 @@ sjcl.bn.pseudoMersennePrime = function(exponent, coeff) {
    * @this { sjcl.bn }
    */
   ppr.reduce = function() {
-    var i, k, l, mo = this.modOffset, limbs = this.limbs, aff, off = this.offset, ol = this.offset.length, fac = this.factor, ll;
+    var i, k, l, mo = this.modOffset, limbs = this.limbs, off = this.offset, ol = this.offset.length, fac = this.factor, ll;
 
     i = this.minOffset;
     while (limbs.length > mo) {
