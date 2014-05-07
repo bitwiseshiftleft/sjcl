@@ -25,7 +25,7 @@ sjcl.mode.ccm = {
    * @return {bitArray} The encrypted data, an array of bytes.
    */
   encrypt: function(prf, plaintext, iv, adata, tlen) {
-    var L, i, out = plaintext.slice(0), tag, w=sjcl.bitArray, ivl = w.bitLength(iv) / 8, ol = w.bitLength(out) / 8;
+    var L, out = plaintext.slice(0), tag, w=sjcl.bitArray, ivl = w.bitLength(iv) / 8, ol = w.bitLength(out) / 8;
     tlen = tlen || 64;
     adata = adata || [];
     
@@ -59,7 +59,7 @@ sjcl.mode.ccm = {
   decrypt: function(prf, ciphertext, iv, adata, tlen) {
     tlen = tlen || 64;
     adata = adata || [];
-    var L, i, 
+    var L,
         w=sjcl.bitArray,
         ivl = w.bitLength(iv) / 8,
         ol = w.bitLength(ciphertext), 
@@ -101,7 +101,7 @@ sjcl.mode.ccm = {
    */
   _computeTag: function(prf, plaintext, iv, adata, tlen, L) {
     // compute B[0]
-    var q, mac, field = 0, offset = 24, tmp, i, macData = [], w=sjcl.bitArray, xor = w._xor4;
+    var mac, tmp, i, macData = [], w=sjcl.bitArray, xor = w._xor4;
 
     tlen /= 8;
   
@@ -161,7 +161,7 @@ sjcl.mode.ccm = {
    * @private
    */
   _ctrMode: function(prf, data, iv, tag, tlen, L) {
-    var enc, i, w=sjcl.bitArray, xor = w._xor4, ctr, b, l = data.length, bl=w.bitLength(data);
+    var enc, i, w=sjcl.bitArray, xor = w._xor4, ctr, l = data.length, bl=w.bitLength(data);
 
     // start the ctr
     ctr = w.concat([w.partial(8,L-1)],iv).concat([0,0,0]).slice(0,4);

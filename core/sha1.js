@@ -138,8 +138,7 @@ sjcl.hash.sha1.prototype = {
   _block:function (words) {  
     var t, tmp, a, b, c, d, e,
     w = words.slice(0),
-    h = this._h,
-    k = this._key;
+    h = this._h;
    
     a = h[0]; b = h[1]; c = h[2]; d = h[3]; e = h[4]; 
 

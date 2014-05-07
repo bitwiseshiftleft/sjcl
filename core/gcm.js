@@ -120,7 +120,7 @@ sjcl.mode.gcm = {
    * @param {Number} tlen The length of the tag, in bits.
    */
   _ctrMode: function(encrypt, prf, data, adata, iv, tlen) {
-    var H, J0, S0, enc, i, ctr, tag, last, l, bl, abl, ivbl, w=sjcl.bitArray, xor=w._xor4;
+    var H, J0, S0, enc, i, ctr, tag, last, l, bl, abl, ivbl, w=sjcl.bitArray;
 
     // Calculate data lengths
     l = data.length;

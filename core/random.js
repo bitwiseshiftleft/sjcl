@@ -462,7 +462,7 @@ sjcl.random = new sjcl.prng(6);
   }
 
   try {
-    var buf, crypt, getRandomValues, ab;
+    var buf, crypt, ab;
 
     // get cryptographically strong entropy depending on runtime environment
     if (typeof module !== 'undefined' && module.exports && (crypt = getCryptoModule()) && crypt.randomBytes) {
