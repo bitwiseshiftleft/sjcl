@@ -526,6 +526,9 @@ var sbp = sjcl.bn.pseudoMersennePrime;
 sjcl.bn.prime = {
   p127: sbp(127, [[0,-1]]),
 
+  // Bernstein's prime for Poly1305, 2^130-5
+  p1305: sbp(130, [[0,-5]]),
+
   // Bernstein's prime for Curve25519
   p25519: sbp(255, [[0,-19]]),
 
