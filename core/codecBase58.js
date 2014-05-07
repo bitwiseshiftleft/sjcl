@@ -97,10 +97,10 @@ sjcl.codec.base58 = {
   _powersOf58: function(maxPower) {
     var out = [
       new sjcl.bn(1)
-    ];
+    ], fiftyEight = new sjcl.bn(58);
 
     for (var i=1;i<=maxPower;i++) {
-      var result = (new sjcl.bn(58)).mul(out[i-1]);
+      var result = fiftyEight.mul(out[i-1]);
       out.push(result);
     }
 
