@@ -14,8 +14,16 @@ sjcl.ecc.point = function(curve,x,y) {
   if (x === undefined) {
     this.isIdentity = true;
   } else {
+    if (x instanceof sjcl.bn) {
+      x = new curve.field(x);
+    }
+    if (y instanceof sjcl.bn) {
+      y = new curve.field(y);
+    }
+
     this.x = x;
     this.y = y;
+
     this.isIdentity = false;
   }
   this.curve = curve;
