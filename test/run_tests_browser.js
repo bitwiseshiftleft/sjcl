@@ -4,6 +4,8 @@ function testCore(coreName, cb) {
     "test.js",
     "aes_test.js",
     "aes_vectors.js",
+    "base58_test.js",
+    "base58_vectors.js",
     "ccm_test.js",
     "ccm_vectors.js",
     "cbc_test.js",
