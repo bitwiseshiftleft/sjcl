@@ -18,7 +18,7 @@ sjcl.codec.base64 = {
     if (_url) {
       c = c.substr(0,62) + '-_';
     }
-    for (i=0; out.length * 6 <= bl; ) {
+    for (i=0; out.length * 6 < bl; ) {
       out += c.charAt((ta ^ arr[i]>>>bits) >>> 26);
       if (bits < 6) {
         ta = arr[i] << (6-bits);
