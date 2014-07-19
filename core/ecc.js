@@ -442,7 +442,16 @@ sjcl.ecc.elGamal.secretKey.prototype = {
   */
   dh: function(pk) {
     return sjcl.hash.sha256.hash(pk._point.mult(this._exponent).toBits());
-  }
+  },
+  
+  /** Diffie-Hellmann function, compatible with Java generateSecret
+   * @param {elGamal.publicKey} pk The Public Key to do Diffie-Hellmann with
+   * @return {bitArray} undigested X value, diffie-hellmann result for this key combination,
+   * compatible with Java generateSecret().
+   */
+   dhJavaEc: function(pk) {
+     return pk._point.mult(this._exponent).x.toBits();
+   }
 };
 
 /** ecdsa keys */
