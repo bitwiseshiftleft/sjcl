@@ -397,10 +397,10 @@ sjcl.prng.prototype = {
     try {
       var x = ev.x || ev.clientX || ev.offsetX || 0, y = ev.y || ev.clientY || ev.offsetY || 0;
       sjcl.random.addEntropy([x,y], 2, "mouse");
-      this._addCurrentTimeToEntropy(0);
     } catch (err) {
       // Event originated from a secure element. No mouse position available.
     }
+    this._addCurrentTimeToEntropy(2);
   },
   
   _loadTimeCollector: function () {
@@ -426,7 +426,7 @@ sjcl.prng.prototype = {
     if (ac) {
       sjcl.random.addEntropy(ac, 2, "accelerometer");
     }
-    this._addCurrentTimeToEntropy(0);
+    this._addCurrentTimeToEntropy(2);
   },
 
   _fireEvent: function (name, arg) {
