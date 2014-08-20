@@ -405,7 +405,10 @@ sjcl.prng.prototype = {
       y = 0;
     }
 
-    sjcl.random.addEntropy([x,y], 2, "mouse");
+    if (x != 0 && y!= 0) {
+      sjcl.random.addEntropy([x,y], 2, "mouse");
+    }
+
     this._addCurrentTimeToEntropy(0);
   },
   
