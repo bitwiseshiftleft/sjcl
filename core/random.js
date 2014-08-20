@@ -404,7 +404,7 @@ sjcl.prng.prototype = {
   },
 
   _addCurrentTimeToEntropy: function (estimatedEntropy) {
-    if (window && window.performance && typeof window.performance.now === "function") {
+    if (typeof window !== 'undefined' && window.performance && typeof window.performance.now === "function") {
       //how much entropy do we want to add here?
       sjcl.random.addEntropy(window.performance.now(), estimatedEntropy, "loadtime");
     } else {
@@ -470,7 +470,7 @@ sjcl.random = new sjcl.prng(6);
       buf = new Uint32Array(new Uint8Array(buf).buffer);
       sjcl.random.addEntropy(buf, 1024, "crypto.randomBytes");
 
-    } else if (window && Uint32Array) {
+    } else if (typeof window !== 'undefined' && typeof Uint32Array !== 'undefined') {
       ab = new Uint32Array(32);
       if (window.crypto && window.crypto.getRandomValues) {
         window.crypto.getRandomValues(ab);
