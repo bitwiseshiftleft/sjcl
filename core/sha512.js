@@ -299,7 +299,7 @@ sjcl.hash.sha512.prototype = {
       t1h += chh + ((t1l >>> 0) < (chl >>> 0) ? 1 : 0);
       t1l += krl;
       t1h += krh + ((t1l >>> 0) < (krl >>> 0) ? 1 : 0);
-      t1l += wrl;
+      t1l = t1l + wrl|0;   // FF32..FF34 perf issue https://bugzilla.mozilla.org/show_bug.cgi?id=1054972
       t1h += wrh + ((t1l >>> 0) < (wrl >>> 0) ? 1 : 0);
 
       // t2 = sigma0 + maj
