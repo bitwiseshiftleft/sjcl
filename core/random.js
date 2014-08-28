@@ -407,7 +407,7 @@ sjcl.prng.prototype = {
     var x = touch.pageX || touch.clientX,
         y = touch.pageY || touch.clientY;
 
-    sjcl.random.addEntropy([x,y],2,"touch");
+    sjcl.random.addEntropy([x,y],1,"touch");
 
     this._addCurrentTimeToEntropy(0);
   },
