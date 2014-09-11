@@ -161,35 +161,7 @@
    * @throws {sjcl.exception.bug} if a parameter has an unsupported type.
    */
   encode: function (obj) {
-    var i, out='{', comma='';
-    for (i in obj) {
-      if (obj.hasOwnProperty(i)) {
-        if (!i.match(/^[a-z0-9]+$/i)) {
-          throw new sjcl.exception.invalid("json encode: invalid property name");
-        }
-        out += comma + '"' + i + '":';
-        comma = ',';
-
-        switch (typeof obj[i]) {
-          case 'number':
-          case 'boolean':
-            out += obj[i];
-            break;
-
-          case 'string':
-            out += '"' + escape(obj[i]) + '"';
-            break;
-
-          case 'object':
-            out += '"' + sjcl.codec.base64.fromBits(obj[i],0) + '"';
-            break;
-
-          default:
-            throw new sjcl.exception.bug("json encode: unsupported type");
-        }
-      }
-    }
-    return out+'}';
+	return JSON.stringify(obj);
   },
   
   /** Decode a simple (flat) JSON string into a structure.  The ciphertext,
@@ -199,22 +171,7 @@
    * @throws {sjcl.exception.invalid} if str isn't (simple) JSON.
    */
   decode: function (str) {
-    str = str.replace(/\s/g,'');
-    if (!str.match(/^\{.*\}$/)) { 
-      throw new sjcl.exception.invalid("json decode: this isn't json!");
-    }
-    var a = str.replace(/^\{|\}$/g, '').split(/,/), out={}, i, m;
-    for (i=0; i<a.length; i++) {
-      if (!(m=a[i].match(/^(?:(["']?)([a-z][a-z0-9]*)\1):(?:(\d+)|true|false|"([a-z0-9+\/%*_.@=\-]*)")$/i))) {
-        throw new sjcl.exception.invalid("json decode: this isn't json!");
-      }
-      if (m[3]) {
-        out[m[2]] = parseInt(m[3],10);
-      } else {
-        out[m[2]] = m[2].match(/^(ct|salt|iv)$/) ? sjcl.codec.base64.toBits(m[4]) : unescape(m[4]);
-      }
-    }
-    return out;
+      return JSON.parse(str);
   },
   
   /** Insert all elements of src into target, modifying and returning target.
