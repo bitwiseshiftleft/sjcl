@@ -40,7 +40,8 @@ new sjcl.test.TestCase("JSON Decode Test", function (cb) {
 	}
 	
 	var str = ''; var i;
-	str = '{"int":4,"nint":-5,"str":"string","iv":[0,1,2,3],"truth":true,"lie":false}';
+	str = '{"int":4,"nint":-5,"str":"string","iv":"/////wAAAAAAAAABAAAAAg==","truth":true,"lie":false}';
+
 	try { 
 		var obj = sjcl.json.decode(str);
 		this.require(obj.int === 4);
@@ -49,11 +50,11 @@ new sjcl.test.TestCase("JSON Decode Test", function (cb) {
 		this.require(obj.truth === true);
 		this.require(obj.lie === false);
 		for(i in obj.iv) {
-			this.require(obj.iv[i] == i);
+			this.require(obj.iv[i] == (i-1)); //Array in iv is [-1,0,1,2]
 		}
 	} catch (e) { this.fail(e); }
 
-	str = '{ "int" : 4,  "nint"  :  -5,"str":"string",  "iv":  [0,1 , 2 ,3],"truth": true,"lie":  false  }';
+	str = '{ "int" : 4,  "nint"  :  -5,"str":"string",  "iv":  "/////wAAAAAAAAABAAAAAg==","truth": true,"lie":  false  }';
 	try { 
 		var obj = sjcl.json.decode(str);
 		this.require(obj.int === 4);
@@ -62,7 +63,7 @@ new sjcl.test.TestCase("JSON Decode Test", function (cb) {
 		this.require(obj.truth === true);
 		this.require(obj.lie === false);
 		for(i in obj.iv) {
-			this.require(obj.iv[i] == i);
+			this.require(obj.iv[i] == (i-1)); //Array in iv is [-1,0,1,2]
 		}
 	} catch (e) { this.fail(e); }
 	
@@ -89,7 +90,6 @@ new sjcl.test.TestCase("JSON Commutative Test", function (cb) {
 	obj1.iv = [ -95577995, -949876189, 1443400017, 697058741 ];
 	obj1.truth = true;
 	obj1.lie = false;
-	obj1.udef = undefined;
 
 	var str1 = '';
 	var str2 = '';
@@ -104,7 +104,7 @@ new sjcl.test.TestCase("JSON Commutative Test", function (cb) {
 	}
 
 	try {
-		this.require(str1 == str2);
+		this.require(str1 === str2);
 		this.require(obj1.int == obj2.int);
 		this.require(obj1.str == obj2.str);
 		this.require(obj1.lie == obj2.lie);
