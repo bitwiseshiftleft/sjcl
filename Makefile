@@ -72,7 +72,8 @@ TEST_SCRIPTS= $(TEST_COMMON) \
               test/pbkdf2_test.js \
               test/bn_vectors.js test/bn_test.js \
               test/ecdsa_test.js test/ecdsa_vectors.js test/ecdh_test.js \
-              test/srp_vectors.js test/srp_test.js
+              test/srp_vectors.js test/srp_test.js \
+              test/json_test.js
 
 # Run all tests in node.js.
 
