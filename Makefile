@@ -57,6 +57,8 @@ lint: core.js core/*.js test/*.js browserTest/*.js lint/coding_guidelines.pl
 TEST_COMMON=  browserTest/nodeUtil.js test/test.js
 
 TEST_SCRIPTS= $(TEST_COMMON) \
+              test/ccm_vectors.js test/ccm_arraybuffer_test.js \
+              test/codec_arraybuffer_test.js \
               test/aes_vectors.js test/aes_test.js \
               test/bitArray_vectors.js test/bitArray_test.js \
               test/ocb2_vectors.js test/ocb2_test.js  \
