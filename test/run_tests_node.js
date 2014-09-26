@@ -2,7 +2,12 @@ var fs = require('fs');
 var vm = require('vm');
 
 var load = function(path) {
+  try {
     vm.runInThisContext(fs.readFileSync(path));
+  } catch (e) {
+    console.log(path);
+    throw e;
+  }
 };
 
 // Assume we're run using `make test`.
