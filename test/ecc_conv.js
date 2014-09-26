@@ -7,7 +7,7 @@ new sjcl.test.TestCase("ECC convenience test", function (cb) {
   
   try {  
     var keys = sjcl.ecc.elGamal.generateKeys(192,0);
-    
+ 
     var ciphertext = sjcl.encrypt(keys.pub, "hello world");
     var plaintext  = sjcl.decrypt(keys.sec, ciphertext);
     

@@ -1,7 +1,14 @@
 sjcl
 ====
 
+[![Build Status](https://travis-ci.org/bitwiseshiftleft/sjcl.png)](https://travis-ci.org/bitwiseshiftleft/sjcl)
+
 Stanford Javascript Crypto Library
+
+Security Advisories
+===
+* 12.02.2014: the current development version has a paranoia bug in the ecc module. The bug was introduced in commit [ac0b3fe0](https://github.com/bitwiseshiftleft/sjcl/commit/ac0b3fe0) and might affect ecc key generation on platforms without a platform random number generator.
+* 
 
 Security Contact
 ====
@@ -11,3 +18,4 @@ Keyserver: pool.sks-keyservers.net
 
 Documentation
 ====
+The documentation is available [here](http://bitwiseshiftleft.github.io/sjcl/doc/)

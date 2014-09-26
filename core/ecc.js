@@ -1,3 +1,6 @@
+/**
+ * base class for all ecc operations.
+ */
 sjcl.ecc = {};
 
 /**
@@ -11,8 +14,16 @@ sjcl.ecc.point = function(curve,x,y) {
   if (x === undefined) {
     this.isIdentity = true;
   } else {
+    if (x instanceof sjcl.bn) {
+      x = new curve.field(x);
+    }
+    if (y instanceof sjcl.bn) {
+      y = new curve.field(y);
+    }
+
     this.x = x;
     this.y = y;
+
     this.isIdentity = false;
   }
   this.curve = curve;
@@ -156,7 +167,7 @@ sjcl.ecc.pointJac.prototype = {
   /**
    * Returns a copy of this point converted to affine coordinates.
    * @return {sjcl.ecc.point} The converted point.
-   */  
+   */
   toAffine: function() {
     if (this.isIdentity || this.z.equals(0)) {
       return new sjcl.ecc.point(this.curve);
@@ -319,63 +330,103 @@ sjcl.ecc.curves = {
 
 };
 
-
-/* Diffie-Hellman-like public-key system */
-sjcl.ecc._dh = function(cn) {
-  sjcl.ecc[cn] = {
-    /** @constructor */
-    publicKey: function(curve, point) {
-      this._curve = curve;
-      this._curveBitLength = curve.r.bitLength();
-      if (point instanceof Array) {
-        this._point = curve.fromBits(point);
-      } else {
-        this._point = point;
-      }
-
-      this.get = function() {
-        var pointbits = this._point.toBits();
-        var len = sjcl.bitArray.bitLength(pointbits);
-        var x = sjcl.bitArray.bitSlice(pointbits, 0, len/2);
-        var y = sjcl.bitArray.bitSlice(pointbits, len/2);
-        return { x: x, y: y };
-      }
-    },
-
-    /** @constructor */
-    secretKey: function(curve, exponent) {
-      this._curve = curve;
-      this._curveBitLength = curve.r.bitLength();
-      this._exponent = exponent;
-
-      this.get = function() {
-        return this._exponent.toBits();
-      }
-    },
-
-    /** @constructor */
-    generateKeys: function(curve, paranoia, sec) {
-      curve = curve || 256;
-      paranoia = paranoia || 0;
-
-      if (typeof curve === "number") {
-        curve = sjcl.ecc.curves['c'+curve];
-        if (curve === undefined) {
-          throw new sjcl.exception.invalid("no such curve");
-        }
-      }
-      sec = sec || sjcl.bn.random(curve.r, paranoia);
-
-      var pub = curve.G.mult(sec);
-      return { pub: new sjcl.ecc[cn].publicKey(curve, pub),
-               sec: new sjcl.ecc[cn].secretKey(curve, sec) };
+/** our basicKey classes
+*/
+sjcl.ecc.basicKey = {
+  /** ecc publicKey. 
+  * @constructor
+  * @param {curve} curve the elliptic curve
+  * @param {point} point the point on the curve
+  */
+  publicKey: function(curve, point) {
+    this._curve = curve;
+    this._curveBitLength = curve.r.bitLength();
+    if (point instanceof Array) {
+      this._point = curve.fromBits(point);
+    } else {
+      this._point = point;
     }
+
+    /** get this keys point data
+    * @return x and y as bitArrays
+    */
+    this.get = function() {
+      var pointbits = this._point.toBits();
+      var len = sjcl.bitArray.bitLength(pointbits);
+      var x = sjcl.bitArray.bitSlice(pointbits, 0, len/2);
+      var y = sjcl.bitArray.bitSlice(pointbits, len/2);
+      return { x: x, y: y };
+    };
+  },
+
+  /** ecc secretKey
+  * @constructor
+  * @param {curve} curve the elliptic curve
+  * @param exponent
+  */
+  secretKey: function(curve, exponent) {
+    this._curve = curve;
+    this._curveBitLength = curve.r.bitLength();
+    this._exponent = exponent;
+
+    /** get this keys exponent data
+    * @return {bitArray} exponent
+    */
+    this.get = function () {
+      return this._exponent.toBits();
+    };
+  }
+};
+
+/** @private */
+sjcl.ecc.basicKey.generateKeys = function(cn) {
+  return function generateKeys(curve, paranoia, sec) {
+    curve = curve || 256;
+
+    if (typeof curve === "number") {
+      curve = sjcl.ecc.curves['c'+curve];
+      if (curve === undefined) {
+        throw new sjcl.exception.invalid("no such curve");
+      }
+    }
+    sec = sec || sjcl.bn.random(curve.r, paranoia);
+
+    var pub = curve.G.mult(sec);
+    return { pub: new sjcl.ecc[cn].publicKey(curve, pub),
+             sec: new sjcl.ecc[cn].secretKey(curve, sec) };
   };
 };
 
-sjcl.ecc._dh("elGamal");
+/** elGamal keys */
+sjcl.ecc.elGamal = {
+  /** generate keys
+  * @function
+  * @param curve
+  * @param {int} paranoia Paranoia for generation (default 6)
+  * @param {secretKey} sec secret Key to use. used to get the publicKey for ones secretKey
+  */
+  generateKeys: sjcl.ecc.basicKey.generateKeys("elGamal"),
+  /** elGamal publicKey. 
+  * @constructor
+  * @augments sjcl.ecc.basicKey.publicKey
+  */
+  publicKey: function (curve, point) {
+    sjcl.ecc.basicKey.publicKey.apply(this, arguments);
+  },
+  /** elGamal secretKey
+  * @constructor
+  * @augments sjcl.ecc.basicKey.secretKey
+  */
+  secretKey: function (curve, exponent) {
+    sjcl.ecc.basicKey.secretKey.apply(this, arguments);
+  }
+};
 
 sjcl.ecc.elGamal.publicKey.prototype = {
+  /** Kem function of elGamal Public Key
+  * @param paranoia paranoia to use for randomization.
+  * @return {object} key and tag. unkem(tag) with the corresponding secret key results in the key returned.
+  */
   kem: function(paranoia) {
     var sec = sjcl.bn.random(this._curve.r, paranoia),
         tag = this._curve.G.mult(sec).toBits(),
@@ -385,34 +436,58 @@ sjcl.ecc.elGamal.publicKey.prototype = {
 };
 
 sjcl.ecc.elGamal.secretKey.prototype = {
+  /** UnKem function of elGamal Secret Key
+  * @param {bitArray} tag The Tag to decrypt.
+  * @return {bitArray} decrypted key.
+  */
   unkem: function(tag) {
     return sjcl.hash.sha256.hash(this._curve.fromBits(tag).mult(this._exponent).toBits());
   },
 
+  /** Diffie-Hellmann function
+  * @param {elGamal.publicKey} pk The Public Key to do Diffie-Hellmann with
+  * @return {bitArray} diffie-hellmann result for this key combination.
+  */
   dh: function(pk) {
     return sjcl.hash.sha256.hash(pk._point.mult(this._exponent).toBits());
-  }
+  },
+  
+  /** Diffie-Hellmann function, compatible with Java generateSecret
+   * @param {elGamal.publicKey} pk The Public Key to do Diffie-Hellmann with
+   * @return {bitArray} undigested X value, diffie-hellmann result for this key combination,
+   * compatible with Java generateSecret().
+   */
+   dhJavaEc: function(pk) {
+     return pk._point.mult(this._exponent).x.toBits();
+   }
 };
 
-sjcl.ecc._dh("ecdsa");
-
-sjcl.ecc.ecdsa.secretKey.prototype = {
-  sign: function(hash, paranoia, fakeLegacyVersion, fixedKForTesting) {
-    if (sjcl.bitArray.bitLength(hash) > this._curveBitLength) {
-      hash = sjcl.bitArray.clamp(hash, this._curveBitLength);
-    }
-    var R  = this._curve.r,
-        l  = R.bitLength(),
-        k  = fixedKForTesting || sjcl.bn.random(R.sub(1), paranoia).add(1),
-        r  = this._curve.G.mult(k).x.mod(R),
-        ss = sjcl.bn.fromBits(hash).add(r.mul(this._exponent)),
-        s  = fakeLegacyVersion ? ss.inverseMod(R).mul(k).mod(R)
-             : ss.mul(k.inverseMod(R)).mod(R);
-    return sjcl.bitArray.concat(r.toBits(l), s.toBits(l));
-  }
+/** ecdsa keys */
+sjcl.ecc.ecdsa = {
+  /** generate keys
+  * @function
+  * @param curve
+  * @param {int} paranoia Paranoia for generation (default 6)
+  * @param {secretKey} sec secret Key to use. used to get the publicKey for ones secretKey
+  */
+  generateKeys: sjcl.ecc.basicKey.generateKeys("ecdsa")
 };
 
+/** ecdsa publicKey. 
+* @constructor
+* @augments sjcl.ecc.basicKey.publicKey
+*/
+sjcl.ecc.ecdsa.publicKey = function (curve, point) {
+  sjcl.ecc.basicKey.publicKey.apply(this, arguments);
+};
+
+/** specific functions for ecdsa publicKey. */
 sjcl.ecc.ecdsa.publicKey.prototype = {
+  /** Diffie-Hellmann function
+  * @param {bitArray} hash hash to verify. 
+  * @param {bitArray} rs signature bitArray.
+  * @param {boolean}  fakeLegacyVersion use old legacy version
+  */
   verify: function(hash, rs, fakeLegacyVersion) {
     if (sjcl.bitArray.bitLength(hash) > this._curveBitLength) {
       hash = sjcl.bitArray.clamp(hash, this._curveBitLength);
@@ -434,5 +509,35 @@ sjcl.ecc.ecdsa.publicKey.prototype = {
       }
     }
     return true;
+  }
+};
+
+/** ecdsa secretKey
+* @constructor
+* @augments sjcl.ecc.basicKey.publicKey
+*/
+sjcl.ecc.ecdsa.secretKey = function (curve, exponent) {
+  sjcl.ecc.basicKey.secretKey.apply(this, arguments);
+};
+
+/** specific functions for ecdsa secretKey. */
+sjcl.ecc.ecdsa.secretKey.prototype = {
+  /** Diffie-Hellmann function
+  * @param {bitArray} hash hash to sign. 
+  * @param {int} paranoia paranoia for random number generation
+  * @param {boolean} fakeLegacyVersion use old legacy version
+  */
+  sign: function(hash, paranoia, fakeLegacyVersion, fixedKForTesting) {
+    if (sjcl.bitArray.bitLength(hash) > this._curveBitLength) {
+      hash = sjcl.bitArray.clamp(hash, this._curveBitLength);
+    }
+    var R  = this._curve.r,
+        l  = R.bitLength(),
+        k  = fixedKForTesting || sjcl.bn.random(R.sub(1), paranoia).add(1),
+        r  = this._curve.G.mult(k).x.mod(R),
+        ss = sjcl.bn.fromBits(hash).add(r.mul(this._exponent)),
+        s  = fakeLegacyVersion ? ss.inverseMod(R).mul(k).mod(R)
+             : ss.mul(k.inverseMod(R)).mod(R);
+    return sjcl.bitArray.concat(r.toBits(l), s.toBits(l));
   }
 };

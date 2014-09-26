@@ -15,7 +15,9 @@ sjcl.codec.base64 = {
   /** Convert from a bitArray to a base64 string. */
   fromBits: function (arr, _noEquals, _url) {
     var out = "", i, bits=0, c = sjcl.codec.base64._chars, ta=0, bl = sjcl.bitArray.bitLength(arr);
-    if (_url) c = c.substr(0,62) + '-_';
+    if (_url) {
+      c = c.substr(0,62) + '-_';
+    }
     for (i=0; out.length * 6 < bl; ) {
       out += c.charAt((ta ^ arr[i]>>>bits) >>> 26);
       if (bits < 6) {
@@ -35,7 +37,9 @@ sjcl.codec.base64 = {
   toBits: function(str, _url) {
     str = str.replace(/\s|=/g,'');
     var out = [], i, bits=0, c = sjcl.codec.base64._chars, ta=0, x;
-    if (_url) c = c.substr(0,62) + '-_';
+    if (_url) {
+      c = c.substr(0,62) + '-_';
+    }
     for (i=0; i<str.length; i++) {
       x = c.indexOf(str.charAt(i));
       if (x < 0) {

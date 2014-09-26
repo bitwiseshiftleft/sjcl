@@ -10,7 +10,7 @@
 
 "use strict";
 /*jslint indent: 2, bitwise: false, nomen: false, plusplus: false, white: false, regexp: false */
-/*global document, window, escape, unescape */
+/*global document, window, escape, unescape, module, require, Uint32Array */
 
 /** @namespace The Stanford Javascript Crypto Library, top-level namespace. */
 var sjcl = {
@@ -68,6 +68,11 @@ var sjcl = {
   }
 };
 
-if(typeof module != 'undefined' && module.exports){
+if(typeof module !== 'undefined' && module.exports){
   module.exports = sjcl;
+}
+if (typeof define === "function") {
+    define([], function () {
+        return sjcl;
+    });
 }
