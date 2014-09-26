@@ -21,7 +21,11 @@ sjcl.codec.arrayBuffer = {
     padding = padding==undefined  ? true : padding
     padding_count = padding_count || 8
 
-    ol = sjcl.bitArray.bitLength(arr)/8
+    if (arr.length === 0) {
+      return new ArrayBuffer(0);
+    }
+
+    ol = sjcl.bitArray.bitLength(arr)/8;
 
     //check to make sure the bitLength is divisible by 8, if it isn't 
     //we can't do anything since arraybuffers work with bytes, not bits
@@ -30,27 +34,27 @@ sjcl.codec.arrayBuffer = {
     }
 
     if (padding && ol%padding_count !== 0){
-      ol += padding_count - (ol%padding_count)
+      ol += padding_count - (ol%padding_count);
     }
 
 
     //padded temp for easy copying
-    tmp = new DataView(new ArrayBuffer(arr.length*4)) 
+    tmp = new DataView(new ArrayBuffer(arr.length*4));
     for (i=0; i<arr.length; i++) {
-      tmp.setUint32(i*4, (arr[i]<<32)) //get rid of the higher bits
+      tmp.setUint32(i*4, (arr[i]<<32)); //get rid of the higher bits
     }
 
     //now copy the final message if we are not going to 0 pad
-    out = new DataView(new ArrayBuffer(ol))
+    out = new DataView(new ArrayBuffer(ol));
 
     //save a step when the tmp and out bytelength are ===
     if (out.byteLength === tmp.byteLength){
-      return tmp.buffer
+      return tmp.buffer;
     }
 
-    smallest = tmp.byteLength < out.byteLength ? tmp.byteLength : out.byteLength
+    smallest = tmp.byteLength < out.byteLength ? tmp.byteLength : out.byteLength;
     for(i=0; i<smallest; i++){
-      out.setUint8(i,tmp.getUint8(i))
+      out.setUint8(i,tmp.getUint8(i));
     }
 
 
@@ -59,6 +63,11 @@ sjcl.codec.arrayBuffer = {
 
   toBits: function (buffer) {
     var i, out=[], len, inView, tmp;
+
+    if (buffer.byteLength === 0) {
+      return [];
+    }
+
     inView = new DataView(buffer);
     len = inView.byteLength - inView.byteLength%4;
 

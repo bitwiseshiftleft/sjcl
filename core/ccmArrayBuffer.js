@@ -230,10 +230,12 @@ sjcl.arrayBuffer.ccm = {
     
     //now copy the adata over to the blocks
     //This will implicitly add 0 padding 
-    adata = new DataView(adata_buffer)
-    for (i = 0; i < adata.byteLength; i++){
-      data_blocks.setUint8(offset, adata.getUint8(i))
-      offset++;
+    if (adata_buffer.byteLength !== 0) {
+      adata = new DataView(adata_buffer)
+      for (i = 0; i < adata.byteLength; i++){
+        data_blocks.setUint8(offset, adata.getUint8(i))
+        offset++;
+      }
     }
 
 
@@ -250,20 +252,22 @@ sjcl.arrayBuffer.ccm = {
       mac = prf.encrypt(mac)
     }
 
-    data = new DataView(data_buffer)
-    //set padding bytes to 0
-    for (i=l_m; i< data_buffer.byteLength; i++){
-      data.setUint8(i,0)
-    }
+    if (data_buffer.byteLength !== 0) {
+      data = new DataView(data_buffer)
+      //set padding bytes to 0
+      for (i=l_m; i< data_buffer.byteLength; i++){
+        data.setUint8(i,0)
+      }
 
-    //now to mac the plaintext blocks
-    for (i=0; i < data.byteLength; i+=16){
-      mac[0] ^= data.getUint32(i)
-      mac[1] ^= data.getUint32(i+4)
-      mac[2] ^= data.getUint32(i+8)
-      mac[3] ^= data.getUint32(i+12)
+      //now to mac the plaintext blocks
+      for (i=0; i < data.byteLength; i+=16){
+        mac[0] ^= data.getUint32(i)
+        mac[1] ^= data.getUint32(i+4)
+        mac[2] ^= data.getUint32(i+8)
+        mac[3] ^= data.getUint32(i+12)
 
-      mac = prf.encrypt(mac)
+        mac = prf.encrypt(mac)
+      }
     }
 
     return sjcl.bitArray.clamp(mac,tlen*8)
@@ -283,7 +287,6 @@ sjcl.arrayBuffer.ccm = {
   ctrCipher: function(prf, data_buffer, iv, mac, tlen){
     var data, ctr, word0, word1, word2, word3, keyblock, i
 
-    data = new DataView(data_buffer)
     ctr = new DataView(new ArrayBuffer(16)) //create the first block for the counter
 
     //prf should use a 256 bit key to make precomputation attacks infeasible
@@ -306,22 +309,25 @@ sjcl.arrayBuffer.ccm = {
     ctr[3]++
     if (ctr[3]===0) ctr[2]++ //increment higher bytes if the lowest 4 bytes are 0
 
-    //now lets encrypt the message
-    for (i=0; i<data.byteLength;i+=16){
-      keyblock = prf.encrypt(ctr)
+    if (data_buffer.byteLength !== 0) {
+      data = new DataView(data_buffer)
+      //now lets encrypt the message
+      for (i=0; i<data.byteLength;i+=16){
+        keyblock = prf.encrypt(ctr)
 
-      word0 = data.getUint32(i)
-      word1 = data.getUint32(i+4)
-      word2 = data.getUint32(i+8)
-      word3 = data.getUint32(i+12)
+        word0 = data.getUint32(i)
+        word1 = data.getUint32(i+4)
+        word2 = data.getUint32(i+8)
+        word3 = data.getUint32(i+12)
 
-      data.setUint32(i,word0 ^ keyblock[0])
-      data.setUint32(i+4, word1 ^ keyblock[1])
-      data.setUint32(i+8, word2 ^ keyblock[2])
-      data.setUint32(i+12, word3 ^ keyblock[3])
+        data.setUint32(i,word0 ^ keyblock[0])
+        data.setUint32(i+4, word1 ^ keyblock[1])
+        data.setUint32(i+8, word2 ^ keyblock[2])
+        data.setUint32(i+12, word3 ^ keyblock[3])
 
-      ctr[3]++
-      if (ctr[3]===0) ctr[2]++ //increment higher bytes if the lowest 4 bytes are 0
+        ctr[3]++
+        if (ctr[3]===0) ctr[2]++ //increment higher bytes if the lowest 4 bytes are 0
+      }
     }
 
     //return the mac, the ciphered data is available through the same data_buffer that was given
