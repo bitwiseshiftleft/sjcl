@@ -3,9 +3,7 @@ console.log("Running CCM using ArrayBuffer tests");
 var start_time = +(new Date());
 
 //This ccm implementation is only defined for IV Lengths of 8 bytes
-var applicable_tests = sjcl.test.vector.ccm.filter(function(test){
-  return test.iv.length === 16 ;
-});
+var applicable_tests = sjcl.test.vector.ccm;
 
 applicable_tests.map(function(tv, index){
   var len = 32 * tv.key.length,

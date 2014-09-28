@@ -100,15 +100,12 @@ sjcl.arrayBuffer.ccm = {
     iv = w.clamp(iv,8*(15-L));
 
     //prf should use a 256 bit key to make precomputation attacks infeasible
-    //the iv should be 8bytes
-    //assume the iv is set to an array of 32 ints, so we need a length of 2 to get 8 bytes
-    if (iv.length !== 2) throw new sjcl.exception.invalid("Invalid IV length, it should be 8 bytes");
 
     mac = sjcl.arrayBuffer.ccm._computeTag(prf, plaintext_buffer, iv, adata, tlen, ol, L);
 
     //encrypt the plaintext and the mac 
     //returns the mac since the plaintext will be left encrypted inside the buffer
-    mac = sjcl.arrayBuffer.ccm._ctrMode(prf, plaintext_buffer, iv, mac, tlen);
+    mac = sjcl.arrayBuffer.ccm._ctrMode(prf, plaintext_buffer, iv, mac, tlen, L);
 
 
     //the plaintext_buffer has been modified so it is now the ciphertext_buffer
@@ -140,12 +137,9 @@ sjcl.arrayBuffer.ccm = {
     iv = w.clamp(iv,8*(15-L));
     
     //prf should use a 256 bit key to make precomputation attacks infeasible
-    //the iv should be 8bytes
-    //assume the iv is set to an array of 32 ints, so we need a length of 2 to get 8 bytes
-    if (iv.length !== 2) throw new sjcl.exception.invalid("Invalid IV length, it should be 8 bytes");
 
     //decrypt the buffer
-    mac = sjcl.arrayBuffer.ccm._ctrMode(prf, ciphertext_buffer, iv, tag, tlen);
+    mac = sjcl.arrayBuffer.ccm._ctrMode(prf, ciphertext_buffer, iv, tag, tlen, L);
 
     mac2 = sjcl.arrayBuffer.ccm._computeTag(prf, ciphertext_buffer, iv, adata, tlen, ol, L);
 
@@ -205,27 +199,18 @@ sjcl.arrayBuffer.ccm = {
    * @return {Object} An object with data and tag, the en/decryption of data and tag values.
    * @private
    */
-  _ctrMode: function(prf, data_buffer, iv, mac, tlen){
-    var data, ctr, word0, word1, word2, word3, keyblock, i;
+  _ctrMode: function(prf, data_buffer, iv, mac, tlen, L){
+    var data, ctr, word0, word1, word2, word3, keyblock, i, w = sjcl.bitArray, xor = w._xor4;
 
     ctr = new DataView(new ArrayBuffer(16)); //create the first block for the counter
 
     //prf should use a 256 bit key to make precomputation attacks infeasible
-    //the iv should be 8bytes
-    //assume the iv is set to an array of 32 ints, so we need a length of 2 to get two bytes
-    
-    ctr.setUint8(0,0x06); //set the flags
-    ctr.setUint32(1,iv[0]); //set the iv
-    ctr.setUint32(5,iv[1]);
-    //the counter is already set to 0
-    
-    ctr = [ctr.getUint32(0),ctr.getUint32(4),ctr.getUint32(8),ctr.getUint32(12)];
-    keyblock = prf.encrypt(ctr); //this gives us the first block in the keystream that we are going to use to encrypt the mac
 
-    mac[0] ^= keyblock[0];
-    mac[1] ^= keyblock[1];
-    mac[2] ^= keyblock[2];
-    mac[3] ^= keyblock[3];
+    // start the ctr
+    ctr = w.concat([w.partial(8,L-1)],iv).concat([0,0,0]).slice(0,4);
+
+    // en/decrypt the tag
+    mac = w.bitSlice(xor(mac,prf.encrypt(ctr)), 0, tlen*8);
 
     ctr[3]++;
     if (ctr[3]===0) ctr[2]++; //increment higher bytes if the lowest 4 bytes are 0
@@ -252,7 +237,7 @@ sjcl.arrayBuffer.ccm = {
     }
 
     //return the mac, the ciphered data is available through the same data_buffer that was given
-    return sjcl.bitArray.clamp(mac,tlen*8);
+    return mac;
   }
 
 };
