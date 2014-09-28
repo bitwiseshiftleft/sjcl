@@ -21,7 +21,6 @@ sjcl.arrayBuffer.ccm = {
   mode: "ccm",
 
   defaults: {
-    adata_buffer: new ArrayBuffer(),
     tlen:128 //this is M in the NIST paper
   },
 
@@ -36,8 +35,7 @@ sjcl.arrayBuffer.ccm = {
    */
   compat_encrypt: function(prf, plaintext, iv, adata, tlen){
     var plaintext_buffer = sjcl.codec.arrayBuffer.fromBits(plaintext, true, 16),
-        l_m = sjcl.bitArray.bitLength(plaintext)/8,
-        adata_buffer = sjcl.codec.arrayBuffer.fromBits(adata, false),
+        ol = sjcl.bitArray.bitLength(plaintext)/8,
         encrypted_obj,
         ct,
         tag;
@@ -45,10 +43,10 @@ sjcl.arrayBuffer.ccm = {
     tlen = tlen || 64;
     adata = adata || [];
 
-    encrypted_obj = sjcl.arrayBuffer.ccm.encrypt(prf, plaintext_buffer, iv, adata_buffer, tlen, l_m);
+    encrypted_obj = sjcl.arrayBuffer.ccm.encrypt(prf, plaintext_buffer, iv, adata, tlen, ol);
     ct = sjcl.codec.arrayBuffer.toBits(encrypted_obj.ciphertext_buffer);
 
-    ct = sjcl.bitArray.clamp(ct, l_m*8);
+    ct = sjcl.bitArray.clamp(ct, ol*8);
 
 
     return sjcl.bitArray.concat(ct, encrypted_obj.tag);
@@ -68,14 +66,12 @@ sjcl.arrayBuffer.ccm = {
     adata = adata || [];
     var L, i, 
         w=sjcl.bitArray,
-        ivl = w.bitLength(iv) / 8,
         ol = w.bitLength(ciphertext), 
         out = w.clamp(ciphertext, ol - tlen),
         tag = w.bitSlice(ciphertext, ol - tlen), tag2,
-        adata_buffer = sjcl.codec.arrayBuffer.fromBits(adata, false),
         ciphertext_buffer = sjcl.codec.arrayBuffer.fromBits(out, true, 16);
 
-    var plaintext_buffer = sjcl.arrayBuffer.ccm.decrypt(prf, ciphertext_buffer, iv, tag, adata_buffer, tlen, (ol-tlen)/8);
+    var plaintext_buffer = sjcl.arrayBuffer.ccm.decrypt(prf, ciphertext_buffer, iv, tag, adata, tlen, (ol-tlen)/8);
     return sjcl.bitArray.clamp(sjcl.codec.arrayBuffer.toBits(plaintext_buffer), ol-tlen);
 
   },
@@ -89,25 +85,30 @@ sjcl.arrayBuffer.ccm = {
    * @param {Number} [tlen=128] the desired tag length, in bits.
    * @return {ArrayBuffer} The encrypted data, in the same array buffer as the given plaintext, but given back anyways
    */
-  encrypt: function(prf, plaintext_buffer, iv, adata_buffer, tlen, l_m){
-    var auth_blocks, mac, plaintext, ctr, keyblock, word0, word1, word2, word3, i;
+  encrypt: function(prf, plaintext_buffer, iv, adata, tlen, ol){
+    var auth_blocks, mac, L, w = sjcl.bitArray,
+      ivl = w.bitLength(iv) / 8;
 
     //set up defaults
-    adata_buffer = adata_buffer || sjcl.arrayBuffer.ccm.defaults.adata_buffer;
+    adata = adata || [];
     tlen = tlen || sjcl.arrayBuffer.ccm.defaults.tlen;
-    l_m = l_m || plaintext_buffer.byteLength;
+    ol = ol || plaintext_buffer.byteLength;
     tlen = Math.ceil(tlen/8);
     
+    for (L=2; L<4 && ol >>> 8*L; L++) {}
+    if (L < 15 - ivl) { L = 15-ivl; }
+    iv = w.clamp(iv,8*(15-L));
+
     //prf should use a 256 bit key to make precomputation attacks infeasible
     //the iv should be 8bytes
     //assume the iv is set to an array of 32 ints, so we need a length of 2 to get 8 bytes
     if (iv.length !== 2) throw new sjcl.exception.invalid("Invalid IV length, it should be 8 bytes");
 
-    mac = sjcl.arrayBuffer.ccm.compute_tag(prf, plaintext_buffer, iv, adata_buffer, tlen, l_m);
+    mac = sjcl.arrayBuffer.ccm._computeTag(prf, plaintext_buffer, iv, adata, tlen, ol, L);
 
     //encrypt the plaintext and the mac 
     //returns the mac since the plaintext will be left encrypted inside the buffer
-    mac = sjcl.arrayBuffer.ccm.ctrCipher(prf, plaintext_buffer, iv, mac, tlen);
+    mac = sjcl.arrayBuffer.ccm._ctrMode(prf, plaintext_buffer, iv, mac, tlen);
 
 
     //the plaintext_buffer has been modified so it is now the ciphertext_buffer
@@ -124,14 +125,19 @@ sjcl.arrayBuffer.ccm = {
    * @param {Number} [tlen=128] the desired tag length, in bits.
    * @return {ArrayBuffer} The decrypted data, in the same array buffer as the given buffer, but given back anyways
    */
-  decrypt: function(prf, ciphertext_buffer, iv, tag, adata_buffer, tlen, l_m){
-    var mac, mac2, i;
+  decrypt: function(prf, ciphertext_buffer, iv, tag, adata, tlen, ol){
+    var mac, mac2, i, L, w = sjcl.bitArray, 
+      ivl = w.bitLength(iv) / 8;
 
     //set up defaults
-    adata_buffer = adata_buffer || sjcl.arrayBuffer.ccm.defaults.adata_buffer;
+    adata = adata || [];
     tlen = tlen || sjcl.arrayBuffer.ccm.defaults.tlen;
-    l_m = l_m || ciphertext_buffer.byteLength;
+    ol = ol || ciphertext_buffer.byteLength;
     tlen = Math.ceil(tlen/8) ;
+
+    for (L=2; L<4 && ol >>> 8*L; L++) {}
+    if (L < 15 - ivl) { L = 15-ivl; }
+    iv = w.clamp(iv,8*(15-L));
     
     //prf should use a 256 bit key to make precomputation attacks infeasible
     //the iv should be 8bytes
@@ -139,9 +145,9 @@ sjcl.arrayBuffer.ccm = {
     if (iv.length !== 2) throw new sjcl.exception.invalid("Invalid IV length, it should be 8 bytes");
 
     //decrypt the buffer
-    mac = sjcl.arrayBuffer.ccm.ctrCipher(prf, ciphertext_buffer, iv, tag, tlen);
+    mac = sjcl.arrayBuffer.ccm._ctrMode(prf, ciphertext_buffer, iv, tag, tlen);
 
-    mac2 = sjcl.arrayBuffer.ccm.compute_tag(prf, ciphertext_buffer, iv, adata_buffer, tlen, l_m);
+    mac2 = sjcl.arrayBuffer.ccm._computeTag(prf, ciphertext_buffer, iv, adata, tlen, ol, L);
 
     //check the tag
     if (!sjcl.bitArray.equal(mac, mac2)){
@@ -156,107 +162,21 @@ sjcl.arrayBuffer.ccm = {
    * @param {Object} prf The pseudorandom function.
    * @param {ArrayBuffer} data_buffer The plaintext data in an arraybuffer.
    * @param {bitArray} iv The initialization value.
-   * @param {ArrayBuffer} adata_buffer The authenticated data in an arraybuffer.
+   * @param {bitArray} adata The authenticated data.
    * @param {Number} tlen the desired tag length, in bits.
    * @return {bitArray} The tag, but not yet encrypted.
    * @private
    */
-  compute_tag: function(prf, data_buffer, iv, adata_buffer, tlen, l_m){
-    var i, l_a, l_a_encoded_length, l_a_encoded_prefix, data_blocks, data_blocks_size, flags, offset, adata, plaintext, mac, data;
+  _computeTag: function(prf, data_buffer, iv, adata, tlen, ol, L){
+    var i, plaintext, mac, data, data_blocks_size, data_blocks,
+      w = sjcl.bitArray, tmp, macData;
 
-    //Let calculate l(a), the length of the authenticated data
-    l_a = adata_buffer.byteLength;
-
-    //now we need to calculate how many bytes we will need to encode l(a)
-    if (l_a === 0){
-      l_a_encoded_length = 0;
-      l_a_encoded_prefix = [];
-    }
-    else if (l_a < 0xFF00){ //0xff00 === 2^16-2^8
-      l_a_encoded_length = 2;
-      l_a_encoded_prefix = [];
-    }else if (l_a < 0x100000000){
-      l_a_encoded_length = 6;
-      l_a_encoded_prefix = [0xff, 0xfe];
-    }else{
-      //the length is greater than 4GB... no way, not supported 
-      //we really shouldn't end up here
-      throw("your authenticated data is too big: "+l_a+" "+adata_buffer);
-      //l_a_encoded_length = 10
-      //l_a_encoded_prefix = [0xff, 0xff]
-    }
-
-    //calculate the amount of blocks we will need, then add one for the first block 
-    data_blocks_size = Math.ceil((l_a_encoded_length+l_a+16)/16) ;
-
-    data_blocks = new DataView(new ArrayBuffer(data_blocks_size*16));
-
-    //set the first block
-    //the format is flag (1 byte) (IV 8 bytes) (l(m) 7 bytes)
-    //flag looks like [<bit>:content] [7:reserved 6:Adata 5-3:M(aka tlen), 2-0 L(hardcoded to 6] 
-    flags = l_a_encoded_length === 0 ? 0x06 : 0x46; //depending on the length of adata we vary the second MSB
-    //flip the tlen bits
-    flags |= ((tlen-2)/2) << 3;
-    data_blocks.setUint8(0, flags);
-    
-    //Copy the IV over to the first block
-    data_blocks.setUint32(1,iv[0]);
-    data_blocks.setUint32(5,iv[1]);
-
-    //copy the message length
-    data_blocks.setUint32(12, l_m);
-    //The higher three bytes are going to be 0 since we never expect to encrypt > 4GB file with this
-
-    //now we add the bytes encoding the length of the adata
-    //start at 16 because that's the start of the next block
-    offset = 16;
-    //if there was a prefix we need to but before the length lets do that
-    if ( l_a_encoded_prefix.length > 0){
-      data_blocks.setUint8(offset++,l_a_encoded_prefix[0]);
-      data_blocks.setUint8(offset++,l_a_encoded_prefix[1]);
-    }
-
-    //place the length
-    if (l_a_encoded_length === 0){
-    }else if(l_a_encoded_length === 2){
-      data_blocks.setUint16(offset,l_a);
-      offset += 2;
-    }else if(l_a_encoded_length === 6){
-      //setting the bottom 4bytes, the top two(prefix, were already set
-      data_blocks.setUint32(offset,l_a);
-      offset += 4;
-    }else{
-      throw("Error in encoding length into Authorized blocks");
-    }
-    
-    //now copy the adata over to the blocks
-    //This will implicitly add 0 padding 
-    if (adata_buffer.byteLength !== 0) {
-      adata = new DataView(adata_buffer);
-      for (i = 0; i < adata.byteLength; i++){
-        data_blocks.setUint8(offset, adata.getUint8(i));
-        offset++;
-      }
-    }
-
-
-    //now lets do the cbc-mac
-
-    mac = [0,0,0,0];
-
-    for (i=0; i < data_blocks.byteLength; i+=16){
-      mac[0] ^= data_blocks.getUint32(i);
-      mac[1] ^= data_blocks.getUint32(i+4);
-      mac[2] ^= data_blocks.getUint32(i+8);
-      mac[3] ^= data_blocks.getUint32(i+12);
-
-      mac = prf.encrypt(mac);
-    }
+    mac = sjcl.mode.ccm._macAdditionalData(prf, adata, iv, tlen, ol, L);
 
     if (data_buffer.byteLength !== 0) {
       data = new DataView(data_buffer);
       //set padding bytes to 0
-      for (i=l_m; i< data_buffer.byteLength; i++){
+      for (i=ol; i< data_buffer.byteLength; i++){
         data.setUint8(i,0);
       }
 
@@ -285,7 +205,7 @@ sjcl.arrayBuffer.ccm = {
    * @return {Object} An object with data and tag, the en/decryption of data and tag values.
    * @private
    */
-  ctrCipher: function(prf, data_buffer, iv, mac, tlen){
+  _ctrMode: function(prf, data_buffer, iv, mac, tlen){
     var data, ctr, word0, word1, word2, word3, keyblock, i;
 
     ctr = new DataView(new ArrayBuffer(16)); //create the first block for the counter
