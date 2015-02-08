@@ -30,7 +30,9 @@ function testCore(coreName, cb) {
     "ecdh_test.js",
     "srp_test.js",
     "srp_vectors.js",
-    "ecc_conv.js"
+    "ecc_conv.js",
+    "ripemd160_test.js",
+    "ripemd160_vectors.js",
   ], i;
   
   for (i=1; i<testFiles.length; i++) {
