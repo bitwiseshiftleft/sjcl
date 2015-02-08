@@ -15,6 +15,27 @@ sjcl.mode.ccm = {
    */
   name: "ccm",
   
+  _progressListeners: [],
+
+  listenProgress: function (cb) {
+    sjcl.mode.ccm._progressListeners.push(cb);
+  },
+
+  unListenProgress: function (cb) {
+    var index = sjcl.mode.ccm._progressListeners.indexOf(cb);
+    if (index > -1) {
+      sjcl.mode.ccm._progressListeners.splice(index, 1);
+    }
+  },
+
+  _callProgressListener: function (val) {
+    var p = sjcl.mode.ccm._progressListeners.slice(), i;
+
+    for (i = 0; i < p.length; i += 1) {
+      p[i](val);
+    }
+  },
+
   /** Encrypt in CCM mode.
    * @static
    * @param {Object} prf The pseudorandom function.  It must have a block size of 16 bytes.
@@ -168,7 +189,7 @@ sjcl.mode.ccm = {
    * @private
    */
   _ctrMode: function(prf, data, iv, tag, tlen, L) {
-    var enc, i, w=sjcl.bitArray, xor = w._xor4, ctr, l = data.length, bl=w.bitLength(data);
+    var enc, i, w=sjcl.bitArray, xor = w._xor4, ctr, l = data.length, bl=w.bitLength(data), n = l/50, p = n;
 
     // start the ctr
     ctr = w.concat([w.partial(8,L-1)],iv).concat([0,0,0]).slice(0,4);
@@ -180,6 +201,10 @@ sjcl.mode.ccm = {
     if (!l) { return {tag:tag, data:[]}; }
     
     for (i=0; i<l; i+=4) {
+      if (i > n) {
+        sjcl.mode.ccm._callProgressListener(i/l);
+        n += p;
+      }
       ctr[3]++;
       enc = prf.encrypt(ctr);
       data[i]   ^= enc[0];
