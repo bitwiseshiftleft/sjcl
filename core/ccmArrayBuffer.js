@@ -200,7 +200,7 @@ sjcl.arrayBuffer.ccm = {
    * @private
    */
   _ctrMode: function(prf, data_buffer, iv, mac, tlen, L){
-    var data, ctr, word0, word1, word2, word3, keyblock, i, w = sjcl.bitArray, xor = w._xor4;
+    var data, ctr, word0, word1, word2, word3, keyblock, i, w = sjcl.bitArray, xor = w._xor4, n = data_buffer.byteLength/50, p = n;
 
     ctr = new DataView(new ArrayBuffer(16)); //create the first block for the counter
 
@@ -219,6 +219,10 @@ sjcl.arrayBuffer.ccm = {
       data = new DataView(data_buffer);
       //now lets encrypt the message
       for (i=0; i<data.byteLength;i+=16){
+        if (i > n) {
+          sjcl.mode.ccm._callProgressListener(i/data_buffer.byteLength);
+          n += p;
+        }
         keyblock = prf.encrypt(ctr);
 
         word0 = data.getUint32(i);
