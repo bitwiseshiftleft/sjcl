@@ -29,8 +29,8 @@ sjcl.mode.ccm = {
     tlen = tlen || 64;
     adata = adata || [];
     
-    if (ivl < 7 || ivl > 13) {
-      throw new sjcl.exception.invalid("ccm: iv must be between 7 and 13 bytes");
+    if (ivl < 7) {
+      throw new sjcl.exception.invalid("ccm: iv must be at least 7 bytes");
     }
     
     // compute the length of the length
