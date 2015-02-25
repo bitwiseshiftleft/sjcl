@@ -76,6 +76,9 @@ sjcl.test.vector.bn_powermod = [
   // // This was disabled because it's slow (~2.5s with `rhino -O 9`). Once
   // // a better powermod algorithm is implemented (e.g., using Montgomery
   // // reduction), this can be re-enabled.
+  //
+  // // Note:  This example can't be done with Montgomery reduction anyways
+  // //   because the modulus is even.
   // {
   //   g: 2,
   //   x: "eeaf0ab9adb3008dd6c314c9c25600057674df692c0006e0d5d8e2050b98be48e4",

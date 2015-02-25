@@ -264,11 +264,7 @@ sjcl.bn.prototype = {
 
   /** this ^ n.  Uses square-and-multiply.  Normalizes and reduces. */
   power: function(l) {
-    if (typeof(l) === "number") {
-      l = [l];
-    } else if (l.limbs !== undefined) {
-      l = l.normalize().trim().limbs;
-    }
+    l = new sjcl.bn(l).normalize().trim().limbs;
     var i, j, out = new this._class(1), pow = this;
 
     for (i=0; i<l.length; i++) {
@@ -289,13 +285,18 @@ sjcl.bn.prototype = {
   },
 
   /** this ^ x mod N */
-  powermod: function(l, N) {
-    if (typeof(l) === "number") {
-      l = [l];
-    } else if (l.limbs !== undefined) {
-      l = l.normalize().trim().limbs;
+  powermod: function(x, N) {
+    x = new sjcl.bn(x);
+    N = new sjcl.bn(N);
+
+    // Jump to montpowermod if possible.
+    if ((N.limbs[0] & 1) == 1) {
+      var montOut = this.montpowermod(x, N);
+
+      if (montOut != false) { return montOut; } // else go to slow powermod
     }
-    var i, j, out = new this._class(1), pow = this;
+
+    var i, j, l = x.normalize().trim().limbs, out = new this._class(1), pow = this;
 
     for (i=0; i<l.length; i++) {
       for (j=0; j<this.radix; j++) {
@@ -307,6 +308,101 @@ sjcl.bn.prototype = {
     }
 
     return out;
+  },
+
+  /** this ^ x mod N with Montomery reduction */
+  montpowermod: function(x, N) {
+    x = new sjcl.bn(x);
+    N = new sjcl.bn(N);
+
+    var i, j,
+      l = x.normalize().trim().limbs,
+      radix = this.radix,
+      out = new this._class(1),
+      pow = this;
+
+    // Generate R as a cap of N.
+    var R, s;
+
+    R = new sjcl.bn({
+      limbs: N.copy().normalize().trim().limbs.map(function() { return 0; })
+    });
+
+    for (s = this.radix; s > 0; s--) {
+      if (((N.limbs[N.limbs.length - 1] >> s) & 1) == 1) {
+        R.limbs[R.limbs.length - 1] = 1 << s;
+        break;
+      }
+    }
+
+    // Find R' and N' such that R * R' - N * N' = 1.
+    var RR = R.copy(), NN = N.copy(), RP = new sjcl.bn(1), NP = new sjcl.bn(0), RT = R.copy();
+
+    while (1 == RT.greaterEquals(1)) {
+      RT.halveM();
+
+      if ((RP.limbs[0] & 1) == 0) {
+        RP.halveM();
+        NP.halveM();
+      } else {
+        RP.addM(NN);
+        RP.halveM();
+
+        NP.halveM();
+        NP.addM(RR);
+      }
+    }
+
+    RP = RP.cnormalize().reduce();
+    NP = NP.cnormalize().reduce();
+
+    if ('0x1' != R.mul(2).mul(RP).sub(N.mul(NP)).normalize().trim().toString()) {
+      return false;
+    }
+
+    var montMul = function(a, b) {
+      var k, ab, right, abBar, mask = (1 << (s + 1)) - 1;
+
+      ab = a.mul(b);
+
+      right = ab.mul(NP);
+      right.limbs = right.limbs.slice(0, R.limbs.length);
+
+      if (right.limbs.length == R.limbs.length) {
+        right.limbs[R.limbs.length - 1] &= mask;
+      }
+
+      right = right.mul(N);
+
+      abBar = ab.add(right).cnormalize().reduce().trim();
+      abBar.limbs = abBar.limbs.slice(R.limbs.length - 1);
+
+      for (k=0; k <= s; k++) {
+        abBar.halveM()
+      }
+
+      if (1 == abBar.greaterEquals(N)) {
+        abBar.subM(N)
+      }
+
+      return abBar;
+    },
+    montIn = function(c) { return c.mul(R).mul(2).mod(N); },
+    montOut = function(c) { return c.mul(RP).mod(N); };
+
+    pow = montIn(pow);
+    out = montIn(out);
+
+    for (i=0; i<l.length; i++) {
+      for (j=0; j<radix; j++) {
+        if (l[i] & (1<<j)) { out = montMul(out, pow); }
+        if (i == (l.length - 1) && l[i]>>(j + 1) == 0) { break; }
+
+        pow = montMul(pow, pow);
+      }
+    }
+
+    return montOut(out);
   },
 
   trim: function() {
