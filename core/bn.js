@@ -312,17 +312,16 @@ sjcl.bn.prototype = {
 
   /** this ^ x mod N with Montomery reduction */
   montpowermod: function(x, N) {
-    x = new sjcl.bn(x);
+    x = new sjcl.bn(x).normalize().trim();
     N = new sjcl.bn(N);
 
     var i, j,
-      l = x.normalize().trim().limbs,
       radix = this.radix,
       out = new this._class(1),
-      pow = this;
+      pow = this.copy();
 
     // Generate R as a cap of N.
-    var R, s;
+    var R, s, wind, bitsize = x.bitLength();
 
     R = new sjcl.bn({
       limbs: N.copy().normalize().trim().limbs.map(function() { return 0; })
@@ -335,10 +334,18 @@ sjcl.bn.prototype = {
       }
     }
 
+    // Calculate window size as a function of the exponent's size.
+    if (bitsize == 0) { return this;
+    } else if (bitsize < 18)  { wind = 1;
+    } else if (bitsize < 48)  { wind = 3;
+    } else if (bitsize < 144) { wind = 4;
+    } else if (bitsize < 768) { wind = 5;
+    } else { wind = 6; }
+
     // Find R' and N' such that R * R' - N * N' = 1.
     var RR = R.copy(), NN = N.copy(), RP = new sjcl.bn(1), NP = new sjcl.bn(0), RT = R.copy();
 
-    while (1 == RT.greaterEquals(1)) {
+    while (RT.greaterEquals(1)) {
       RT.halveM();
 
       if ((RP.limbs[0] & 1) == 0) {
@@ -353,14 +360,17 @@ sjcl.bn.prototype = {
       }
     }
 
-    RP = RP.normalize().reduce();
-    NP = NP.normalize().reduce();
+    RP = RP.normalize();
+    NP = NP.normalize();
 
+    // Check whether the invariant holds.
+    // If it doesn't, we can't use Montgomery reduction on this modulus.
     if (!R.mul(2).mul(RP).sub(N.mul(NP)).equals(1)) {
       return false;
     }
 
-    var montMul = function(a, b) {
+    var montIn = function(c) { return c.mul(R).mul(2).mod(N); },
+    montMul = function(a, b) {
       // Standard Montgomery reduction
       var k, carry, ab, right, abBar, mask = (1 << (s + 1)) - 1;
 
@@ -378,6 +388,7 @@ sjcl.bn.prototype = {
       abBar = ab.add(right).normalize().trim();
       abBar.limbs = abBar.limbs.slice(R.limbs.length - 1);
 
+      // Division.  Equivelent to calling *.halveM() s times.
       for (k=0; k < abBar.limbs.length; k++) {
         if (k > 0) {
           abBar.limbs[k - 1] |= (abBar.limbs[k] & mask) << (radix - s - 1)
@@ -392,18 +403,53 @@ sjcl.bn.prototype = {
 
       return abBar;
     },
-    montIn = function(c) { return c.mul(R).mul(2).mod(N); },
-    montOut = function(c) { return c.mul(RP).mod(N); };
+    montOut = function(c) { return montMul(c, 1); };
 
     pow = montIn(pow);
     out = montIn(out);
 
-    for (i=0; i<l.length; i++) {
-      for (j=0; j<radix; j++) {
-        if (l[i] & (1<<j)) { out = montMul(out, pow); }
-        if (i == (l.length - 1) && l[i]>>(j + 1) == 0) { break; }
+    // Sliding-Window Exponentiation (HAC 14.85)
+    var h, precomp = {}, cap = (1 << (wind - 1)) - 1;
 
-        pow = montMul(pow, pow);
+    precomp[1] = pow.copy();
+    precomp[2] = montMul(pow, pow);
+
+    for (h=1; h<=cap; h++) {
+      precomp[(2 * h) + 1] = montMul(precomp[(2 * h) - 1], precomp[2]);
+    }
+
+    var getBit = function(exp, i) { // Gets ith bit of exp.
+      var off = i % exp.radix;
+
+      return (exp.limbs[Math.floor(i / exp.radix)] & (1 << off)) >> off;
+    }
+
+    for (i = x.bitLength() - 1; i >= 0; ) {
+      if (getBit(x, i) == 0) {
+        // If the next bit is zero:
+        //   Square, move forward one bit.
+        out = montMul(out, out)
+        i = i - 1;
+      } else {
+        // If the next bit is one:
+        //   Find the longest sequence of bits after this one, less than `wind`
+        //   bits long, that ends with a 1.  Convert the sequence into an
+        //   integer and look up the pre-computed value to add.
+        var l = i - wind + 1;
+
+        while (getBit(x, l) == 0) {
+          l++;
+        }
+
+        var indx = 0;
+        for (j = l; j <= i; j++) {
+          indx += getBit(x, j) << (j - l)
+          out = montMul(out, out);
+        }
+
+        out = montMul(out, precomp[indx])
+
+        i = l - 1;
       }
     }
 
