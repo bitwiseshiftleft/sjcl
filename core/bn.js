@@ -353,15 +353,16 @@ sjcl.bn.prototype = {
       }
     }
 
-    RP = RP.cnormalize().reduce();
-    NP = NP.cnormalize().reduce();
+    RP = RP.normalize().reduce();
+    NP = NP.normalize().reduce();
 
-    if ('0x1' != R.mul(2).mul(RP).sub(N.mul(NP)).normalize().trim().toString()) {
+    if (!R.mul(2).mul(RP).sub(N.mul(NP)).equals(1)) {
       return false;
     }
 
     var montMul = function(a, b) {
-      var k, ab, right, abBar, mask = (1 << (s + 1)) - 1;
+      // Standard Montgomery reduction
+      var k, carry, ab, right, abBar, mask = (1 << (s + 1)) - 1;
 
       ab = a.mul(b);
 
@@ -374,14 +375,18 @@ sjcl.bn.prototype = {
 
       right = right.mul(N);
 
-      abBar = ab.add(right).cnormalize().reduce().trim();
+      abBar = ab.add(right).normalize().trim();
       abBar.limbs = abBar.limbs.slice(R.limbs.length - 1);
 
-      for (k=0; k <= s; k++) {
-        abBar.halveM()
+      for (k=0; k < abBar.limbs.length; k++) {
+        if (k > 0) {
+          abBar.limbs[k - 1] |= (abBar.limbs[k] & mask) << (radix - s - 1)
+        }
+
+        abBar.limbs[k] = abBar.limbs[k] >> (s + 1)
       }
 
-      if (1 == abBar.greaterEquals(N)) {
+      if (abBar.greaterEquals(N)) {
         abBar.subM(N)
       }
 
