@@ -363,13 +363,16 @@ sjcl.bn.prototype = {
     RP = RP.normalize();
     NP = NP.normalize();
 
+    RR.doubleM()
+    var R2 = RR.mulmod(RR, N);
+
     // Check whether the invariant holds.
     // If it doesn't, we can't use Montgomery reduction on this modulus.
-    if (!R.mul(2).mul(RP).sub(N.mul(NP)).equals(1)) {
+    if (!RR.mul(RP).sub(N.mul(NP)).equals(1)) {
       return false;
     }
 
-    var montIn = function(c) { return c.mul(R).mul(2).mod(N); },
+    var montIn = function(c) { return montMul(c, R2) },
     montMul = function(a, b) {
       // Standard Montgomery reduction
       var k, carry, ab, right, abBar, mask = (1 << (s + 1)) - 1;
