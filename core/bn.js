@@ -335,12 +335,19 @@ sjcl.bn.prototype = {
     }
 
     // Calculate window size as a function of the exponent's size.
-    if (bitsize == 0) { return this;
-    } else if (bitsize < 18)  { wind = 1;
-    } else if (bitsize < 48)  { wind = 3;
-    } else if (bitsize < 144) { wind = 4;
-    } else if (bitsize < 768) { wind = 5;
-    } else { wind = 6; }
+    if (bitsize == 0) {
+      return this;
+    } else if (bitsize < 18)  {
+      wind = 1;
+    } else if (bitsize < 48)  {
+      wind = 3;
+    } else if (bitsize < 144) {
+      wind = 4;
+    } else if (bitsize < 768) {
+      wind = 5;
+    } else {
+      wind = 6;
+    }
 
     // Find R' and N' such that R * R' - N * N' = 1.
     var RR = R.copy(), NN = N.copy(), RP = new sjcl.bn(1), NP = new sjcl.bn(0), RT = R.copy();
