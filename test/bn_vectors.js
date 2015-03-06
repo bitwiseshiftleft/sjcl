@@ -72,14 +72,11 @@ sjcl.test.vector.bn_powermod = [
     x: "89457115510016156219817846189181057618965150496979174671534084187",
     N: "1897166415676096761",
     v: "16840615e646a4c5c8d"
-  }//,
-  // // This was disabled because it's slow (~2.5s with `rhino -O 9`). Once
-  // // a better powermod algorithm is implemented (e.g., using Montgomery
-  // // reduction), this can be re-enabled.
-  // {
-  //   g: 2,
-  //   x: "eeaf0ab9adb3008dd6c314c9c25600057674df692c0006e0d5d8e2050b98be48e4",
-  //   N: "b48130d6e07674df740e1d33b4816e0d5d8e20e2050b98be48e457674df74096ea",
-  //   v: "9c3219b694befb9caac51a13eb1ac7053b02c654b6a0541cfa60c483592d478630"
-  // }
+  },
+  {
+    g: 2,
+    x: "eeaf0ab9adb3008dd6c314c9c25600057674df692c0006e0d5d8e2050b98be48e4",
+    N: "b48130d6e07674df740e1d33b4816e0d5d8e20e2050b98be48e457674df74096ea",
+    v: "9c3219b694befb9caac51a13eb1ac7053b02c654b6a0541cfa60c483592d478630"
+  }
 ]

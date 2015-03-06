@@ -10,7 +10,7 @@ sjcl.bn.prototype = {
   radix: 24,
   maxMul: 8,
   _class: sjcl.bn,
-  
+
   copy: function() {
     return new this._class(this);
   },
@@ -24,12 +24,12 @@ sjcl.bn.prototype = {
     case "object":
       this.limbs = it.limbs.slice(0);
       break;
-      
+
     case "number":
       this.limbs = [it];
       this.normalize();
       break;
-      
+
     case "string":
       it = it.replace(/^0x/, '');
       this.limbs = [];
@@ -60,14 +60,14 @@ sjcl.bn.prototype = {
     }
     return (difference === 0);
   },
-  
+
   /**
    * Get the i'th limb of this, zero if i is too large.
    */
   getLimb: function(i) {
     return (i >= this.limbs.length) ? 0 : this.limbs[i];
   },
-  
+
   /**
    * Constant time comparison function.
    * Returns 1 if this >= that, or zero otherwise.
@@ -84,7 +84,7 @@ sjcl.bn.prototype = {
     }
     return (greater | ~less) >>> 31;
   },
-  
+
   /**
    * Convert to a hex string.
    */
@@ -100,7 +100,7 @@ sjcl.bn.prototype = {
     }
     return "0x"+out;
   },
-  
+
   /** this += that.  Does not normalize. */
   addM: function(that) {
     if (typeof(that) !== "object") { that = new this._class(that); }
@@ -113,7 +113,7 @@ sjcl.bn.prototype = {
     }
     return this;
   },
-  
+
   /** this *= 2.  Requires normalized; ends up normalized. */
   doubleM: function() {
     var i, carry=0, tmp, r=this.radix, m=this.radixMask, l=this.limbs;
@@ -128,7 +128,7 @@ sjcl.bn.prototype = {
     }
     return this;
   },
-  
+
   /** this /= 2, rounded down.  Requires normalized; ends up normalized. */
   halveM: function() {
     var i, carry=0, tmp, r=this.radix, l=this.limbs;
@@ -155,21 +155,21 @@ sjcl.bn.prototype = {
     }
     return this;
   },
-  
+
   mod: function(that) {
     var neg = !this.greaterEquals(new sjcl.bn(0));
-    
+
     that = new sjcl.bn(that).normalize(); // copy before we begin
     var out = new sjcl.bn(this).normalize(), ci=0;
-    
+
     if (neg) out = (new sjcl.bn(0)).subM(out).normalize();
-    
+
     for (; out.greaterEquals(that); ci++) {
       that.doubleM();
     }
-    
+
     if (neg) out = that.sub(out).normalize();
-    
+
     for (; ci > 0; ci--) {
       that.halveM();
       if (out.greaterEquals(that)) {
@@ -178,15 +178,15 @@ sjcl.bn.prototype = {
     }
     return out.trim();
   },
-  
+
   /** return inverse mod prime p.  p must be odd. Binary extended Euclidean algorithm mod p. */
   inverseMod: function(p) {
     var a = new sjcl.bn(1), b = new sjcl.bn(0), x = new sjcl.bn(this), y = new sjcl.bn(p), tmp, i, nz=1;
-    
+
     if (!(p.limbs[0] & 1)) {
       throw (new sjcl.exception.invalid("inverseMod: p must be odd"));
     }
-    
+
     // invariant: y is odd
     do {
       if (x.limbs[0] & 1) {
@@ -197,13 +197,13 @@ sjcl.bn.prototype = {
         }
         x.subM(y);
         x.normalize();
-        
+
         if (!a.greaterEquals(b)) {
           a.addM(p);
         }
         a.subM(b);
       }
-      
+
       // cut everything in half
       x.halveM();
       if (a.limbs[0] & 1) {
@@ -211,20 +211,20 @@ sjcl.bn.prototype = {
       }
       a.normalize();
       a.halveM();
-      
+
       // check for termination: x ?= 0
       for (i=nz=0; i<x.limbs.length; i++) {
         nz |= x.limbs[i];
       }
     } while(nz);
-    
+
     if (!y.equals(1)) {
       throw (new sjcl.exception.invalid("inverseMod: p and x must be relatively prime"));
     }
-    
+
     return b;
   },
-  
+
   /** this + that.  Does not normalize. */
   add: function(that) {
     return this.copy().addM(that);
@@ -234,7 +234,7 @@ sjcl.bn.prototype = {
   sub: function(that) {
     return this.copy().subM(that);
   },
-  
+
   /** this * that.  Normalizes and reduces. */
   mul: function(that) {
     if (typeof(that) === "number") { that = new this._class(that); }
@@ -248,7 +248,7 @@ sjcl.bn.prototype = {
       for (j=0; j<bl; j++) {
         c[i+j] += ai * b[j];
       }
-     
+
       if (!--ii) {
         ii = this.maxMul;
         out.cnormalize();
@@ -264,22 +264,18 @@ sjcl.bn.prototype = {
 
   /** this ^ n.  Uses square-and-multiply.  Normalizes and reduces. */
   power: function(l) {
-    if (typeof(l) === "number") {
-      l = [l];
-    } else if (l.limbs !== undefined) {
-      l = l.normalize().limbs;
-    }
+    l = new sjcl.bn(l).normalize().trim().limbs;
     var i, j, out = new this._class(1), pow = this;
 
     for (i=0; i<l.length; i++) {
       for (j=0; j<this.radix; j++) {
-        if (l[i] & (1<<j)) {
-          out = out.mul(pow);
-        }
+        if (l[i] & (1<<j)) { out = out.mul(pow); }
+        if (i == (l.length - 1) && l[i]>>(j + 1) == 0) { break; }
+
         pow = pow.square();
       }
     }
-    
+
     return out;
   },
 
@@ -290,14 +286,184 @@ sjcl.bn.prototype = {
 
   /** this ^ x mod N */
   powermod: function(x, N) {
-    var result = new sjcl.bn(1), a = new sjcl.bn(this), k = new sjcl.bn(x);
-    while (true) {
-      if (k.limbs[0] & 1) { result = result.mulmod(a, N); }
-      k.halveM();
-      if (k.equals(0)) { break; }
-      a = a.mulmod(a, N);
+    x = new sjcl.bn(x);
+    N = new sjcl.bn(N);
+
+    // Jump to montpowermod if possible.
+    if ((N.limbs[0] & 1) == 1) {
+      var montOut = this.montpowermod(x, N);
+
+      if (montOut != false) { return montOut; } // else go to slow powermod
     }
-    return result.normalize().reduce();
+
+    var i, j, l = x.normalize().trim().limbs, out = new this._class(1), pow = this;
+
+    for (i=0; i<l.length; i++) {
+      for (j=0; j<this.radix; j++) {
+        if (l[i] & (1<<j)) { out = out.mulmod(pow, N); }
+        if (i == (l.length - 1) && l[i]>>(j + 1) == 0) { break; }
+
+        pow = pow.mulmod(pow, N);
+      }
+    }
+
+    return out;
+  },
+
+  /** this ^ x mod N with Montomery reduction */
+  montpowermod: function(x, N) {
+    x = new sjcl.bn(x).normalize().trim();
+    N = new sjcl.bn(N);
+
+    var i, j,
+      radix = this.radix,
+      out = new this._class(1),
+      pow = this.copy();
+
+    // Generate R as a cap of N.
+    var R, s, wind, bitsize = x.bitLength();
+
+    R = new sjcl.bn({
+      limbs: N.copy().normalize().trim().limbs.map(function() { return 0; })
+    });
+
+    for (s = this.radix; s > 0; s--) {
+      if (((N.limbs[N.limbs.length - 1] >> s) & 1) == 1) {
+        R.limbs[R.limbs.length - 1] = 1 << s;
+        break;
+      }
+    }
+
+    // Calculate window size as a function of the exponent's size.
+    if (bitsize == 0) {
+      return this;
+    } else if (bitsize < 18)  {
+      wind = 1;
+    } else if (bitsize < 48)  {
+      wind = 3;
+    } else if (bitsize < 144) {
+      wind = 4;
+    } else if (bitsize < 768) {
+      wind = 5;
+    } else {
+      wind = 6;
+    }
+
+    // Find R' and N' such that R * R' - N * N' = 1.
+    var RR = R.copy(), NN = N.copy(), RP = new sjcl.bn(1), NP = new sjcl.bn(0), RT = R.copy();
+
+    while (RT.greaterEquals(1)) {
+      RT.halveM();
+
+      if ((RP.limbs[0] & 1) == 0) {
+        RP.halveM();
+        NP.halveM();
+      } else {
+        RP.addM(NN);
+        RP.halveM();
+
+        NP.halveM();
+        NP.addM(RR);
+      }
+    }
+
+    RP = RP.normalize();
+    NP = NP.normalize();
+
+    RR.doubleM()
+    var R2 = RR.mulmod(RR, N);
+
+    // Check whether the invariant holds.
+    // If it doesn't, we can't use Montgomery reduction on this modulus.
+    if (!RR.mul(RP).sub(N.mul(NP)).equals(1)) {
+      return false;
+    }
+
+    var montIn = function(c) { return montMul(c, R2) },
+    montMul = function(a, b) {
+      // Standard Montgomery reduction
+      var k, carry, ab, right, abBar, mask = (1 << (s + 1)) - 1;
+
+      ab = a.mul(b);
+
+      right = ab.mul(NP);
+      right.limbs = right.limbs.slice(0, R.limbs.length);
+
+      if (right.limbs.length == R.limbs.length) {
+        right.limbs[R.limbs.length - 1] &= mask;
+      }
+
+      right = right.mul(N);
+
+      abBar = ab.add(right).normalize().trim();
+      abBar.limbs = abBar.limbs.slice(R.limbs.length - 1);
+
+      // Division.  Equivelent to calling *.halveM() s times.
+      for (k=0; k < abBar.limbs.length; k++) {
+        if (k > 0) {
+          abBar.limbs[k - 1] |= (abBar.limbs[k] & mask) << (radix - s - 1)
+        }
+
+        abBar.limbs[k] = abBar.limbs[k] >> (s + 1)
+      }
+
+      if (abBar.greaterEquals(N)) {
+        abBar.subM(N)
+      }
+
+      return abBar;
+    },
+    montOut = function(c) { return montMul(c, 1); };
+
+    pow = montIn(pow);
+    out = montIn(out);
+
+    // Sliding-Window Exponentiation (HAC 14.85)
+    var h, precomp = {}, cap = (1 << (wind - 1)) - 1;
+
+    precomp[1] = pow.copy();
+    precomp[2] = montMul(pow, pow);
+
+    for (h=1; h<=cap; h++) {
+      precomp[(2 * h) + 1] = montMul(precomp[(2 * h) - 1], precomp[2]);
+    }
+
+    var getBit = function(exp, i) { // Gets ith bit of exp.
+      var off = i % exp.radix;
+
+      return (exp.limbs[Math.floor(i / exp.radix)] & (1 << off)) >> off;
+    }
+
+    for (i = x.bitLength() - 1; i >= 0; ) {
+      if (getBit(x, i) == 0) {
+        // If the next bit is zero:
+        //   Square, move forward one bit.
+        out = montMul(out, out)
+        i = i - 1;
+      } else {
+        // If the next bit is one:
+        //   Find the longest sequence of bits after this one, less than `wind`
+        //   bits long, that ends with a 1.  Convert the sequence into an
+        //   integer and look up the pre-computed value to add.
+        var l = i - wind + 1;
+
+        while (getBit(x, l) == 0) {
+          l++;
+        }
+
+        var indx = 0;
+        for (j = l; j <= i; j++) {
+          indx += getBit(x, j) << (j - l)
+          out = montMul(out, out);
+        }
+
+        out = montMul(out, precomp[indx])
+
+        i = l - 1;
+      }
+    }
+
+    return montOut(out);
   },
 
   trim: function() {
@@ -308,7 +474,7 @@ sjcl.bn.prototype = {
     l.push(p);
     return this;
   },
-  
+
   /** Reduce mod a modulus.  Stubbed for subclassing. */
   reduce: function() {
     return this;
@@ -318,7 +484,7 @@ sjcl.bn.prototype = {
   fullReduce: function() {
     return this.normalize();
   },
-  
+
   /** Propagate carries. */
   normalize: function() {
     var carry=0, i, pv = this.placeVal, ipv = this.ipv, l, m, limbs = this.limbs, ll = limbs.length, mask = this.radixMask;
@@ -344,7 +510,7 @@ sjcl.bn.prototype = {
     limbs[i] += carry;
     return this;
   },
-  
+
   /** Serialize to a bit array */
   toBits: function(len) {
     this.fullReduce();
@@ -357,7 +523,7 @@ sjcl.bn.prototype = {
     }
     return out;
   },
-  
+
   /** Return the length in bits, rounded up to the nearest byte. */
   bitLength: function() {
     this.fullReduce();
@@ -376,7 +542,7 @@ sjcl.bn.prototype = {
 sjcl.bn.fromBits = function(bits) {
   var Class = this, out = new Class(), words=[], w=sjcl.bitArray, t = this.prototype,
       l = Math.min(this.bitLength || 0x100000000, w.bitLength(bits)), e = l % t.radix || t.radix;
-  
+
   words[0] = w.extract(bits, 0, e);
   for (; e < l; e += t.radix) {
     words.unshift(w.extract(bits, e, t.radix));
@@ -396,7 +562,7 @@ sjcl.bn.prototype.radixMask = (1 << sjcl.bn.prototype.radix) - 1;
  * i.e. a prime of the form 2^e + sum(a * 2^b),where the sum is negative and sparse.
  */
 sjcl.bn.pseudoMersennePrime = function(exponent, coeff) {
-  /** @constructor 
+  /** @constructor
   * @private
   */
   function p(it) {
@@ -416,7 +582,7 @@ sjcl.bn.pseudoMersennePrime = function(exponent, coeff) {
   ppr.fullOffset = [];
   ppr.fullFactor = [];
   ppr.modulus = p.modulus = new sjcl.bn(Math.pow(2,exponent));
-  
+
   ppr.fullMask = 0|-Math.pow(2, exponent % ppr.radix);
 
   for (i=0; i<coeff.length; i++) {
@@ -444,7 +610,7 @@ sjcl.bn.pseudoMersennePrime = function(exponent, coeff) {
       for (k=0; k<ol; k++) {
         limbs[ll+off[k]] -= fac[k] * l;
       }
-      
+
       i--;
       if (!i) {
         limbs.push(0);
@@ -456,7 +622,7 @@ sjcl.bn.pseudoMersennePrime = function(exponent, coeff) {
 
     return this;
   };
-  
+
   /** @memberof sjcl.bn
   * @this { sjcl.bn }
   */
@@ -480,7 +646,7 @@ sjcl.bn.pseudoMersennePrime = function(exponent, coeff) {
   ppr.fullReduce = function() {
     var greater, i;
     // massively above the modulus, may be negative
-    
+
     this._strongReduce();
     // less than twice the modulus, may be negative
 
@@ -488,7 +654,7 @@ sjcl.bn.pseudoMersennePrime = function(exponent, coeff) {
     this.addM(this.modulus);
     this.normalize();
     // probably 2-3x the modulus
-    
+
     this._strongReduce();
     // less than the power of 2.  still may be more than
     // the modulus
@@ -497,7 +663,7 @@ sjcl.bn.pseudoMersennePrime = function(exponent, coeff) {
     for (i=this.limbs.length; i<this.modOffset; i++) {
       this.limbs[i] = 0;
     }
-    
+
     // constant-time subtract modulus
     greater = this.greaterEquals(this.modulus);
     for (i=0; i<this.limbs.length; i++) {
@@ -565,4 +731,3 @@ sjcl.bn.random = function(modulus, paranoia) {
     }
   }
 };
-
