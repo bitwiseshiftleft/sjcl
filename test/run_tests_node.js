@@ -1,6 +1,5 @@
 var fs = require('fs');
 var vm = require('vm');
-var crypto = require('crypto');
 
 var load = function(path) {
     vm.runInThisContext(fs.readFileSync(path));
