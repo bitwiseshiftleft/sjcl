@@ -7,8 +7,8 @@ Stanford Javascript Crypto Library
 
 Security Advisories
 ===
+
 * 12.02.2014: the current development version has a paranoia bug in the ecc module. The bug was introduced in commit [ac0b3fe0](https://github.com/bitwiseshiftleft/sjcl/commit/ac0b3fe0) and might affect ecc key generation on platforms without a platform random number generator.
-* 
 
 Security Contact
 ====
