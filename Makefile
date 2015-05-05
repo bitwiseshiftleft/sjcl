@@ -59,21 +59,23 @@ TEST_COMMON=  browserTest/nodeUtil.js test/test.js
 TEST_SCRIPTS= $(TEST_COMMON) \
               test/aes_vectors.js test/aes_test.js \
               test/bitArray_vectors.js test/bitArray_test.js \
-              test/ocb2_vectors.js test/ocb2_test.js  \
-              test/ccm_vectors.js test/ccm_test.js  \
+              test/bn_vectors.js test/bn_test.js \
               test/cbc_vectors.js test/cbc_test.js  \
+              test/ccm_vectors.js test/ccm_test.js  \
+              test/ecc_conv.js \
+              test/ecdsa_test.js test/ecdsa_vectors.js test/ecdh_test.js \
               test/gcm_vectors.js test/gcm_test.js  \
+              test/hmac_vectors.js test/hmac_test.js \
+              test/json_test.js \
+              test/ocb2_vectors.js test/ocb2_test.js  \
+              test/pbkdf2_test.js \
+              test/ripemd160_vectors.js test/ripemd160_test.js \
+              test/sha1_vectors.js test/sha1_test.js \
               test/sha256_vectors.js test/sha256_test.js \
               test/sha256_test_brute_force.js \
               test/sha512_vectors.js test/sha512_test.js \
               test/sha512_test_brute_force.js \
-              test/sha1_vectors.js test/sha1_test.js \
-              test/hmac_vectors.js test/hmac_test.js \
-              test/pbkdf2_test.js \
-              test/bn_vectors.js test/bn_test.js \
-              test/ecdsa_test.js test/ecdsa_vectors.js test/ecdh_test.js \
-              test/srp_vectors.js test/srp_test.js \
-              test/json_test.js
+              test/srp_vectors.js test/srp_test.js
 
 # Run all tests in node.js.
 
@@ -90,4 +92,3 @@ clean: tidy
 distclean: clean
 	./configure
 	make sjcl.js tidy
-
