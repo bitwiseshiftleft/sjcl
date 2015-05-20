@@ -15,6 +15,27 @@ sjcl.mode.ccm = {
    */
   name: "ccm",
   
+  _progressListeners: [],
+
+  listenProgress: function (cb) {
+    sjcl.mode.ccm._progressListeners.push(cb);
+  },
+
+  unListenProgress: function (cb) {
+    var index = sjcl.mode.ccm._progressListeners.indexOf(cb);
+    if (index > -1) {
+      sjcl.mode.ccm._progressListeners.splice(index, 1);
+    }
+  },
+
+  _callProgressListener: function (val) {
+    var p = sjcl.mode.ccm._progressListeners.slice(), i;
+
+    for (i = 0; i < p.length; i += 1) {
+      p[i](val);
+    }
+  },
+
   /** Encrypt in CCM mode.
    * @static
    * @param {Object} prf The pseudorandom function.  It must have a block size of 16 bytes.
@@ -90,39 +111,16 @@ sjcl.mode.ccm = {
     return out.data;
   },
 
-  /* Compute the (unencrypted) authentication tag, according to the CCM specification
-   * @param {Object} prf The pseudorandom function.
-   * @param {bitArray} plaintext The plaintext data.
-   * @param {bitArray} iv The initialization value.
-   * @param {bitArray} adata The authenticated data.
-   * @param {Number} tlen the desired tag length, in bits.
-   * @return {bitArray} The tag, but not yet encrypted.
-   * @private
-   */
-  _computeTag: function(prf, plaintext, iv, adata, tlen, L) {
-    // compute B[0]
+  _macAdditionalData: function (prf, adata, iv, tlen, ol, L) {
     var mac, tmp, i, macData = [], w=sjcl.bitArray, xor = w._xor4;
-
-    tlen /= 8;
-  
-    // check tag length and message length
-    if (tlen % 2 || tlen < 4 || tlen > 16) {
-      throw new sjcl.exception.invalid("ccm: invalid tag length");
-    }
-  
-    if (adata.length > 0xFFFFFFFF || plaintext.length > 0xFFFFFFFF) {
-      // I don't want to deal with extracting high words from doubles.
-      throw new sjcl.exception.bug("ccm: can't deal with 4GiB or more data");
-    }
 
     // mac the flags
     mac = [w.partial(8, (adata.length ? 1<<6 : 0) | (tlen-2) << 2 | L-1)];
 
     // mac the iv and length
     mac = w.concat(mac, iv);
-    mac[3] |= w.bitLength(plaintext)/8;
+    mac[3] |= ol;
     mac = prf.encrypt(mac);
-    
   
     if (adata.length) {
       // mac the associated data.  start with its length...
@@ -139,7 +137,37 @@ sjcl.mode.ccm = {
         mac = prf.encrypt(xor(mac, macData.slice(i,i+4).concat([0,0,0])));
       }
     }
+
+    return mac;
+  },
+
+  /* Compute the (unencrypted) authentication tag, according to the CCM specification
+   * @param {Object} prf The pseudorandom function.
+   * @param {bitArray} plaintext The plaintext data.
+   * @param {bitArray} iv The initialization value.
+   * @param {bitArray} adata The authenticated data.
+   * @param {Number} tlen the desired tag length, in bits.
+   * @return {bitArray} The tag, but not yet encrypted.
+   * @private
+   */
+  _computeTag: function(prf, plaintext, iv, adata, tlen, L) {
+    // compute B[0]
+    var mac, i, w=sjcl.bitArray, xor = w._xor4;
+
+    tlen /= 8;
   
+    // check tag length and message length
+    if (tlen % 2 || tlen < 4 || tlen > 16) {
+      throw new sjcl.exception.invalid("ccm: invalid tag length");
+    }
+  
+    if (adata.length > 0xFFFFFFFF || plaintext.length > 0xFFFFFFFF) {
+      // I don't want to deal with extracting high words from doubles.
+      throw new sjcl.exception.bug("ccm: can't deal with 4GiB or more data");
+    }
+
+    mac = sjcl.mode.ccm._macAdditionalData(prf, adata, iv, tlen, w.bitLength(plaintext)/8, L);
+
     // mac the plaintext
     for (i=0; i<plaintext.length; i+=4) {
       mac = prf.encrypt(xor(mac, plaintext.slice(i,i+4).concat([0,0,0])));
@@ -161,7 +189,7 @@ sjcl.mode.ccm = {
    * @private
    */
   _ctrMode: function(prf, data, iv, tag, tlen, L) {
-    var enc, i, w=sjcl.bitArray, xor = w._xor4, ctr, l = data.length, bl=w.bitLength(data);
+    var enc, i, w=sjcl.bitArray, xor = w._xor4, ctr, l = data.length, bl=w.bitLength(data), n = l/50, p = n;
 
     // start the ctr
     ctr = w.concat([w.partial(8,L-1)],iv).concat([0,0,0]).slice(0,4);
@@ -173,6 +201,10 @@ sjcl.mode.ccm = {
     if (!l) { return {tag:tag, data:[]}; }
     
     for (i=0; i<l; i+=4) {
+      if (i > n) {
+        sjcl.mode.ccm._callProgressListener(i/l);
+        n += p;
+      }
       ctr[3]++;
       enc = prf.encrypt(ctr);
       data[i]   ^= enc[0];
