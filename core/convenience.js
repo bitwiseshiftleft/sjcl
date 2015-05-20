@@ -208,11 +208,11 @@
       if (!(m=a[i].match(/^\s*(?:(["']?)([a-z][a-z0-9]*)\1)\s*:\s*(?:(-?\d+)|"([a-z0-9+\/%*_.@=\-]*)"|(true|false))$/i))) {
         throw new sjcl.exception.invalid("json decode: this isn't json!");
       }
-      if (m[3]) {
+      if (m[3] != null) {
         out[m[2]] = parseInt(m[3],10);
-      } else if (m[4]) {
+      } else if (m[4] != null) {
         out[m[2]] = m[2].match(/^(ct|adata|salt|iv)$/) ? sjcl.codec.base64.toBits(m[4]) : unescape(m[4]);
-      } else if (m[5]) {
+      } else if (m[5] != null) {
         out[m[2]] = m[5] === 'true';
       }
     }
