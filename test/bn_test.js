@@ -65,3 +65,14 @@ new sjcl.test.TestCase("Bignum modular exponentiation test", function (cb) {
   }
   cb && cb();
 });
+
+new sjcl.test.TestCase("Bignum toString test", function (cb) {
+  if (!sjcl.bn) {
+    this.unimplemented();
+    cb && cb();
+    return;
+  }
+  this.require((new sjcl.bn(12312434)).power(10).toString() ===
+    '0xb99c06973dcc72429aa1dd41b0bc40a424289a05d3d72f066ee4e71c400');
+  cb && cb();
+});
