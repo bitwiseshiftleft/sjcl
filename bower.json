@@ -1,5 +1,20 @@
 {
 	"name": "sjcl",
 	"version": "1.0.3",
-	"main": ["./sjcl.js"]
+	"main": ["./sjcl.js"],
+  "ignore": [
+    ".*",
+    "*.md",
+    "Makefile",
+    "config.mk",
+    "configure",
+    "package.json",
+    "browserTest",
+    "compress",
+    "core",
+    "demo",
+    "jsdoc_toolkit-2.3.3-beta",
+    "lint",
+    "test"
+  ]
 }
