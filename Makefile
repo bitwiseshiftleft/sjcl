@@ -70,7 +70,7 @@ TEST_SCRIPTS= $(TEST_COMMON) \
               test/hmac_vectors.js test/hmac_test.js \
               test/json_test.js \
               test/ocb2_vectors.js test/ocb2_test.js  \
-              test/pbkdf2_test.js \
+              test/pbkdf2_test.js test/scrypt_test.js \
               test/ripemd160_vectors.js test/ripemd160_test.js \
               test/sha1_vectors.js test/sha1_test.js \
               test/sha256_vectors.js test/sha256_test.js \
