@@ -16,9 +16,12 @@
 sjcl.misc.scrypt = function (password, salt, N, r, p, length, Prff) {
   var reverse = function (words) { // Converts Big <-> Little Endian words
     return words.map(function (word) {
-      return sjcl.codec.bytes.toBits(
-        sjcl.codec.bytes.fromBits([word]).reverse()
-      )[0];
+      var out = word & 0xFF;
+      out = (out << 8) | (word >>>  8) & 0xFF;
+      out = (out << 8) | (word >>> 16) & 0xFF;
+      out = (out << 8) | (word >>> 24) & 0xFF;
+
+      return out;
     })
   }
 
@@ -97,6 +100,24 @@ sjcl.misc.scrypt = function (password, salt, N, r, p, length, Prff) {
   N = N || 16384;
   r = r || 8;
   p = p || 1;
+
+  var SIZE_MAX = Math.pow(2, 32) - 1;
+
+  if (r * p >= Math.pow(2, 30)) {
+    throw sjcl.exception.invalid("The parameters r, p must satisfy r * p < 2^30");
+  }
+
+  if ((N < 2) || (N & (N - 1) != 0)) {
+    throw sjcl.exception.invalid("The parameter N must be a power of 2.");
+  }
+
+  if (N > SIZE_MAX / 128 / r) {
+    throw sjcl.exception.invalid("N too big.");
+  }
+
+  if (r > SIZE_MAX / 128 / p) {
+    throw sjcl.exception.invalid("r too big.");
+  }
 
   var blocks = [],
       tmp = sjcl.misc.pbkdf2(password, salt, 1, p * 128 * r * 8, Prff),
