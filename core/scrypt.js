@@ -14,11 +14,12 @@
  * @return {bitArray} The derived key.
  */
 sjcl.misc.scrypt = function (password, salt, N, r, p, length, Prff) {
+  var SIZE_MAX = Math.pow(2, 32) - 1,
+      self = sjcl.misc.scrypt;
+
   N = N || 16384;
   r = r || 8;
   p = p || 1;
-
-  var SIZE_MAX = Math.pow(2, 32) - 1;
 
   if (r * p >= Math.pow(2, 30)) {
     throw sjcl.exception.invalid("The parameters r, p must satisfy r * p < 2^30");
@@ -43,7 +44,7 @@ sjcl.misc.scrypt = function (password, salt, N, r, p, length, Prff) {
   while (tmp.length > 0) { blocks.push(tmp.splice(0, len)); }
 
   blocks = blocks.map(function (block) {
-    return reverse(scryptROMix(reverse(block), N));
+    return self.reverse(self.ROMix(self.reverse(block), N));
   }).reduce(function(a, b) {
     return a.concat(b);
   });
@@ -51,7 +52,7 @@ sjcl.misc.scrypt = function (password, salt, N, r, p, length, Prff) {
   return sjcl.misc.pbkdf2(password, blocks, 1, length, Prff);
 }
 
-var reverse = function (words) { // Converts Big <-> Little Endian words
+sjcl.misc.scrypt.reverse = function (words) { // Converts Big <-> Little Endian words
   return words.map(function (word) {
     var out = word & 0xFF;
     out = (out << 8) | (word >>>  8) & 0xFF;
@@ -62,7 +63,7 @@ var reverse = function (words) { // Converts Big <-> Little Endian words
   })
 }
 
-var salsa20Core = function (word, rounds) {
+sjcl.misc.scrypt.salsa20Core = function (word, rounds) {
   var R = function(a, b) { return (a << b) | (a >>> (32 - b)); }
   var x = word.slice(0);
 
@@ -90,8 +91,10 @@ var salsa20Core = function (word, rounds) {
   return word;
 }
 
-var scryptBlockMix = function(blocks) {
-  var temp = [];
+sjcl.misc.scrypt.blockMix = function(blocks) {
+  var temp = [],
+      self = sjcl.misc.scrypt;
+
   while (blocks.length > 0) { temp.push(blocks.splice(0, 16)); }
   blocks = temp;
 
@@ -100,7 +103,7 @@ var scryptBlockMix = function(blocks) {
 
   for (var i = 0; i < blocks.length; i++) {
     var T = X.map(function (xj, j) { return xj ^ blocks[i][j] });
-    X = salsa20Core(T, 8);
+    X = self.salsa20Core(T, 8);
     blocks[i] = X
   }
 
@@ -115,20 +118,21 @@ var scryptBlockMix = function(blocks) {
   return out.reduce(function(a, b) { return a.concat(b); });
 }
 
-var scryptROMix = function(block, N) {
+sjcl.misc.scrypt.ROMix = function(block, N) {
   var X = block.slice(0),
-      V = [];
+      V = [],
+      self = sjcl.misc.scrypt;
 
   for (var i = 0; i < N; i++) {
     V.push(X.slice(0));
-    X = scryptBlockMix(X);
+    X = self.blockMix(X);
   }
 
   for (i = 0; i < N; i++) {
     var j = X[X.length - 16] & (N - 1);
 
     var T = X.map(function(b, k) { return b ^ V[j][k]; });
-    X = scryptBlockMix(T);
+    X = self.blockMix(T);
   }
 
   return X;
