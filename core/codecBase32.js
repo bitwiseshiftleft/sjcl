@@ -33,12 +33,14 @@ sjcl.codec.base32 = {
         bits -= BASE;
       }
     }
+    while ((out.length & 7) && !_noEquals) { out += "="; }
 
     return out;
   },
   
   /** Convert from a base32 string to a bitArray */
   toBits: function(str) {
+    str = str.replace(/\s|=/g,'').toUpperCase();
     var BITS = sjcl.codec.base32.BITS, BASE = sjcl.codec.base32.BASE, REMAINING = sjcl.codec.base32.REMAINING;
     var out = [], i, bits=0, c = sjcl.codec.base32._chars, ta=0, x;
 
