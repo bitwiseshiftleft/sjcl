@@ -8,7 +8,7 @@ sjcl.codec.base32 = {
   /** The base32 alphabet.
    * @private
    */
-  _chars: "0123456789abcdefghjkmnpqrstvwxyz",
+  _chars: "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567",
 
   /* bits in an array */
   BITS: 32,
