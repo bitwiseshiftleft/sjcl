@@ -26,6 +26,8 @@ function testCore(coreName, cb) {
     "pbkdf2_test.js",
     "ripemd160_test.js",
     "ripemd160_vectors.js",
+    "scrypt_test.js",
+    "scrypt_vectors.js",
     "sha1_test.js",
     "sha1_vectors.js",
     "sha256_test.js",
