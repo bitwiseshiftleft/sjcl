@@ -27,7 +27,7 @@ sjcl.codec.base32 = {
       c = sjcl.codec.base32._hexChars;
     }
 
-    for (i=0; out.length * BASE <= bl; ) {
+    for (i=0; out.length * BASE < bl; ) {
       out += c.charAt((ta ^ arr[i]>>>bits) >>> REMAINING);
       if (bits < BASE) {
         ta = arr[i] << (BASE-bits);
