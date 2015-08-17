@@ -22,7 +22,7 @@ sjcl.codec.base32 = {
     var BITS = sjcl.codec.base32.BITS, BASE = sjcl.codec.base32.BASE, REMAINING = sjcl.codec.base32.REMAINING;
     var out = "", i, bits=0, c = sjcl.codec.base32._chars, ta=0, bl = sjcl.bitArray.bitLength(arr);
 
-    for (i=0; out.length * BASE <= bl; ) {
+    for (i=0; out.length * BASE < bl; ) {
       out += c.charAt((ta ^ arr[i]>>>bits) >>> REMAINING);
       if (bits < BASE) {
         ta = arr[i] << (BASE-bits);
