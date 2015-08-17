@@ -57,6 +57,13 @@ sjcl.codec.base32 = {
     for (i=0; i<str.length; i++) {
       x = c.indexOf(str.charAt(i));
       if (x < 0) {
+        // Invalid character, try hex format
+        if (!_hex) {
+          try {
+            return sjcl.codec.base32hex.toBits(str);
+          }
+          catch (e) {}
+        }
         throw new sjcl.exception.invalid("this isn't " + format + "!");
       }
       if (bits > REMAINING) {
