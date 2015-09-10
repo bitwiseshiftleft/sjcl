@@ -69,6 +69,7 @@ TEST_SCRIPTS= $(TEST_COMMON) \
               test/gcm_vectors.js test/gcm_test.js  \
               test/hmac_vectors.js test/hmac_test.js \
               test/json_test.js \
+							test/keccak_vectors.js test/keccak_test.js \
               test/ocb2_vectors.js test/ocb2_test.js  \
               test/pbkdf2_test.js test/scrypt_vectors.js test/scrypt_test.js \
               test/ripemd160_vectors.js test/ripemd160_test.js \
