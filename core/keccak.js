@@ -1,10 +1,36 @@
-/** @fileOverview Keccak-f permutations
+/** @fileOverview Keccak
  *
  * @author Stefan Bühler
  */
 
+ /** Create a Keccak sponge class with given parameters. Uses
+  * {@link sjcl.hash.sponge.makeClass} and adds a width and a capacity
+  * property.
+  * @param {Number} capacity          The capacity of the sponge
+  * @param {Number} [out=2*capacity]  The output bit width
+  * @param {Number} [width=1600]      Bitwidth for {@link sjcl.hash.keccak.fPermutation}
+  * @param {function} [pad]           Custom padding function (defaults to
+  *     {@link sjcl.hash.sponge.pad_101})
+  * @return {function} Sponge class
+  */
+ sjcl.hash.keccak = function (capacity, out, width, pad) {
+   var rate, fPerm, sponge = sjcl.hash.sponge, constr;
+   out = out || (capacity >>> 1);
+   capacity = capacity || 2 * out;
+   width = width || 1600;
+   rate = width - capacity;
+   fPerm = fPermutation(width);
+   pad = pad || sponge.pad_101;
+
+   constr = sponge.makeClass(fPerm, pad, rate, out);
+   // set additional properties
+   constr.width = width;
+   constr.capacity = capacity;
+   return constr;
+ };
+
 /** @ignore */
-sjcl.hash.keccak_f = (function() {
+var fPermutation = (function() {
   // Keccak 1600: each lane as [low,high] little endian (32-bit) words. state[2*(5*y+x)] = low, state[2*(5*y+x)+1] = high
   // Keccak <= 800: each lane as little endian word in state[5*y+x]
 
@@ -41,7 +67,7 @@ sjcl.hash.keccak_f = (function() {
   }
 
   /** Run the Keccak-f transformation on a 1600-bit state
-   * @name sjcl.hash.keccak_f1600
+   * @name sjcl.hash.keccak.f1600
    * @param {sjcl.bitArrayLE} a  The state to transform (gets modified)
    * @return {sjcl.bitArrayLE}   The modified state
    */
@@ -99,7 +125,7 @@ sjcl.hash.keccak_f = (function() {
     return state;
   }
   keccak_f1600.width = 1600;
-  sjcl.hash.keccak_f1600 = keccak_f1600;
+  sjcl.hash.keccak.f1600 = keccak_f1600;
 
   /** Return the Keccak-f transformation for a state with (25 * 2^l) bits, for l <= 5 (=> w = 2^l <= 32, width <= 800)
    * (the 1600 bit state has an explicit function, as for l <= 5 only one word per lane is needed)
@@ -182,20 +208,20 @@ sjcl.hash.keccak_f = (function() {
       return data;
     }
     keccak_f.width = 25 * w;
-    sjcl.hash['keccak_f' + keccak_f.width] = keccak_f;
+    sjcl.hash.keccak['f' + keccak_f.width] = keccak_f;
     return keccak_f;
   }
 
   /** Create a Keccak-f transformation function for a specified bit width.
    * @function
-   * @name sjcl.hash.keccak_f
+   * @name sjcl.hash.keccak.fPermutation
    * @param {Number} bitwidth   Anything in [25,50,100,200,400,800,1600];
    *                            bitwidth = 25*2^l for 0 <= l <= 6
    * @return {function}         The transformation function: taking, modifying
    *                            and returning a {@link sjcl.bitArrayLE}
    */
   function keccak_f_get(b) {
-    var f = sjcl.hash['keccak_f' + b], l;
+    var f = sjcl.hash.keccak['f' + b], l;
     if (f) {
       return f;
     }
@@ -214,3 +240,15 @@ sjcl.hash.keccak_f = (function() {
 
   return keccak_f_get;
 }());
+
+ // common keccak variants used for SHA3, SHAKE128 and SHAKE256
+ /** Keccak[256] sponge (= sjcl.hash.keccak(256)) */
+ sjcl.hash.keccak256 = sjcl.hash.keccak(256);
+ /** Keccak[448] sponge (= sjcl.hash.keccak(448)) */
+ sjcl.hash.keccak448 = sjcl.hash.keccak(448);
+ /** Keccak[512] sponge (= sjcl.hash.keccak(512)) */
+ sjcl.hash.keccak512 = sjcl.hash.keccak(512);
+ /** Keccak[768] sponge (= sjcl.hash.keccak(768)) */
+ sjcl.hash.keccak768 = sjcl.hash.keccak(768);
+ /** Keccak[1024] sponge (= sjcl.hash.keccak(1024)) */
+ sjcl.hash.keccak1024 = sjcl.hash.keccak(1024);

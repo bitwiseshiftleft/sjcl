@@ -1,11 +1,11 @@
-/** @fileOverview Sponge implementation for Keccak/SHA3/SHAKE
+/** @fileOverview SHA3
  *
  * @author Stefan Bühler
  */
 
 /** Context for a Sponge operations.
  * @constructor
- * @param {function} f       The transformation function to run on a 
+ * @param {function} f       The transformation function to run on a
  *     {@link sjcl.bitArrayLE} state with f.width bits (rounded up to next
  *     multiple of 32).
  * @param {function} pad     The padding function that pads a
@@ -158,7 +158,7 @@ sjcl.hash.sponge.prototype.finalize = function finalize(outlen) {
  * function (data, outlen) { return class().update(data).finalize(outlen); };
  * calling the returned function returns a {@link sjcl.hash.sponge} object.
  *
- * @param {function} f       The transformation function to run on a 
+ * @param {function} f       The transformation function to run on a
  *     {@link sjcl.bitArrayLE} state with f.width bits (rounded up to next
  *     multiple of 32).
  * @param {function} pad     The padding function that pads a
