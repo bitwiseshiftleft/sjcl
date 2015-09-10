@@ -57,13 +57,13 @@ lint: core.js core/*.js test/*.js browserTest/*.js lint/coding_guidelines.pl
 TEST_COMMON=  browserTest/nodeUtil.js test/test.js
 
 TEST_SCRIPTS= $(TEST_COMMON) \
+							test/aes_vectors.js test/aes_test.js \
+							test/bitArray_vectors.js test/bitArray_test.js test/bitArrayLE_test.js \
+							test/bn_vectors.js test/bn_test.js \
               test/ccm_vectors.js test/ccm_arraybuffer_test.js \
-              test/codec_arraybuffer_test.js \
-              test/aes_vectors.js test/aes_test.js \
-              test/bn_vectors.js test/bn_test.js \
-              test/bitArray_vectors.js test/bitArray_test.js test/bitArrayLE_test.js \
               test/cbc_vectors.js test/cbc_test.js  \
               test/ccm_vectors.js test/ccm_test.js  \
+							test/codec_arraybuffer_test.js \
               test/ecc_conv.js \
               test/ecdsa_test.js test/ecdsa_vectors.js test/ecdh_test.js \
               test/gcm_vectors.js test/gcm_test.js  \
