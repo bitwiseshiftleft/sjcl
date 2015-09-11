@@ -8,7 +8,7 @@
   * property.
   * @param {Number} capacity          The capacity of the sponge
   * @param {Number} [out=2*capacity]  The output bit width
-  * @param {Number} [width=1600]      Bitwidth for {@link sjcl.hash.keccak.fPermutation}
+  * @param {Number} [width=1600]      Bitwidth for {@link sjcl.hash.keccak.f}
   * @param {function} [pad]           Custom padding function (defaults to
   *     {@link sjcl.hash.sponge.pad_101})
   * @return {function} Sponge class
@@ -19,7 +19,7 @@
    capacity = capacity || 2 * out;
    width = width || 1600;
    rate = width - capacity;
-   fPerm = fPermutation(width);
+   fPerm = sjcl.hash.keccak.f(width);
    pad = pad || sponge.pad_101;
 
    constr = sponge.makeClass(fPerm, pad, rate, out);
@@ -30,7 +30,7 @@
  };
 
 /** @ignore */
-var fPermutation = (function() {
+sjcl.hash.keccak.f = (function() { // Keccak-f permutation
   // Keccak 1600: each lane as [low,high] little endian (32-bit) words. state[2*(5*y+x)] = low, state[2*(5*y+x)+1] = high
   // Keccak <= 800: each lane as little endian word in state[5*y+x]
 
@@ -214,7 +214,7 @@ var fPermutation = (function() {
 
   /** Create a Keccak-f transformation function for a specified bit width.
    * @function
-   * @name sjcl.hash.keccak.fPermutation
+   * @name sjcl.hash.keccak.f
    * @param {Number} bitwidth   Anything in [25,50,100,200,400,800,1600];
    *                            bitwidth = 25*2^l for 0 <= l <= 6
    * @return {function}         The transformation function: taking, modifying

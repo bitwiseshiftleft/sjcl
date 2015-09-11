@@ -1,4 +1,4 @@
-/** @fileOverview SHA3
+/** @fileOverview Sponge implementation for Keccak/SHA3/SHAKE
  *
  * @author Stefan Bühler
  */
