@@ -73,9 +73,12 @@ TEST_SCRIPTS= $(TEST_COMMON) \
               test/pbkdf2_test.js test/scrypt_vectors.js test/scrypt_test.js \
               test/ripemd160_vectors.js test/ripemd160_test.js \
               test/sha1_vectors.js test/sha1_test.js \
+              test/sha1_vectors_long_messages.js test/sha1_test_long_messages.js \
               test/sha256_vectors.js test/sha256_test.js \
+              test/sha256_vectors_long_messages.js test/sha256_test_long_messages.js \
               test/sha256_test_brute_force.js \
               test/sha512_vectors.js test/sha512_test.js \
+              test/sha512_vectors_long_messages.js test/sha512_test_long_messages.js \
               test/sha512_test_brute_force.js \
               test/srp_vectors.js test/srp_test.js
 

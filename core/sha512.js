@@ -69,8 +69,18 @@ sjcl.hash.sha512.prototype = {
     var i, b = this._buffer = sjcl.bitArray.concat(this._buffer, data),
         ol = this._length,
         nl = this._length = ol + sjcl.bitArray.bitLength(data);
-    for (i = 1024+ol & -1024; i <= nl; i+= 1024) {
-      this._block(b.splice(0,32));
+    if (typeof Uint32Array !== 'undefined') {
+        var c = new Uint32Array(b);
+        var j = 0;
+        for (i = 1024+ol & -1024; i <= nl; i+= 1024) {
+            this._block(c.subarray(32 * j, 32 * (j+1)));
+            j += 1;
+        }
+        b.splice(0, 32 * j);
+    } else {
+        for (i = 1024+ol & -1024; i <= nl; i+= 1024) {
+            this._block(b.splice(0,32));
+        }
     }
     return this;
   },
@@ -208,14 +218,28 @@ sjcl.hash.sha512.prototype = {
    * @private
    */
   _block:function (words) {
+    //se za uint32array undefined
     var i, wrh, wrl,
-        w = words.slice(0),
         h = this._h,
         k = this._key,
         h0h = h[ 0], h0l = h[ 1], h1h = h[ 2], h1l = h[ 3],
         h2h = h[ 4], h2l = h[ 5], h3h = h[ 6], h3l = h[ 7],
         h4h = h[ 8], h4l = h[ 9], h5h = h[10], h5l = h[11],
         h6h = h[12], h6l = h[13], h7h = h[14], h7l = h[15];
+    var w;
+    if (typeof Uint32Array !== 'undefined') {
+	// When words is passed to _block, it has 32 elements. SHA512 _block
+	// function extends words with new elements (at the end there are 160 elements). 
+	// The problem is that if we use Uint32Array instead of Array, 
+	// the length of Uint32Array cannot be changed. Thus, we replace words with a 
+	// normal Array here.
+        w = Array(160);
+        for (var j=0; j<32; j++){
+    	    w[j] = words[j]; 
+        }
+    } else {
+	w = words;
+    } 
 
     // Working variables
     var ah = h0h, al = h0l, bh = h1h, bl = h1l,
