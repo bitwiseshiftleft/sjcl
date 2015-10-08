@@ -64,8 +64,8 @@
     rp.key = password;
 
     /* do the encryption */
-    if (p.mode === "ccm" && sjcl.arrayBuffer && sjcl.arrayBuffer.ccm && plaintext instanceof ArrayBuffer) {
-      p.ct = sjcl.arrayBuffer.ccm.encrypt(prp, plaintext, p.iv, adata, p.ts);
+    if (p.mode === "ccm" && sjcl.arrayBuffer && sjcl.arrayBuffer.ccm) {
+      p.ct = sjcl.arrayBuffer.ccm.compat_encrypt(prp, plaintext, p.iv, adata, p.ts);
     } else {
       p.ct = sjcl.mode[p.mode].encrypt(prp, plaintext, p.iv, adata, p.ts);
     }
@@ -131,12 +131,12 @@
     prp = new sjcl.cipher[p.cipher](password);
 
     /* do the decryption */
-    if (p.mode === "ccm" && sjcl.arrayBuffer && sjcl.arrayBuffer.ccm && p.ct instanceof ArrayBuffer) {
-      ct = sjcl.arrayBuffer.ccm.decrypt(prp, p.ct, p.iv, p.tag, adata, p.ts);
+    if (p.mode === "ccm" && sjcl.arrayBuffer && sjcl.arrayBuffer.ccm) {
+      ct = sjcl.arrayBuffer.ccm.compat_decrypt(prp, p.ct, p.iv, adata, p.ts);
     } else {
       ct = sjcl.mode[p.mode].decrypt(prp, p.ct, p.iv, adata, p.ts);
     }
-
+    
     /* return the json data */
     j._add(rp, p);
     rp.key = password;

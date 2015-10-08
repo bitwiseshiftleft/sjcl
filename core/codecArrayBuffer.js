@@ -19,7 +19,7 @@ sjcl.codec.arrayBuffer = {
   fromBits: function (arr, padding, padding_count) {
     var out, i, ol, tmp, smallest;
     padding = padding==undefined  ? true : padding
-    padding_count = padding_count || 8
+    padding_count = padding_count || 16
 
     if (arr.length === 0) {
       return new ArrayBuffer(0);
@@ -88,7 +88,36 @@ sjcl.codec.arrayBuffer = {
     return out;
   },
 
+  padBuffer: function (buffer, padding, padding_count) {
+    var ol, out, i;
+    padding = padding==undefined  ? true : padding
+    padding_count = padding_count || 16
 
+    if (buffer.byteLength === 0) {
+      return new ArrayBuffer(0);
+    }
+
+    ol = buffer.byteLength;
+    if (padding && ol%padding_count !== 0){
+      ol += padding_count - (ol%padding_count);
+    }
+
+    var out = new Uint8Array(ol);
+      out.set(new Uint8Array(buffer), 0);
+      return out.buffer;
+  },
+
+  /** Ciphertext is stored in sjcl encoded bitArray - this function converts it back to buffer **/
+  toBuffer: function (bitArray) {
+    var tmp, i;
+    tmp = new DataView(new ArrayBuffer(bitArray.length*4));
+    for (i=0; i<bitArray.length; i++) {
+      tmp.setUint32(i*4, bitArray[i]);
+    }
+    var bytesLength = sjcl.bitArray.bitLength(bitArray)/8;
+    // when encoding some zeros might be added; thus this needs to removed (see slice)
+    return tmp.buffer.slice(0, bytesLength);
+  },
 
   /** Prints a hex output of the buffer contents, akin to hexdump **/
   hexDumpBuffer: function(buffer){

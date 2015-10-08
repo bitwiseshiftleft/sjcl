@@ -34,11 +34,14 @@ sjcl.arrayBuffer.ccm = {
    * @return {bitArray} The encrypted data, an array of bytes.
    */
   compat_encrypt: function(prf, plaintext, iv, adata, tlen){
-    var plaintext_buffer = sjcl.codec.arrayBuffer.fromBits(plaintext, true, 16),
-        ol = sjcl.bitArray.bitLength(plaintext)/8,
-        encrypted_obj,
-        ct,
-        tag;
+    var plaintext_buffer, ol, encrypted_obj, ct, tag;
+    if (plaintext instanceof ArrayBuffer) {
+      ol = plaintext.byteLength;
+      plaintext_buffer = sjcl.codec.arrayBuffer.padBuffer(plaintext);
+    } else {
+      ol = sjcl.bitArray.bitLength(plaintext)/8;
+      plaintext_buffer = sjcl.codec.arrayBuffer.fromBits(plaintext, true, 16);
+    }
 
     tlen = tlen || 64;
     adata = adata || [];
@@ -94,7 +97,11 @@ sjcl.arrayBuffer.ccm = {
     tlen = tlen || sjcl.arrayBuffer.ccm.defaults.tlen;
     ol = ol || plaintext_buffer.byteLength;
     tlen = Math.ceil(tlen/8);
-    
+
+    if (ivl < 7) {
+      throw new sjcl.exception.invalid("ccm: iv must be at least 7 bytes");
+    }
+
     for (L=2; L<4 && ol >>> 8*L; L++) {}
     if (L < 15 - ivl) { L = 15-ivl; }
     iv = w.clamp(iv,8*(15-L));
