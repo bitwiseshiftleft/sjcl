@@ -132,3 +132,18 @@ sjcl.codec.hex = sjcl.codec.hex ||
     return sjcl.bitArray.clamp(out, len*4);
   }
 };
+
+// CCM ArrayBuffer implementation test relies on sjcl.codec.arrayBuffer.toBuffer
+sjcl.codec.arrayBuffer = sjcl.codec.arrayBuffer ||
+{
+  toBuffer: function (bitArray) {
+    var tmp, i;
+    tmp = new DataView(new ArrayBuffer(bitArray.length*4));
+    for (i=0; i<bitArray.length; i++) {
+      tmp.setUint32(i*4, bitArray[i]);
+    }
+    var bytesLength = sjcl.bitArray.bitLength(bitArray)/8;
+    // when encoding some zeros might be added; thus this needs to removed (see slice)
+    return tmp.buffer.slice(0, bytesLength);
+  }
+};
