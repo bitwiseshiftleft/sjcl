@@ -40,7 +40,7 @@ sjcl.arrayBuffer.ccm = {
       plaintext_buffer = sjcl.codec.arrayBuffer.padBuffer(plaintext);
     } else {
       ol = sjcl.bitArray.bitLength(plaintext)/8;
-      plaintext_buffer = sjcl.codec.arrayBuffer.fromBits(plaintext, true, 16);
+      plaintext_buffer = sjcl.codec.arrayBuffer.fromBits(plaintext);
     }
 
     tlen = tlen || 64;

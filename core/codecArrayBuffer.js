@@ -17,15 +17,10 @@ sjcl.codec.arrayBuffer = {
   /** Convert from a bitArray to an ArrayBuffer. 
    * Will default to 8byte padding if padding is undefined*/
   fromBits: function (arr, padding, padding_count) {
-    var out, i, ol, tmp, smallest;
-    padding = padding==undefined  ? true : padding
-    padding_count = padding_count || 16
-
+    var i, tmp, buffer;
     if (arr.length === 0) {
       return new ArrayBuffer(0);
     }
-
-    ol = sjcl.bitArray.bitLength(arr)/8;
 
     //check to make sure the bitLength is divisible by 8, if it isn't 
     //we can't do anything since arraybuffers work with bytes, not bits
@@ -33,32 +28,14 @@ sjcl.codec.arrayBuffer = {
       throw new sjcl.exception.invalid("Invalid bit size, must be divisble by 8 to fit in an arraybuffer correctly")
     }
 
-    if (padding && ol%padding_count !== 0){
-      ol += padding_count - (ol%padding_count);
-    }
-
-
     //padded temp for easy copying
     tmp = new DataView(new ArrayBuffer(arr.length*4));
     for (i=0; i<arr.length; i++) {
       tmp.setUint32(i*4, (arr[i]<<32)); //get rid of the higher bits
     }
+    var buffer = tmp.buffer.slice(0, sjcl.bitArray.bitLength(arr)/8);
 
-    //now copy the final message if we are not going to 0 pad
-    out = new DataView(new ArrayBuffer(ol));
-
-    //save a step when the tmp and out bytelength are ===
-    if (out.byteLength === tmp.byteLength){
-      return tmp.buffer;
-    }
-
-    smallest = tmp.byteLength < out.byteLength ? tmp.byteLength : out.byteLength;
-    for(i=0; i<smallest; i++){
-      out.setUint8(i,tmp.getUint8(i));
-    }
-
-
-    return out.buffer
+    return sjcl.codec.arrayBuffer.padBuffer(buffer, padding, padding_count);
   },
 
   toBits: function (buffer) {
@@ -88,9 +65,7 @@ sjcl.codec.arrayBuffer = {
     return out;
   },
 
-  /** Add padding with zero bytes if needed.
-   * This is the same padding as applied in fromBits where
-   * bitArray gets converted to ArrayBuffer.*/
+  /** Add padding with zero bytes if needed. **/
   padBuffer: function (buffer, padding, padding_count) {
     var ol, out, i;
     padding = padding==undefined  ? true : padding
@@ -106,24 +81,10 @@ sjcl.codec.arrayBuffer = {
     }
 
     var out = new Uint8Array(ol);
-      out.set(new Uint8Array(buffer), 0);
-      return out.buffer;
+    out.set(new Uint8Array(buffer), 0);
+    return out.buffer;
   },
-
-  /** Convert decrypted bitArray into buffer with original length.
-   * When plaintext is obtained by decryption, it is in the form of bitArray.
-   * If this bitArray would be converted using fromBits, there would be some
-   * zeros appended at the end (compared to the original ArrayBuffer prior encryption). **/
-  toBuffer: function (bitArray) {
-    var tmp, i;
-    tmp = new DataView(new ArrayBuffer(bitArray.length*4));
-    for (i=0; i<bitArray.length; i++) {
-      tmp.setUint32(i*4, bitArray[i]);
-    }
-    var bytesLength = sjcl.bitArray.bitLength(bitArray)/8;
-    return tmp.buffer.slice(0, bytesLength);
-  },
-
+  
   /** Prints a hex output of the buffer contents, akin to hexdump **/
   hexDumpBuffer: function(buffer){
       var stringBufferView = new DataView(buffer)
