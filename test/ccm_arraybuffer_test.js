@@ -19,6 +19,11 @@ new sjcl.test.TestCase("CCM arrayBuffer tests", function (cb) {
   ciphertext = sjcl.encrypt(sessionKey, buffer, params);
   params.raw = 1; // to prevent sjcl converting to utf8String
   ciphertext = sjcl.decrypt(sessionKey, ciphertext, params);
+
+  console.log(sjcl.codec); // debugging Travis failure
+  console.log(sjcl.codec.arrayBuffer); // debugging Travis failure
+  console.log(Object.getOwnPropertyNames(sjcl.codec.arrayBuffer)); // debugging Travis failure
+
   var buffer1 = sjcl.codec.arrayBuffer.toBuffer(ciphertext);
   var a = new Uint8Array(buffer);
   var a1 = new Uint8Array(buffer1);
