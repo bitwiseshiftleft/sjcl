@@ -88,6 +88,9 @@ sjcl.codec.arrayBuffer = {
     return out;
   },
 
+  /** Add padding with zero bytes if needed.
+   * This is the same padding as applied in fromBits where
+   * bitArray gets converted to ArrayBuffer.*/
   padBuffer: function (buffer, padding, padding_count) {
     var ol, out, i;
     padding = padding==undefined  ? true : padding
@@ -107,7 +110,10 @@ sjcl.codec.arrayBuffer = {
       return out.buffer;
   },
 
-  /** Ciphertext is stored in sjcl encoded bitArray - this function converts it back to buffer **/
+  /** Convert decrypted bitArray into buffer with original length.
+   * When plaintext is obtained by decryption, it is in the form of bitArray.
+   * If this bitArray would be converted using fromBits, there would be some
+   * zeros appended at the end (compared to the original ArrayBuffer prior encryption). **/
   toBuffer: function (bitArray) {
     var tmp, i;
     tmp = new DataView(new ArrayBuffer(bitArray.length*4));
@@ -115,7 +121,6 @@ sjcl.codec.arrayBuffer = {
       tmp.setUint32(i*4, bitArray[i]);
     }
     var bytesLength = sjcl.bitArray.bitLength(bitArray)/8;
-    // when encoding some zeros might be added; thus this needs to removed (see slice)
     return tmp.buffer.slice(0, bytesLength);
   },
 
