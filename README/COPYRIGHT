@@ -30,3 +30,20 @@ fees for OCB 2.0.
 There may be patents which apply to SJCL other than Phil Rogaway's OCB
 patents.  We suggest that you consult legal counsel before using SJCL
 in a commercial project.
+
+-----
+
+Please note, two Java JAR files, Google Closure Compiler and 
+YUI Compressor, are provided in the "compress" folder as a convenience 
+for the compiling process of SJCL.  These are not part of SJCL itself 
+and provided under their own licenses.
+
+As of October 2015, more information can be found at the following
+locations:
+
+Google Closure Compiler
+  -  https://developers.google.com/closure/compiler/
+
+YUI Compressor
+  -  http://yui.github.io/yuicompressor/
+
