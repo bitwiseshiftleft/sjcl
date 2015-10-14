@@ -15,14 +15,13 @@ if [ $? -eq 0 ] ; then
   else
     curl -V > /dev/null 2> /dev/null
     if [ $? -eq 0 ] ; then
-      curl -s -z $DIR/$FILE -o $DIR/$FILE $URL
+      curl -s -z $DIR/$FILE -o $DIR/$FILE $URL > /dev/null 2> /dev/null
     fi
   fi
-  echo test $DIR/$FILE
   if [ -s $DIR/$FILE ] ; then
     pushd . > /dev/null
     cd $DIR
-    unzip -o $FILE compiler.jar
+    unzip -o $FILE compiler.jar > /dev/null 2> /dev/null
     popd > /dev/null
   fi
 fi
