@@ -2,7 +2,7 @@
 
 DIR=`dirname $0`
 
-URL="http://dl.google.com/closure-compiler/compiler-latest.zip"
+URL="https://dl.google.com/closure-compiler/compiler-latest.zip"
 FILE=`echo $URL | sed 's#.*/##'`
 unzip > /dev/null 2> /dev/null
 if [ $? -eq 0 ] ; then
