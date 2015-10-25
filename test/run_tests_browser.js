@@ -22,6 +22,7 @@ function testCore(coreName, cb) {
     "hmac_vectors.js",
     "json_test.js",
     "ocb2_test.js",
+    "ocb2progressive_test.js",
     "ocb2_vectors.js",
     "pbkdf2_test.js",
     "ripemd160_test.js",
