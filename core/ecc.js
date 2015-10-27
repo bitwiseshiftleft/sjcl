@@ -388,10 +388,9 @@ sjcl.ecc.basicKey = {
   * @param {curve} curve the elliptic curve
   * @param {point} point the point on the curve
   */
-  publicKey: function(curve, point, type) {
+  publicKey: function(curve, point) {
     this._curve = curve;
     this._curveBitLength = curve.r.bitLength();
-    this._type = type;
     if (point instanceof Array) {
       this._point = curve.fromBits(point);
     } else {
@@ -401,7 +400,7 @@ sjcl.ecc.basicKey = {
     this.serialize = function () {
       var curveName = sjcl.ecc.curveName(curve);
       return {
-        type: this._type,
+        type: this.getType(),
         secretKey: false,
         point: sjcl.codec.hex.fromBits(this._point.toBits()),
         curve: curveName
@@ -425,17 +424,16 @@ sjcl.ecc.basicKey = {
   * @param {curve} curve the elliptic curve
   * @param exponent
   */
-  secretKey: function(curve, exponent, type) {
+  secretKey: function(curve, exponent) {
     this._curve = curve;
     this._curveBitLength = curve.r.bitLength();
     this._exponent = exponent;
-    this._type = type;
 
     this.serialize = function () {
       var exponent = this.get();
       var curveName = sjcl.ecc.curveName(curve);
       return {
-        type: this._type,
+        type: this.getType(),
         secretKey: true,
         exponent: sjcl.codec.hex.fromBits(exponent),
         curve: curveName
@@ -484,20 +482,14 @@ sjcl.ecc.elGamal = {
   * @augments sjcl.ecc.basicKey.publicKey
   */
   publicKey: function (curve, point) {
-    var extendedArguments = Array.prototype.slice.call(arguments);
-    extendedArguments.push("elGamal");
-    // might be better to simply add argument to publicKey call in basicKey.generateKeys
-    // like: pub: new sjcl.ecc[cn].publicKey(curve, pub, cn),
-    sjcl.ecc.basicKey.publicKey.apply(this, extendedArguments);
+    sjcl.ecc.basicKey.publicKey.apply(this, arguments);
   },
   /** elGamal secretKey
   * @constructor
   * @augments sjcl.ecc.basicKey.secretKey
   */
   secretKey: function (curve, exponent) {
-    var extendedArguments = Array.prototype.slice.call(arguments);
-    extendedArguments.push("elGamal");
-    sjcl.ecc.basicKey.secretKey.apply(this, extendedArguments);
+    sjcl.ecc.basicKey.secretKey.apply(this, arguments);
   }
 };
 
@@ -511,6 +503,10 @@ sjcl.ecc.elGamal.publicKey.prototype = {
         tag = this._curve.G.mult(sec).toBits(),
         key = sjcl.hash.sha256.hash(this._point.mult(sec).toBits());
     return { key: key, tag: tag };
+  },
+  
+  getType: function() {
+    return "elGamal";
   }
 };
 
@@ -532,13 +528,17 @@ sjcl.ecc.elGamal.secretKey.prototype = {
   },
 
   /** Diffie-Hellmann function, compatible with Java generateSecret
-   * @param {elGamal.publicKey} pk The Public Key to do Diffie-Hellmann with
-   * @return {bitArray} undigested X value, diffie-hellmann result for this key combination,
-   * compatible with Java generateSecret().
-   */
-   dhJavaEc: function(pk) {
-     return pk._point.mult(this._exponent).x.toBits();
-   }
+  * @param {elGamal.publicKey} pk The Public Key to do Diffie-Hellmann with
+  * @return {bitArray} undigested X value, diffie-hellmann result for this key combination,
+  * compatible with Java generateSecret().
+  */
+  dhJavaEc: function(pk) {
+    return pk._point.mult(this._exponent).x.toBits();
+  }, 
+
+  getType: function() {
+    return "elGamal";
+  }
 };
 
 /** ecdsa keys */
@@ -557,11 +557,7 @@ sjcl.ecc.ecdsa = {
 * @augments sjcl.ecc.basicKey.publicKey
 */
 sjcl.ecc.ecdsa.publicKey = function (curve, point) {
-  var extendedArguments = Array.prototype.slice.call(arguments);
-  extendedArguments.push("ecdsa");
-  // might be better to simply add argument to publicKey call in basicKey.generateKeys
-  // like: pub: new sjcl.ecc[cn].publicKey(curve, pub, cn),
-  sjcl.ecc.basicKey.publicKey.apply(this, extendedArguments);
+  sjcl.ecc.basicKey.publicKey.apply(this, arguments);
 };
 
 /** specific functions for ecdsa publicKey. */
@@ -592,6 +588,10 @@ sjcl.ecc.ecdsa.publicKey.prototype = {
       }
     }
     return true;
+  },
+
+  getType: function() {
+    return "ecdsa";
   }
 };
 
@@ -600,9 +600,7 @@ sjcl.ecc.ecdsa.publicKey.prototype = {
 * @augments sjcl.ecc.basicKey.publicKey
 */
 sjcl.ecc.ecdsa.secretKey = function (curve, exponent) {
-  var extendedArguments = Array.prototype.slice.call(arguments);
-  extendedArguments.push("ecdsa");
-  sjcl.ecc.basicKey.secretKey.apply(this, extendedArguments);
+  sjcl.ecc.basicKey.secretKey.apply(this, arguments);
 };
 
 /** specific functions for ecdsa secretKey. */
@@ -624,5 +622,9 @@ sjcl.ecc.ecdsa.secretKey.prototype = {
         s  = fakeLegacyVersion ? ss.inverseMod(R).mul(k).mod(R)
              : ss.mul(k.inverseMod(R)).mod(R);
     return sjcl.bitArray.concat(r.toBits(l), s.toBits(l));
+  },
+
+  getType: function() {
+    return "ecdsa";
   }
 };
