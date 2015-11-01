@@ -18,6 +18,8 @@ function testCore(coreName, cb) {
     "ecdsa_vectors.js",
     "gcm_test.js",
     "gcm_vectors.js",
+    "hkdf_test.js",
+    "hkdf_vectors.js",
     "hmac_test.js",
     "hmac_vectors.js",
     "json_test.js",
