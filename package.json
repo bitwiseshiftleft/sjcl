@@ -1,0 +1,16 @@
+{
+    "name": "sjcl",
+    "version": "1.0.4",
+    "description": "Stanford Javascript Crypto Library",
+    "main": "sjcl.js",
+    "author": "bitwiseshiftleft",
+    "keywords": ["encryption", "high-level", "crypto"],
+    "repository" : {
+        "type": "git",
+        "url": "https://github.com/bitwiseshiftleft/sjcl.git"
+    },
+    "scripts": {
+      "test": "make test"
+    },
+    "engines": { "node": "*" }
+}

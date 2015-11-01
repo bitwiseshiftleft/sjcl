@@ -1,0 +1,88 @@
+<html>
+<head>
+
+<title>Entropy Generator Progress</title>
+<!-- ProgressBar source: http://stackoverflow.com/questions/7190898/progress-bar-with-html-and-css -->
+
+<style>
+#progressbar {
+  background-color: black;
+  border-radius: 13px; /* (height of inner div) / 2 + padding */
+  padding: 3px;
+}
+#progressbar > div {
+   background-color: orange;
+   width: 0%; /* Adjust with JavaScript */
+   height: 20px;
+   border-radius: 10px;
+}
+</style>
+
+<script type="text/javascript" src="../sjcl.js">
+</script>
+
+<script type="text/javascript">
+
+var busy = 0;
+var collecting = 0;
+
+function showprogress () {
+	var barwidth = document.getElementById ("progresswidth");
+	var paranoia = parseInt (document.getElementById ("paranoialevel").value);
+	var progress = 100 * sjcl.random.getProgress (paranoia);
+	barwidth.style.width = progress+"%";
+	if (!sjcl.random.isReady (paranoia)) {
+		setTimeout ("showprogress()", 10, "JavaScript");
+	} else {
+		busy = 0;
+		document.getElementById ("startbutton").style.disabled = 1;
+	}
+}
+
+function startup () {
+	if (collecting == 0) {
+		sjcl.random.startCollectors ();
+		collecting = 1;
+	}
+	if (busy == 0) {
+		busy = 1;
+		document.getElementById ("startbutton").style.disabled = 1;
+		showprogress ();
+	}
+}
+
+function consume (numbits) {
+	var collector = document.getElementById ("collector");
+	collector.value = "retrieving random data";
+	var paranoia = document.getElementById ("paranoialevel").value;
+	var numwords = Math.ceil (numbits / 32);
+	var bits = sjcl.random.randomWords (numwords, paranoia);
+	collector.value = '';
+	for (var i=0; i<numwords; i++) {
+		var hi = (bits [i] >> 16) & 0x0000ffff;
+		var lo =  bits [i]        & 0x0000ffff;
+		collector.value = collector.value + hi.toString (16) + lo.toString (16);
+	}
+	startup ();
+}
+
+</script>
+
+</head>
+<body>
+<h1>Entropy Generator Progress</h1>
+
+<p>Target: 192 bits, available at paranoia level 5.</p>
+
+<p>Corresponding paranoia level from [0,1..10]: <input type="text" value="5" id="paranoialevel"/> <input type=button onclick="startup ()" id="startbutton" value=" Start &gt;&gt; "> (the idea being that you can see the progress bar advance gently from empty/black to full/yellow after you press this)</p>
+
+<p><input type=button onclick="consume (192)" value=" Consume 192 bits &gt;&gt; "><input type=text id=collector size=50 value="" onkeypress="consume (192)"> (also consumes 192 bits with every keypress in the text field; use key repeat to consume swiftly)</p>
+
+<div id="progressbar">
+  <div id="progresswidth"></div>
+</div>
+
+<p>Please move your mouse, play around and generally introduce entropy into your environment.</p>
+
+</body>
+</html>

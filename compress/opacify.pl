@@ -13,17 +13,24 @@
 my $script = join '', <>;
 
 # remove comments
-$script =~ s=/\*([^\*]|\*+[^\/])*\*/==g;
-$script =~ s=//.*==g;
+#$script =~ s=/\*([^\*]|\*+[^\/])*\*/==g;
+#$script =~ s=//.*==g;
 
 # stringify property names
 $script =~ s=\.([a-zA-Z][_a-zA-Z0-9]*)=['$1']=g;
+
+# destringify 'prototype'
+$script =~ s=\['prototype'\]=.prototype=g;
 
 # stringify sjcl
 $script =~ s=(?:var\s+)?sjcl(\.|\s*\=)=window['sjcl']$1=g;
 
 # stringify object notation
-$script =~ s=([\{,]\s*)([a-zA-Z0-9][_a-zA-Z0-9]*):=$1'$2':=g;
+$script =~ s=([\{,]
+              \s*
+              (?:/\*(?:[^\*]|\*+[^\/])*\*/\s* # preserve C-style comments
+              |//[^\n]*\n\s*)*) 
+             ([a-zA-Z0-9][_a-zA-Z0-9]*):=$1'$2':=xg;
 
 # Export sjcl.  This is a bit of a hack, and might get replaced later.
 print $script;

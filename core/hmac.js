@@ -27,14 +27,35 @@ sjcl.misc.hmac = function (key, Hash) {
   
   this._baseHash[0].update(exKey[0]);
   this._baseHash[1].update(exKey[1]);
+  this._resultHash = new Hash(this._baseHash[0]);
 };
 
 /** HMAC with the specified hash function.  Also called encrypt since it's a prf.
  * @param {bitArray|String} data The data to mac.
- * @param {Codec} [encoding] the encoding function to use.
  */
-sjcl.misc.hmac.prototype.encrypt = sjcl.misc.hmac.prototype.mac = function (data, encoding) {
-  var w = new (this._hash)(this._baseHash[0]).update(data, encoding).finalize();
-  return new (this._hash)(this._baseHash[1]).update(w).finalize();
+sjcl.misc.hmac.prototype.encrypt = sjcl.misc.hmac.prototype.mac = function (data) {
+  if (!this._updated) {
+    this.update(data);
+    return this.digest(data);
+  } else {
+    throw new sjcl.exception.invalid("encrypt on already updated hmac called!");
+  }
 };
 
+sjcl.misc.hmac.prototype.reset = function () {
+  this._resultHash = new this._hash(this._baseHash[0]);
+  this._updated = false;
+};
+
+sjcl.misc.hmac.prototype.update = function (data) {
+  this._updated = true;
+  this._resultHash.update(data);
+};
+
+sjcl.misc.hmac.prototype.digest = function () {
+  var w = this._resultHash.finalize(), result = new (this._hash)(this._baseHash[1]).update(w).finalize();
+
+  this.reset();
+
+  return result;
+};

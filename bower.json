@@ -1,0 +1,4 @@
+{
+	"name": "sjcl",
+	"main": ["./sjcl.js"]
+}

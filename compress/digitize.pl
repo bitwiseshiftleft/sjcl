@@ -16,7 +16,7 @@ sub digitize {
 }
 
 while (<>) {
-    s/([^a-zA-Z0-9_])(\d+)/$1 . digitize $2/eg;
+    s/([^a-zA-Z0-9_"])(\d+)/$1 . digitize $2/eg;
     print;
 }
 
