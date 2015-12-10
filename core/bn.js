@@ -496,9 +496,6 @@ sjcl.bn.prototype = {
     if (carry === -1) {
       limbs[i-1] -= pv;
     }
-    while (limbs.length > 0 && limbs[limbs.length-1] === 0) {
-      limbs.pop();
-    }
     return this;
   },
 
