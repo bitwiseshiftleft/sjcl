@@ -88,15 +88,12 @@ sjcl.bn.prototype = {
   /**
    * Convert to a hex string.
    */
-  toString: function(doTrim) {
-    var i, s, l, out = new sjcl.bn(this);
-    out.fullReduce();
-	doTrim && out.trim();
-    l = out.limbs;
-	out = "";
-    for (i=0; i < l.length; i++) {
+  toString: function() {
+    this.fullReduce();
+    var out="", i, s, l = this.limbs;
+    for (i=0; i < this.limbs.length; i++) {
       s = l[i].toString(16);
-      while (i < l.length - 1 && s.length < 6) {
+      while (i < this.limbs.length - 1 && s.length < 6) {
         s = "0" + s;
       }
       out = s + out;
