@@ -64,6 +64,7 @@ TEST_SCRIPTS= $(TEST_COMMON) \
               test/bn_vectors.js test/bn_test.js \
               test/cbc_vectors.js test/cbc_test.js  \
               test/ccm_vectors.js test/ccm_test.js  \
+              test/ecc_test.js \
               test/ecc_conv.js \
               test/ecdsa_test.js test/ecdsa_vectors.js test/ecdh_test.js \
               test/gcm_vectors.js test/gcm_test.js  \
