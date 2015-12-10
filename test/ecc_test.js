@@ -65,7 +65,7 @@ new sjcl.test.TestCase("ECC curves multiplication test", function (cb) {
   };
 
   for (cn in pri) {
-	pnt = sjcl.ecc.curves[cn].G.mult(pri[cn]);
+    pnt = sjcl.ecc.curves[cn].G.mult(pri[cn]);
     this.require(pnt.x.equals(pub[cn].x) && pnt.y.equals(pub[cn].y), cn+" failed");
   }
   cb && cb();

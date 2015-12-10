@@ -496,6 +496,7 @@ sjcl.bn.prototype = {
     if (carry === -1) {
       limbs[i-1] -= pv;
     }
+    this.trim();
     return this;
   },
 
