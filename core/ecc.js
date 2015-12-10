@@ -347,6 +347,39 @@ sjcl.ecc.curves = {
 
 };
 
+sjcl.ecc.curveName = function (curve) {
+  var curcurve;
+  for (curcurve in sjcl.ecc.curves) {
+    if (sjcl.ecc.curves.hasOwnProperty(curcurve)) {
+      if (sjcl.ecc.curves[curcurve] === curve) {
+        return curcurve;
+      }
+    }
+  }
+
+  throw new sjcl.exception.invalid("no such curve");
+};
+
+sjcl.ecc.deserialize = function (key) {
+  var types = ["elGamal", "ecdsa"];
+
+  if (!key || !key.curve || !sjcl.ecc.curves[key.curve]) { throw new sjcl.exception.invalid("invalid serialization"); }
+  if (types.indexOf(key.type) === -1) { throw new sjcl.exception.invalid("invalid type"); }
+
+  var curve = sjcl.ecc.curves[key.curve];
+
+  if (key.secretKey) {
+    if (!key.exponent) { throw new sjcl.exception.invalid("invalid exponent"); }
+    var exponent = new sjcl.bn(key.exponent);
+    return new sjcl.ecc[key.type].secretKey(curve, exponent);
+  } else {
+    if (!key.point) { throw new sjcl.exception.invalid("invalid point"); }
+    
+    var point = curve.fromBits(sjcl.codec.hex.toBits(key.point));
+    return new sjcl.ecc[key.type].publicKey(curve, point);
+  }
+};
+
 /** our basicKey classes
 */
 sjcl.ecc.basicKey = {
@@ -363,6 +396,16 @@ sjcl.ecc.basicKey = {
     } else {
       this._point = point;
     }
+
+    this.serialize = function () {
+      var curveName = sjcl.ecc.curveName(curve);
+      return {
+        type: this.getType(),
+        secretKey: false,
+        point: sjcl.codec.hex.fromBits(this._point.toBits()),
+        curve: curveName
+      };
+    };
 
     /** get this keys point data
     * @return x and y as bitArrays
@@ -385,6 +428,17 @@ sjcl.ecc.basicKey = {
     this._curve = curve;
     this._curveBitLength = curve.r.bitLength();
     this._exponent = exponent;
+
+    this.serialize = function () {
+      var exponent = this.get();
+      var curveName = sjcl.ecc.curveName(curve);
+      return {
+        type: this.getType(),
+        secretKey: true,
+        exponent: sjcl.codec.hex.fromBits(exponent),
+        curve: curveName
+      };
+    };
 
     /** get this keys exponent data
     * @return {bitArray} exponent
@@ -449,6 +503,10 @@ sjcl.ecc.elGamal.publicKey.prototype = {
         tag = this._curve.G.mult(sec).toBits(),
         key = sjcl.hash.sha256.hash(this._point.mult(sec).toBits());
     return { key: key, tag: tag };
+  },
+  
+  getType: function() {
+    return "elGamal";
   }
 };
 
@@ -470,13 +528,17 @@ sjcl.ecc.elGamal.secretKey.prototype = {
   },
 
   /** Diffie-Hellmann function, compatible with Java generateSecret
-   * @param {elGamal.publicKey} pk The Public Key to do Diffie-Hellmann with
-   * @return {bitArray} undigested X value, diffie-hellmann result for this key combination,
-   * compatible with Java generateSecret().
-   */
-   dhJavaEc: function(pk) {
-     return pk._point.mult(this._exponent).x.toBits();
-   }
+  * @param {elGamal.publicKey} pk The Public Key to do Diffie-Hellmann with
+  * @return {bitArray} undigested X value, diffie-hellmann result for this key combination,
+  * compatible with Java generateSecret().
+  */
+  dhJavaEc: function(pk) {
+    return pk._point.mult(this._exponent).x.toBits();
+  }, 
+
+  getType: function() {
+    return "elGamal";
+  }
 };
 
 /** ecdsa keys */
@@ -526,6 +588,10 @@ sjcl.ecc.ecdsa.publicKey.prototype = {
       }
     }
     return true;
+  },
+
+  getType: function() {
+    return "ecdsa";
   }
 };
 
@@ -556,5 +622,9 @@ sjcl.ecc.ecdsa.secretKey.prototype = {
         s  = fakeLegacyVersion ? ss.inverseMod(R).mul(k).mod(R)
              : ss.mul(k.inverseMod(R)).mod(R);
     return sjcl.bitArray.concat(r.toBits(l), s.toBits(l));
+  },
+
+  getType: function() {
+    return "ecdsa";
   }
 };
