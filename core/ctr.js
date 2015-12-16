@@ -65,20 +65,21 @@ sjcl.beware["CTR mode is dangerous because it doesn't protect message integrity.
      * @private
      */
     _calculate: function(prf, data, iv) {
-      var l, bl, ctr, enc, i;
+      var l, bl, res, c, d, e, i;
       if (!(l = data.length))
 		  return [];
-      bl = sjcl.bitArray.bitLength(data);
-      ctr = iv.slice(0);
+      c = iv.slice(0);
+      d = data.slice(0);
+      bl = sjcl.bitArray.bitLength(d);
       for (i=0; i<l; i+=4) {
-        enc = prf.encrypt(ctr);
-        data[i] ^= enc[0];
-        data[i+1] ^= enc[1];
-        data[i+2] ^= enc[2];
-        data[i+3] ^= enc[3];
-        ctr[3]++;
+        e = prf.encrypt(c);
+        d[i] ^= e[0];
+        d[i+1] ^= e[1];
+        d[i+2] ^= e[2];
+        d[i+3] ^= e[3];
+        c[3]++;
       }
-      return sjcl.bitArray.clamp(data, bl);
+      return sjcl.bitArray.clamp(d, bl);
     }
   };
 };
