@@ -1,5 +1,5 @@
 new sjcl.test.TestCase("ECC point multiplication test", function (cb) {
-  if (!sjcl.bn) {
+  if (!sjcl.ecc) {
     this.unimplemented();
     cb && cb();
     return;
