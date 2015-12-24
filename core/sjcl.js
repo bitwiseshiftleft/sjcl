@@ -21,7 +21,7 @@ var sjcl = {
   hash: {},
 
   /** @namespace Key exchange functions.  Right now only SRP is implemented. */
-  keyexchange: {},
+  keyex: {},
   
   /** @namespace Block cipher modes of operation. */
   mode: {},

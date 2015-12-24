@@ -9,7 +9,7 @@
  * Default hash function is SHA1 and default group is 1024-bit group from rfc5054
  *
  * Example Registration:
- * [client] client = new sjcl.keyexchange.srp.client(name, password);
+ * [client] client = new sjcl.keyex.srp.client(name, password);
  * [client] data = client.calculateVerifier();
  * [client -> server] (name, data.salt, data.verifier)
  * [server] store (name, salt, verifier)
@@ -17,10 +17,10 @@
  * Example Authentication:
  * [client -> server] name
  * [server] lookup (salt, verifier) by name
- * [server] server = new sjcl.keyexchange.srp.server(name, salt, verifier);
+ * [server] server = new sjcl.keyex.srp.server(name, salt, verifier);
  * [server] B = server.getServerChallenge();
  * [server -> client] (salt, B)
- * [client] client = new sjcl.keyexchange.srp.client(name, password);
+ * [client] client = new sjcl.keyex.srp.client(name, password);
  * [client] A = client.getClientChallenge();
  * [client] K = client.setServerResponse(salt, B);
  * [client] M1 = client.getClientAuth();
@@ -41,7 +41,7 @@
 /**
  * SRP namespace
  */
-sjcl.keyexchange.srp = {
+sjcl.keyex.srp = {
   /**
    * Private values SHOULD be at least 256-bit random numbers [rfc5054]
    * SECRET_BITS default size for private values to generate  (if not passed as an argument)
@@ -142,10 +142,10 @@ sjcl.keyexchange.srp = {
  * @constructor
  * @param {String} username Username.
  * @param {bitArray|String} password User password.
- * @param {Object} [hash=sjcl.keyexchange.srp.DEFAULT_HASH] Hash function to use.
- * @param {Object} [group=sjcl.keyexchange.srp.DEFAULT_GROUP] Group to use.
+ * @param {Object} [hash=sjcl.keyex.srp.DEFAULT_HASH] Hash function to use.
+ * @param {Object} [group=sjcl.keyex.srp.DEFAULT_GROUP] Group to use.
  */
-sjcl.keyexchange.srp.client = function(username, password, hash, group) {
+sjcl.keyex.srp.client = function(username, password, hash, group) {
   if (typeof username !== "string") {
     throw new sjcl.exception.invalid("username must be a string!");
   }
@@ -154,15 +154,15 @@ sjcl.keyexchange.srp.client = function(username, password, hash, group) {
   }
   this.username = username;
   this._password = password;
-  this._hash = hash || sjcl.hash[sjcl.keyexchange.srp.DEFAULT_HASH];
-  this._group = group || sjcl.keyexchange.srp.groups[sjcl.keyexchange.srp.DEFAULT_GROUP];
+  this._hash = hash || sjcl.hash[sjcl.keyex.srp.DEFAULT_HASH];
+  this._group = group || sjcl.keyex.srp.groups[sjcl.keyex.srp.DEFAULT_GROUP];
 
-  if (!sjcl.keyexchange.srp.group.prototype.isPrototypeOf(this._group)) {
-    throw new sjcl.exception.invalid("group must be a sjcl.keyexchange.srp.group!");
+  if (!sjcl.keyex.srp.group.prototype.isPrototypeOf(this._group)) {
+    throw new sjcl.exception.invalid("group must be a sjcl.keyex.srp.group!");
   }
 };
 
-sjcl.keyexchange.srp.client.prototype = {
+sjcl.keyex.srp.client.prototype = {
   /**
   * Calculate SRP verifier with given salt.
   *    Verifier and salt are sent to server during client registration.
@@ -170,8 +170,8 @@ sjcl.keyexchange.srp.client.prototype = {
   * @return {Object} SRP verifier as obj.verifier and random salt as obj.salt.
   */
   calculateVerifier: function(salt) {
-    salt = salt || sjcl.keyexchange.srp._randomBits(sjcl.keyexchange.srp.SALT_BITS);
-    if (typeof salt !== "object" || sjcl.bitArray.bitLength(salt) < sjcl.keyexchange.srp.SALT_BITS_MIN) {
+    salt = salt || sjcl.keyex.srp._randomBits(sjcl.keyex.srp.SALT_BITS);
+    if (typeof salt !== "object" || sjcl.bitArray.bitLength(salt) < sjcl.keyex.srp.SALT_BITS_MIN) {
       throw new sjcl.exception.invalid("Salt must be a bitArray longer than SALT_BITS_MIN!");
     }
     return {salt: salt, verifier: this._calculateV(salt).toBits()};
@@ -185,8 +185,8 @@ sjcl.keyexchange.srp.client.prototype = {
   getClientChallenge: function(secretA) {
     var group = this._group;
 
-    secretA = secretA || sjcl.keyexchange.srp._randomBits(sjcl.keyexchange.srp.SECRET_BITS);
-    if (typeof secretA !== "object" || sjcl.bitArray.bitLength(secretA) < sjcl.keyexchange.srp.SECRET_BITS_MIN) {
+    secretA = secretA || sjcl.keyex.srp._randomBits(sjcl.keyex.srp.SECRET_BITS);
+    if (typeof secretA !== "object" || sjcl.bitArray.bitLength(secretA) < sjcl.keyex.srp.SECRET_BITS_MIN) {
       throw new sjcl.exception.invalid("SecretA must be a bitArray longer than SECRET_BITS_MIN!");
     }
 
@@ -217,7 +217,7 @@ sjcl.keyexchange.srp.client.prototype = {
     }
     this._publicB = publicB;
 
-    u = sjcl.keyexchange.srp._calculateU(this._hash, group,
+    u = sjcl.keyex.srp._calculateU(this._hash, group,
                                          this._publicA.toBits(), this._publicB.toBits());
     if (u.mod(group.N).equals(0)) {
       throw new sjcl.exception.corrupt("u mod N == 0! SRP must be aborted!");
@@ -241,7 +241,7 @@ sjcl.keyexchange.srp.client.prototype = {
   * @return {bitArray} SRP M1 client authentication
   */
   getClientAuth: function() {
-    this._M1 = sjcl.keyexchange.srp._getAuth1(this._hash, this._group, this.username, this._salt,
+    this._M1 = sjcl.keyex.srp._getAuth1(this._hash, this._group, this.username, this._salt,
                                               this._publicA.toBits(), this._publicB.toBits(), this._K);
     return this._M1;
   },
@@ -255,7 +255,7 @@ sjcl.keyexchange.srp.client.prototype = {
     if (typeof serverM !== "object" || sjcl.bitArray.bitLength(serverM) == 0) {
       throw new sjcl.exception.invalid("serverM must be a bitArray!");
     }
-    this._M2 = sjcl.keyexchange.srp._getAuth2(this._hash, this._publicA.toBits(), this._M1, this._K);
+    this._M2 = sjcl.keyex.srp._getAuth2(this._hash, this._publicA.toBits(), this._M1, this._K);
     this.authenticated = sjcl.bitArray.equal(serverM, this._M2);
     return this.authenticated;
   },
@@ -299,10 +299,10 @@ sjcl.keyexchange.srp.client.prototype = {
  * @param {String} username Username.
  * @param {bitArray} salt User salt.
  * @param {bitArray} verifier User password verifier.
- * @param {Object} [hash=sjcl.keyexchange.srp.DEFAULT_HASH] Hash function to use.
- * @param {Object} [group=sjcl.keyexchange.srp.DEFAULT_GROUP] Group to use.
+ * @param {Object} [hash=sjcl.keyex.srp.DEFAULT_HASH] Hash function to use.
+ * @param {Object} [group=sjcl.keyex.srp.DEFAULT_GROUP] Group to use.
  */
-sjcl.keyexchange.srp.server = function(username, salt, verifier, hash, group) {
+sjcl.keyex.srp.server = function(username, salt, verifier, hash, group) {
   if (typeof username !== "string") {
     throw new sjcl.exception.invalid("username must be a string!");
   }
@@ -315,15 +315,15 @@ sjcl.keyexchange.srp.server = function(username, salt, verifier, hash, group) {
   this.username = username;
   this._salt = salt;
   this._verifier = sjcl.bn.fromBits(verifier);
-  this._hash = hash || sjcl.hash[sjcl.keyexchange.srp.DEFAULT_HASH];
-  this._group = group || sjcl.keyexchange.srp.groups[sjcl.keyexchange.srp.DEFAULT_GROUP];
+  this._hash = hash || sjcl.hash[sjcl.keyex.srp.DEFAULT_HASH];
+  this._group = group || sjcl.keyex.srp.groups[sjcl.keyex.srp.DEFAULT_GROUP];
 
-  if (!sjcl.keyexchange.srp.group.prototype.isPrototypeOf(this._group)) {
-    throw new sjcl.exception.invalid("group must be a sjcl.keyexchange.srp.group!");
+  if (!sjcl.keyex.srp.group.prototype.isPrototypeOf(this._group)) {
+    throw new sjcl.exception.invalid("group must be a sjcl.keyex.srp.group!");
   }
 };
 
-sjcl.keyexchange.srp.server.prototype = {
+sjcl.keyex.srp.server.prototype = {
   /**
   * Generate server challenge B.
   * @param {bitArray} secretB Server secret ephemeral value b (random SECRET_BITS bits if omitted).
@@ -332,8 +332,8 @@ sjcl.keyexchange.srp.server.prototype = {
   getServerChallenge: function(secretB) {
     var group = this._group, g2b, k;
 
-    secretB = secretB || sjcl.keyexchange.srp._randomBits(sjcl.keyexchange.srp.SECRET_BITS);
-    if (typeof secretB !== "object" || sjcl.bitArray.bitLength(secretB) < sjcl.keyexchange.srp.SECRET_BITS_MIN) {
+    secretB = secretB || sjcl.keyex.srp._randomBits(sjcl.keyex.srp.SECRET_BITS);
+    if (typeof secretB !== "object" || sjcl.bitArray.bitLength(secretB) < sjcl.keyex.srp.SECRET_BITS_MIN) {
       throw new sjcl.exception.invalid("SecretB must be a bitArray longer than SECRET_BITS_MIN!");
     }
 
@@ -361,7 +361,7 @@ sjcl.keyexchange.srp.server.prototype = {
     }
     this._publicA = publicA;
 
-    u = sjcl.keyexchange.srp._calculateU(this._hash, group,
+    u = sjcl.keyex.srp._calculateU(this._hash, group,
                                          this._publicA.toBits(), this._publicB.toBits());
     if (u.mod(group.N).equals(0)) {
       throw new sjcl.exception.corrupt("u mod N == 0! SRP must be aborted!");
@@ -386,7 +386,7 @@ sjcl.keyexchange.srp.server.prototype = {
     if (typeof clientM !== "object" || sjcl.bitArray.bitLength(clientM) == 0) {
       throw new sjcl.exception.invalid("clientM must be a bitArray!");
     }
-    this._M1 = sjcl.keyexchange.srp._getAuth1(this._hash, this._group, this.username, this._salt,
+    this._M1 = sjcl.keyex.srp._getAuth1(this._hash, this._group, this.username, this._salt,
                                               this._publicA.toBits(), this._publicB.toBits(), this._K);
     this.authenticated = sjcl.bitArray.equal(clientM, this._M1);
     return this.authenticated;
@@ -397,7 +397,7 @@ sjcl.keyexchange.srp.server.prototype = {
   * @return {bitArray} SRP M2 server authentication
   */
   getServerAuth: function() {
-    this._M2 = sjcl.keyexchange.srp._getAuth2(this._hash, this._publicA.toBits(), this._M1, this._K);
+    this._M2 = sjcl.keyex.srp._getAuth2(this._hash, this._publicA.toBits(), this._M1, this._K);
     return this._M2;
   },
 };
@@ -409,12 +409,12 @@ sjcl.keyexchange.srp.server.prototype = {
  * @param {bigInt} N The prime.
  * @param {bigInt} g The generator.
  */
-sjcl.keyexchange.srp.group = function(N, g) {
+sjcl.keyex.srp.group = function(N, g) {
   this._N = N;
   this._g = g;
 };
 
-sjcl.keyexchange.srp.group.prototype = {
+sjcl.keyex.srp.group.prototype = {
   /**
   * Get group prime N
   * @return {sjcl.bn}
@@ -472,8 +472,8 @@ sjcl.keyexchange.srp.group.prototype = {
 /*
  * SRP Group Parameters from rfc5054 Appendix A
  */
-sjcl.keyexchange.srp.groups = {
-  ng1024: new sjcl.keyexchange.srp.group(
+sjcl.keyex.srp.groups = {
+  ng1024: new sjcl.keyex.srp.group(
     "EEAF0AB9ADB38DD69C33F80AFA8FC5E86072618775FF3C0B9EA2314C" +
     "9C256576D674DF7496EA81D3383B4813D692C6E0E0D5D8E250B98BE4" +
     "8E495C1D6089DAD15DC7D7B46154D6B6CE8EF4AD69B15D4982559B29" +
@@ -481,7 +481,7 @@ sjcl.keyexchange.srp.groups = {
     "FD5138FE8376435B9FC61D2FC0EB06E3",
     2
   ),
-  ng1536: new sjcl.keyexchange.srp.group(
+  ng1536: new sjcl.keyex.srp.group(
     "9DEF3CAFB939277AB1F12A8617A47BBBDBA51DF499AC4C80BEEEA961" +
     "4B19CC4D5F4F5F556E27CBDE51C6A94BE4607A291558903BA0D0F843" +
     "80B655BB9A22E8DCDF028A7CEC67F0D08134B1C8B97989149B609E0B" +
@@ -491,7 +491,7 @@ sjcl.keyexchange.srp.groups = {
     "8CE7A28C2442C6F315180F93499A234DCF76E3FED135F9BB",
     2
   ),
-  ng2048: new sjcl.keyexchange.srp.group(
+  ng2048: new sjcl.keyex.srp.group(
     "AC6BDB41324A9A9BF166DE5E1389582FAF72B6651987EE07FC319294" +
     "3DB56050A37329CBB4A099ED8193E0757767A13DD52312AB4B03310D" +
     "CD7F48A9DA04FD50E8083969EDB767B0CF6095179A163AB3661A05FB" +
@@ -504,7 +504,7 @@ sjcl.keyexchange.srp.groups = {
     "9E4AFF73",
     2
   ),
-  ng3072: new sjcl.keyexchange.srp.group(
+  ng3072: new sjcl.keyex.srp.group(
     "FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E08" +
     "8A67CC74020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B" +
     "302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9" +
@@ -521,7 +521,7 @@ sjcl.keyexchange.srp.groups = {
     "E0FD108E4B82D120A93AD2CAFFFFFFFFFFFFFFFF",
     5
   ),
-  ng4096: new sjcl.keyexchange.srp.group(
+  ng4096: new sjcl.keyex.srp.group(
     "FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E08" +
     "8A67CC74020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B" +
     "302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9" +
@@ -543,7 +543,7 @@ sjcl.keyexchange.srp.groups = {
     "FFFFFFFFFFFFFFFF",
     5
   ),
-  ng6144: new sjcl.keyexchange.srp.group(
+  ng6144: new sjcl.keyex.srp.group(
     "FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E08" +
     "8A67CC74020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B" +
     "302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9" +
@@ -574,7 +574,7 @@ sjcl.keyexchange.srp.groups = {
     "6DCC4024FFFFFFFFFFFFFFFF",
     5
   ),
-  ng8192: new sjcl.keyexchange.srp.group(
+  ng8192: new sjcl.keyex.srp.group(
     "FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E08" +
     "8A67CC74020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B" +
     "302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9" +

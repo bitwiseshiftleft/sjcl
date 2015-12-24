@@ -1,5 +1,5 @@
 new sjcl.test.TestCase("SRP known-answer tests", function (cb) {
-  if (!sjcl.keyexchange.srp) {
+  if (!sjcl.keyex.srp) {
     this.unimplemented();
     cb && cb();
     return;
@@ -10,19 +10,19 @@ new sjcl.test.TestCase("SRP known-answer tests", function (cb) {
   for (i=0; i<kat.length; i++) {
     tv = kat[i];
     hash = sjcl.hash[tv.hash];
-    group = sjcl.keyexchange.srp.groups[tv.group];
+    group = sjcl.keyex.srp.groups[tv.group];
 
     salt = sjcl.codec.hex.toBits(tv.s);
 
     /* check calculateVerifier */
-    client = new sjcl.keyexchange.srp.client(tv.I, tv.P, hash, group);
+    client = new sjcl.keyex.srp.client(tv.I, tv.P, hash, group);
     var res = client.calculateVerifier(salt);
     verifier = sjcl.codec.hex.toBits(tv.v);
     this.require(sjcl.bitArray.equal(res.salt, salt), "srp salt #" + i);
     this.require(sjcl.bitArray.equal(res.verifier, verifier), "srp verifier #" + i);
 
     /* check _calculateX */
-    client = new sjcl.keyexchange.srp.client(tv.I, tv.P, hash, group);
+    client = new sjcl.keyex.srp.client(tv.I, tv.P, hash, group);
     var x = client._calculateX(salt);
     this.require(sjcl.bitArray.equal(x.toBits(), sjcl.codec.hex.toBits(tv.x)), "srp x #" + i);
 
@@ -31,11 +31,11 @@ new sjcl.test.TestCase("SRP known-answer tests", function (cb) {
     this.require(sjcl.bitArray.equal(k.toBits(), sjcl.codec.hex.toBits(tv.k)), "srp k #" + i);
 
     /* check success */
-    client = new sjcl.keyexchange.srp.client(tv.I, tv.P, hash, group);
+    client = new sjcl.keyex.srp.client(tv.I, tv.P, hash, group);
     var clientA = client.getClientChallenge(sjcl.codec.hex.toBits(tv.a));
     this.require(sjcl.bitArray.equal(clientA, sjcl.codec.hex.toBits(tv.A)), "srp A #" + i);
 
-    server = new sjcl.keyexchange.srp.server(tv.I, salt, verifier, hash, group);
+    server = new sjcl.keyex.srp.server(tv.I, salt, verifier, hash, group);
     var serverB = server.getServerChallenge(sjcl.codec.hex.toBits(tv.b));
     this.require(sjcl.bitArray.equal(serverB, sjcl.codec.hex.toBits(tv.B)), "srp B #" + i);
 
@@ -59,10 +59,10 @@ new sjcl.test.TestCase("SRP known-answer tests", function (cb) {
     this.require(auth && client.authenticated, "srp server auth #" + i);
 
     /* check fail */
-    client = new sjcl.keyexchange.srp.client(tv.I, tv.P + "1", hash, group);
+    client = new sjcl.keyex.srp.client(tv.I, tv.P + "1", hash, group);
     var clientA = client.getClientChallenge(sjcl.codec.hex.toBits(tv.a));
 
-    server = new sjcl.keyexchange.srp.server(tv.I, salt, verifier, hash, group);
+    server = new sjcl.keyex.srp.server(tv.I, salt, verifier, hash, group);
     var serverB = server.getServerChallenge(sjcl.codec.hex.toBits(tv.b));
 
     var clientK = client.setServerResponse(salt, serverB);
