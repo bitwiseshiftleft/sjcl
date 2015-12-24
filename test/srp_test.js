@@ -10,7 +10,7 @@ new sjcl.test.TestCase("SRP known-answer tests", function (cb) {
   for (i=0; i<kat.length; i++) {
     tv = kat[i];
     hash = sjcl.hash[tv.hash];
-    group = sjcl.keyex.srp.groups[tv.group];
+    group = sjcl.keyex.srp.getGroup(tv.group);
 
     salt = sjcl.codec.hex.toBits(tv.s);
 
@@ -23,8 +23,7 @@ new sjcl.test.TestCase("SRP known-answer tests", function (cb) {
 
     /* check _calculateX */
     client = new sjcl.keyex.srp.client(tv.I, tv.P, hash, group);
-    var x = client._calculateX(salt);
-    this.require(sjcl.bitArray.equal(x.toBits(), sjcl.codec.hex.toBits(tv.x)), "srp x #" + i);
+    this.require(client.testX(salt, sjcl.codec.hex.toBits(tv.x)), "srp x #" + i);
 
     /* check group.calculateK */
     var k = group.calculateK(hash);
@@ -40,12 +39,12 @@ new sjcl.test.TestCase("SRP known-answer tests", function (cb) {
     this.require(sjcl.bitArray.equal(serverB, sjcl.codec.hex.toBits(tv.B)), "srp B #" + i);
 
     var clientK = client.setServerResponse(salt, serverB);
-    this.require(sjcl.bitArray.equal(client._u.toBits(), sjcl.codec.hex.toBits(tv.u)), "srp client u #" + i);
-    this.require(sjcl.bitArray.equal(client._S.toBits(), sjcl.codec.hex.toBits(tv.S)), "srp client S #" + i);
+    this.require(client.testU(sjcl.codec.hex.toBits(tv.u)), "srp client u #" + i);
+    this.require(client.testS(sjcl.codec.hex.toBits(tv.S)), "srp client S #" + i);
 
     var serverK = server.setClientResponse(clientA);
-    this.require(sjcl.bitArray.equal(server._u.toBits(), sjcl.codec.hex.toBits(tv.u)), "srp server u #" + i);
-    this.require(sjcl.bitArray.equal(server._S.toBits(), sjcl.codec.hex.toBits(tv.S)), "srp server S #" + i);
+    this.require(server.testU(sjcl.codec.hex.toBits(tv.u)), "srp server u #" + i);
+    this.require(server.testS(sjcl.codec.hex.toBits(tv.S)), "srp server S #" + i);
 
     this.require(sjcl.bitArray.equal(clientK, serverK), "srp K #" + i);
     var clientM = client.getClientAuth();

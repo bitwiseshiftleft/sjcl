@@ -64,6 +64,19 @@ sjcl.keyex.srp = {
   DEFAULT_HASH: "sha1",
   DEFAULT_GROUP: "ng1024",
 
+  /** Get known group by name
+   * @param {String} name Group name
+   * @return {sjcl.keyex.srp.group} Object with g and N properties
+   */
+  getGroup: function(name) {
+    var group = sjcl.keyex.srp._groups[name];
+    if (!name) {
+      throw new sjcl.exception.invalid("No such group!");
+    }
+    group.initialize();
+    return group;
+  },
+
   /** Generate random words and truncate to given number of bits.
    * @param {Number} len The number of bits to generate.
    * @param {Number} paranoia Desired paranoia level.
@@ -155,7 +168,7 @@ sjcl.keyex.srp.client = function(username, password, hash, group) {
   this.username = username;
   this._password = password;
   this._hash = hash || sjcl.hash[sjcl.keyex.srp.DEFAULT_HASH];
-  this._group = group || sjcl.keyex.srp.groups[sjcl.keyex.srp.DEFAULT_GROUP];
+  this._group = group || sjcl.keyex.srp.getGroup(sjcl.keyex.srp.DEFAULT_GROUP);
 
   if (!sjcl.keyex.srp.group.prototype.isPrototypeOf(this._group)) {
     throw new sjcl.exception.invalid("group must be a sjcl.keyex.srp.group!");
@@ -291,6 +304,34 @@ sjcl.keyex.srp.client.prototype = {
     x = x || this._calculateX(salt);
     return group.g.powermod(x, group.N);
   },
+
+  /**
+  * Test helper. Compare computed x against provided
+  * @param {bitArray} salt User salt.
+  * @param {bitArray} x SRP x
+  * @return {Boolean} True is equal.
+  */
+  testX: function(salt, x) {
+    return sjcl.bitArray.equal(this._calculateX(salt).toBits(), x);
+  },
+
+  /**
+  * Test helper. Compare computed u against provided
+  * @param {bitArray} u SRP u
+  * @return {Boolean} True is equal.
+  */
+  testU: function(u) {
+    return sjcl.bitArray.equal(this._u.toBits(), u);
+  },
+
+  /**
+  * Test helper. Compare computed S against provided
+  * @param {bitArray} S SRP S
+  * @return {Boolean} True is equal.
+  */
+  testS: function(S) {
+    return sjcl.bitArray.equal(this._S.toBits(), S);
+  },
 };
 
 /**
@@ -316,7 +357,7 @@ sjcl.keyex.srp.server = function(username, salt, verifier, hash, group) {
   this._salt = salt;
   this._verifier = sjcl.bn.fromBits(verifier);
   this._hash = hash || sjcl.hash[sjcl.keyex.srp.DEFAULT_HASH];
-  this._group = group || sjcl.keyex.srp.groups[sjcl.keyex.srp.DEFAULT_GROUP];
+  this._group = group || sjcl.keyex.srp.getGroup(sjcl.keyex.srp.DEFAULT_GROUP);
 
   if (!sjcl.keyex.srp.group.prototype.isPrototypeOf(this._group)) {
     throw new sjcl.exception.invalid("group must be a sjcl.keyex.srp.group!");
@@ -400,6 +441,24 @@ sjcl.keyex.srp.server.prototype = {
     this._M2 = sjcl.keyex.srp._getAuth2(this._hash, this._publicA.toBits(), this._M1, this._K);
     return this._M2;
   },
+
+  /**
+  * Test helper. Compare computed u against provided
+  * @param {bitArray} u SRP u
+  * @return {Boolean} True is equal.
+  */
+  testU: function(u) {
+    return sjcl.bitArray.equal(this._u.toBits(), u);
+  },
+
+  /**
+  * Test helper. Compare computed S against provided
+  * @param {bitArray} S SRP S
+  * @return {Boolean} True is equal.
+  */
+  testS: function(S) {
+    return sjcl.bitArray.equal(this._S.toBits(), S);
+  },
 };
 
 /**
@@ -409,32 +468,25 @@ sjcl.keyex.srp.server.prototype = {
  * @param {bigInt} N The prime.
  * @param {bigInt} g The generator.
  */
-sjcl.keyex.srp.group = function(N, g) {
+sjcl.keyex.srp.group = function(N, g, lazy) {
   this._N = N;
   this._g = g;
+  if (!lazy) {
+    this.initialize();
+  }
 };
 
 sjcl.keyex.srp.group.prototype = {
   /**
-  * Get group prime N
-  * @return {sjcl.bn}
+  * Initialize g and N
   */
-  get N() {
-    if (!sjcl.bn.prototype.isPrototypeOf(this._N)) {
-      this._N = new sjcl.bn(this._N);
+  initialize: function() {
+    if (!this.N) {
+      this.N = new sjcl.bn(this._N);
     }
-    return this._N;
-  },
-
-  /**
-  * Get group generator g
-  * @return {sjcl.bn}
-  */
-  get g() {
-    if (!sjcl.bn.prototype.isPrototypeOf(this._g)) {
-      this._g = new sjcl.bn(this._g);
+    if (!this.g) {
+      this.g = new sjcl.bn(this._g);
     }
-    return this._g;
   },
 
   /**
@@ -471,15 +523,18 @@ sjcl.keyex.srp.group.prototype = {
 
 /*
  * SRP Group Parameters from rfc5054 Appendix A
+ *
+ * Use sjcl.keyex.srp.getGroup to access these objects.
  */
-sjcl.keyex.srp.groups = {
+sjcl.keyex.srp._groups = {
   ng1024: new sjcl.keyex.srp.group(
     "EEAF0AB9ADB38DD69C33F80AFA8FC5E86072618775FF3C0B9EA2314C" +
     "9C256576D674DF7496EA81D3383B4813D692C6E0E0D5D8E250B98BE4" +
     "8E495C1D6089DAD15DC7D7B46154D6B6CE8EF4AD69B15D4982559B29" +
     "7BCF1885C529F566660E57EC68EDBC3C05726CC02FD4CBF4976EAA9A" +
     "FD5138FE8376435B9FC61D2FC0EB06E3",
-    2
+    2,
+    true
   ),
   ng1536: new sjcl.keyex.srp.group(
     "9DEF3CAFB939277AB1F12A8617A47BBBDBA51DF499AC4C80BEEEA961" +
@@ -489,7 +544,8 @@ sjcl.keyex.srp.groups = {
     "6EDF019539349627DB2FD53D24B7C48665772E437D6C7F8CE442734A" +
     "F7CCB7AE837C264AE3A9BEB87F8A2FE9B8B5292E5A021FFF5E91479E" +
     "8CE7A28C2442C6F315180F93499A234DCF76E3FED135F9BB",
-    2
+    2,
+    true
   ),
   ng2048: new sjcl.keyex.srp.group(
     "AC6BDB41324A9A9BF166DE5E1389582FAF72B6651987EE07FC319294" +
@@ -502,7 +558,8 @@ sjcl.keyex.srp.groups = {
     "03CE53299CCC041C7BC308D82A5698F3A8D0C38271AE35F8E9DBFBB6" +
     "94B5C803D89F7AE435DE236D525F54759B65E372FCD68EF20FA7111F" +
     "9E4AFF73",
-    2
+    2,
+    true
   ),
   ng3072: new sjcl.keyex.srp.group(
     "FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E08" +
@@ -519,7 +576,8 @@ sjcl.keyex.srp.groups = {
     "1AD2EE6BF12FFA06D98A0864D87602733EC86A64521F2B18177B200C" +
     "BBE117577A615D6C770988C0BAD946E208E24FA074E5AB3143DB5BFC" +
     "E0FD108E4B82D120A93AD2CAFFFFFFFFFFFFFFFF",
-    5
+    5,
+    true
   ),
   ng4096: new sjcl.keyex.srp.group(
     "FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E08" +
@@ -541,7 +599,8 @@ sjcl.keyex.srp.groups = {
     "233BA186515BE7ED1F612970CEE2D7AFB81BDD762170481CD0069127" +
     "D5B05AA993B4EA988D8FDDC186FFB7DC90A6C08F4DF435C934063199" +
     "FFFFFFFFFFFFFFFF",
-    5
+    5,
+    true
   ),
   ng6144: new sjcl.keyex.srp.group(
     "FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E08" +
@@ -572,7 +631,8 @@ sjcl.keyex.srp.groups = {
     "B7C5DA76F550AA3D8A1FBFF0EB19CCB1A313D55CDA56C9EC2EF29632" +
     "387FE8D76E3C0468043E8F663F4860EE12BF2D5B0B7474D6E694F91E" +
     "6DCC4024FFFFFFFFFFFFFFFF",
-    5
+    5,
+    true
   ),
   ng8192: new sjcl.keyex.srp.group(
     "FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E08" +
@@ -612,6 +672,7 @@ sjcl.keyex.srp.groups = {
     "359046F4EB879F924009438B481C6CD7889A002ED5EE382BC9190DA6" +
     "FC026E479558E4475677E9AA9E3050E2765694DFC81F56E880B96E71" +
     "60C980DD98EDD3DFFFFFFFFFFFFFFFFF",
-    19
+    19,
+    true
   ),
 };
