@@ -197,5 +197,56 @@ sjcl.bitArray = {
       a[i] = (v >>> 24) | ((v >>> 8) & m) | ((v & m) << 8) | (v << 24);
     }
     return a;
-  }
+  },
+
+  /** Pad with zeroes on the left.
+   * (throws if array is longer that requested pad length)
+   * @param {bitArray} bitarray Word array
+   * @param {Number} padlen Length to pad to
+   * @return {bitArray} Padded array
+   */
+  zeropadLeft: function(bitarray, padlen) {
+    padlen -= sjcl.bitArray.bitLength(bitarray);
+    if (padlen < 0) {
+      throw new sjcl.exception.invalid("padlen is less than bitArray length!");
+    }
+    var out = []
+    var padwords = padlen/32|0;
+    for (var i=0; i<padwords; i++) {
+      out.push(0);
+    }
+    var remainder = padlen - padwords*32;
+    if (remainder) {
+      out.push(sjcl.bitArray.partial(remainder, 0, true));
+    }
+    return sjcl.bitArray.concat(out, bitarray);
+  },
+
+  /** XOR two arrays of equal length.
+   * (throws if arrays have different length)
+   * @param {bitArray} a First array
+   * @param {bitArray} b Second array
+   * @return {bitArray} XOR'ed array
+   */
+  xorAll: function(a, b) {
+    if (a.length != b.length) {
+      throw new sjcl.exception.invalid("trying to XOR arrays of unequal length!");
+    }
+
+    var out = [];
+    var len = a.length;
+    if (len == 0) {
+      return out;
+    }
+
+    var partlen = sjcl.bitArray.getPartial(a[len-1]);
+    for (var i=0; i<len; i++) {
+      out.push(a[i] ^ b[i]);
+    }
+
+    if (partlen % 32) {
+      out[len-1] = sjcl.bitArray.partial(out[len-1], partlen, true);
+    }
+    return out;
+  },
 };
