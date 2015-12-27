@@ -1,9 +1,12 @@
-before_script: ./configure --with-all
-
+sudo: false
 language: node_js
+cache:
+  directories:
+    - node_modules
 node_js:
+  - "4.2"
+  - "0.12"
   - "0.11"
   - "0.10"
   - "0.8"
-# 0.6 appears to be unreliable on Travis at the moment.
-#  - "0.6"
+before_script: ./configure --with-all
