@@ -108,7 +108,7 @@ function doDecrypt() {
     }
     v.mode = rp.mode;
     v.iv = rp.iv;
-    v.adata = rp.adata;
+    v.adata = sjcl.codec.utf8String.fromBits(rp.adata);
     if (v.password) {
       v.salt = rp.salt;
       v.iter = rp.iter;

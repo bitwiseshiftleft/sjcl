@@ -111,39 +111,16 @@ sjcl.mode.ccm = {
     return out.data;
   },
 
-  /* Compute the (unencrypted) authentication tag, according to the CCM specification
-   * @param {Object} prf The pseudorandom function.
-   * @param {bitArray} plaintext The plaintext data.
-   * @param {bitArray} iv The initialization value.
-   * @param {bitArray} adata The authenticated data.
-   * @param {Number} tlen the desired tag length, in bits.
-   * @return {bitArray} The tag, but not yet encrypted.
-   * @private
-   */
-  _computeTag: function(prf, plaintext, iv, adata, tlen, L) {
-    // compute B[0]
+  _macAdditionalData: function (prf, adata, iv, tlen, ol, L) {
     var mac, tmp, i, macData = [], w=sjcl.bitArray, xor = w._xor4;
-
-    tlen /= 8;
-  
-    // check tag length and message length
-    if (tlen % 2 || tlen < 4 || tlen > 16) {
-      throw new sjcl.exception.invalid("ccm: invalid tag length");
-    }
-  
-    if (adata.length > 0xFFFFFFFF || plaintext.length > 0xFFFFFFFF) {
-      // I don't want to deal with extracting high words from doubles.
-      throw new sjcl.exception.bug("ccm: can't deal with 4GiB or more data");
-    }
 
     // mac the flags
     mac = [w.partial(8, (adata.length ? 1<<6 : 0) | (tlen-2) << 2 | L-1)];
 
     // mac the iv and length
     mac = w.concat(mac, iv);
-    mac[3] |= w.bitLength(plaintext)/8;
+    mac[3] |= ol;
     mac = prf.encrypt(mac);
-    
   
     if (adata.length) {
       // mac the associated data.  start with its length...
@@ -160,7 +137,37 @@ sjcl.mode.ccm = {
         mac = prf.encrypt(xor(mac, macData.slice(i,i+4).concat([0,0,0])));
       }
     }
+
+    return mac;
+  },
+
+  /* Compute the (unencrypted) authentication tag, according to the CCM specification
+   * @param {Object} prf The pseudorandom function.
+   * @param {bitArray} plaintext The plaintext data.
+   * @param {bitArray} iv The initialization value.
+   * @param {bitArray} adata The authenticated data.
+   * @param {Number} tlen the desired tag length, in bits.
+   * @return {bitArray} The tag, but not yet encrypted.
+   * @private
+   */
+  _computeTag: function(prf, plaintext, iv, adata, tlen, L) {
+    // compute B[0]
+    var mac, i, w=sjcl.bitArray, xor = w._xor4;
+
+    tlen /= 8;
   
+    // check tag length and message length
+    if (tlen % 2 || tlen < 4 || tlen > 16) {
+      throw new sjcl.exception.invalid("ccm: invalid tag length");
+    }
+  
+    if (adata.length > 0xFFFFFFFF || plaintext.length > 0xFFFFFFFF) {
+      // I don't want to deal with extracting high words from doubles.
+      throw new sjcl.exception.bug("ccm: can't deal with 4GiB or more data");
+    }
+
+    mac = sjcl.mode.ccm._macAdditionalData(prf, adata, iv, tlen, w.bitLength(plaintext)/8, L);
+
     // mac the plaintext
     for (i=0; i<plaintext.length; i+=4) {
       mac = prf.encrypt(xor(mac, plaintext.slice(i,i+4).concat([0,0,0])));

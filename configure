@@ -4,7 +4,7 @@ use strict;
 
 my ($arg, $i, $j, $targ);
 
-my @targets = qw/sjcl aes bitArray codecString codecHex codecBase32 codecBase64 codecBytes sha256 sha512 sha1 ccm cbc ocb2 gcm hmac pbkdf2 random convenience bn ecc srp/;
+my @targets = qw/sjcl aes bitArray codecString codecHex codecBase32 codecBase64 codecBytes sha256 sha512 sha1 ccm cbc ocb2 ocb2progressive gcm hmac pbkdf2 scrypt random convenience bn ecc srp ccmArrayBuffer codecArrayBuffer ripemd160/;
 my %deps = ('aes'=>'sjcl',
             'bitArray'=>'sjcl',
             'codecString'=>'bitArray',
@@ -15,20 +15,25 @@ my %deps = ('aes'=>'sjcl',
             'sha256'=>'codecString',
             'sha512'=>'codecString',
             'sha1'=>'codecString',
+            'ripemd160' => 'codecString',
             'ccm'=>'bitArray,aes',
             'ocb2'=>'bitArray,aes',
+            'ocb2progressive'=>'ocb2',
             'gcm'=>'bitArray,aes',
             'hmac'=>'sha256',
             'pbkdf2'=>'hmac',
+            'scrypt'=>'pbkdf2,codecBytes',
             'srp'=>'sha1,bn,bitArray',
             'bn'=>'bitArray,random',
             'ecc'=>'bn',
             'cbc'=>'bitArray,aes',
             'random'=>'sha256,aes',
-            'convenience'=>'ccm,pbkdf2,random,codecBase64');
-            
+            'convenience'=>'ccm,pbkdf2,random,codecBase64',
+            'ccmArrayBuffer'=>'bitArray,codecArrayBuffer',
+            'codecArrayBuffer'=>'bitArray');
+
 my $compress = "closure";
-            
+
 my %enabled = ();
 $enabled{$_} = 0 foreach (@targets);
 
@@ -77,14 +82,14 @@ Usage: $0 arguments...
 Valid arguments are:
   --with-all: by default, include all targets
   --without-all: by default, include no targets
-  
+
   --compress=none|closure|yui
-  
+
   --with-TARGET: require TARGET
   --without-TARGET: forbid TARGET
-  
+
   --help: show this message
-  
+
   Valid targets are:
     $targets
 
@@ -141,4 +146,3 @@ $compress = "core_$compress.js";
 $compress = 'core.js' if ($compress eq 'core_none.js');
 
 print CONFIG "COMPRESS= $compress\n";
-

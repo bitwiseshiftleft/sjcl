@@ -104,13 +104,15 @@
         <label for="ccm"><acronym title="Counter mode with Cipher block chaining Message authentication code">CCM</acronym></label>
         <input type="radio" name="mode" value="ocb2" id="ocb2" autocomplete="off"/>
         <label for="ocb2"><acronym title="Offset CodeBook mode, version 2.0">OCB2</acronym></label>
+        <input type="radio" name="mode" value="gcm" id="gcm" autocomplete="off"/>
+        <label for="gcm"><acronym title="Galois Counter Mode">GCM</acronym></label>
         <p class="explanation">
           The cipher mode is a standard for how to use AES and other
           algorithms to encrypt and authenticate your message.
-          <a href="http://en.wikipedia.org/wiki/OCB_mode">OCB2 mode</a>
-          is slightly faster and has more features, but
-          <a href="http://en.wikipedia.org/wiki/CCM_mode">CCM mode</a> has wider
-          support because it is not patented.
+          <a href="http://en.wikipedia.org/wiki/OCB_mode">OCB2 mode</a> (patented) and
+          <a href="http://en.wikipedia.org/wiki/GCM_mode">GCM mode</a> (unencumbered)
+          are slightly faster and have more features than
+          <a href="http://en.wikipedia.org/wiki/CCM_mode">CCM mode</a>.
         </p>
       </div>
       
@@ -128,7 +130,7 @@
           different each time you send it.
         </p>
         <p class="explanation">
-          Be careful: CCM mode doesn't use
+          Be careful: CCM mode and GCM mode don't use
           the whole IV, so changing just part of it isn't enough.
         </p>
       </div>

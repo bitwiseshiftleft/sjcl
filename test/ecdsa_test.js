@@ -15,7 +15,33 @@ new sjcl.test.TestCase("ECDSA test", function (cb) {
   } catch (e) {
     this.fail("good message rejected");
   }
-  
+
+  var serializedPubKey = keys.pub.serialize();
+  var deserializedPubKey = sjcl.ecc.deserialize(serializedPubKey);
+  var serializedSecKey = keys.sec.serialize();
+  var deserializedSecKey = sjcl.ecc.deserialize(serializedSecKey);
+  var signatureAfterSerialization = deserializedSecKey.sign(hash,0);
+
+  this.require(sjcl.bitArray.equal(keys.pub.get().x,       
+      deserializedPubKey.get().x));
+  this.require(sjcl.bitArray.equal(keys.pub.get().y,
+      deserializedPubKey.get().y));
+  this.require(sjcl.bitArray.equal(deserializedSecKey.get(), keys.sec.get()));
+
+  try {
+    deserializedPubKey.verify(hash, signature);
+    this.pass();
+  } catch (e) {
+    this.fail("good message rejected after serialization and deserialization of public key");
+  }
+
+  try {
+    keys.pub.verify(hash, signatureAfterSerialization);
+    this.pass();
+  } catch (e) {
+    this.fail("signature provided with serialized/deserialized secret key rejected");
+  }
+
   hash[1] ^= 8; // minor change to hash
   
   try {

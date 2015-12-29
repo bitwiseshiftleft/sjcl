@@ -39,7 +39,7 @@ sjcl.ecc.point.prototype = {
   mult: function(k) {
     return this.toJac().mult(k, this).toAffine();
   },
-  
+
   /**
    * Multiply this point by k, added to affine2*k2, and return the answer in Jacobian coordinates.
    * @param {bigInt} k The coefficient to multiply this by.
@@ -50,7 +50,7 @@ sjcl.ecc.point.prototype = {
   mult2: function(k, k2, affine2) {
     return this.toJac().mult2(k, this, k2, affine2).toAffine();
   },
-  
+
   multiples: function() {
     var m, i, j;
     if (this._multiples === undefined) {
@@ -62,6 +62,11 @@ sjcl.ecc.point.prototype = {
       }
     }
     return this._multiples;
+  },
+
+  negate: function() {
+    var newY = new this.curve.field(0).sub(this.y).normalize().reduce();
+    return new sjcl.ecc.point(this.curve, this.x, newY);
   },
 
   isValid: function() {
@@ -100,7 +105,7 @@ sjcl.ecc.pointJac.prototype = {
    * Adds S and T and returns the result in Jacobian coordinates. Note that S must be in Jacobian coordinates and T must be in affine coordinates.
    * @param {sjcl.ecc.pointJac} S One of the points to add, in Jacobian coordinates.
    * @param {sjcl.ecc.point} T The other point to add, in affine coordinates.
-   * @return {sjcl.ecc.pointJac} The sum of the two points, in Jacobian coordinates. 
+   * @return {sjcl.ecc.pointJac} The sum of the two points, in Jacobian coordinates.
    */
   add: function(T) {
     var S = this, sz2, c, d, c2, x1, x2, x, y1, y2, y, z;
@@ -126,7 +131,7 @@ sjcl.ecc.pointJac.prototype = {
         return new sjcl.ecc.pointJac(S.curve);
       }
     }
-    
+
     d = T.y.mul(sz2.mul(S.z)).subM(S.y);
     c2 = c.square();
 
@@ -142,7 +147,7 @@ sjcl.ecc.pointJac.prototype = {
 
     return new sjcl.ecc.pointJac(this.curve,x,y,z);
   },
-  
+
   /**
    * doubles this point.
    * @return {sjcl.ecc.pointJac} The doubled point.
@@ -175,7 +180,7 @@ sjcl.ecc.pointJac.prototype = {
     var zi = this.z.inverse(), zi2 = zi.square();
     return new sjcl.ecc.point(this.curve, this.x.mul(zi2).fullReduce(), this.y.mul(zi2.mul(zi)).fullReduce());
   },
-  
+
   /**
    * Multiply this point by k and return the answer in Jacobian coordinates.
    * @param {bigInt} k The coefficient to multiply by.
@@ -188,7 +193,7 @@ sjcl.ecc.pointJac.prototype = {
     } else if (k.limbs !== undefined) {
       k = k.normalize().limbs;
     }
-    
+
     var i, j, out = new sjcl.ecc.point(this.curve).toJac(), multiples = affine.multiples();
 
     for (i=k.length-1; i>=0; i--) {
@@ -196,10 +201,10 @@ sjcl.ecc.pointJac.prototype = {
         out = out.doubl().doubl().doubl().doubl().add(multiples[k[i]>>j & 0xF]);
       }
     }
-    
+
     return out;
   },
-  
+
   /**
    * Multiply this point by k, added to affine2*k2, and return the answer in Jacobian coordinates.
    * @param {bigInt} k The coefficient to multiply this by.
@@ -214,13 +219,13 @@ sjcl.ecc.pointJac.prototype = {
     } else if (k1.limbs !== undefined) {
       k1 = k1.normalize().limbs;
     }
-    
+
     if (typeof(k2) === "number") {
       k2 = [k2];
     } else if (k2.limbs !== undefined) {
       k2 = k2.normalize().limbs;
     }
-    
+
     var i, j, out = new sjcl.ecc.point(this.curve).toJac(), m1 = affine.multiples(),
         m2 = affine2.multiples(), l1, l2;
 
@@ -231,8 +236,12 @@ sjcl.ecc.pointJac.prototype = {
         out = out.doubl().doubl().doubl().doubl().add(m1[l1>>j & 0xF]).add(m2[l2>>j & 0xF]);
       }
     }
-    
+
     return out;
+  },
+
+  negate: function() {
+    return this.toAffine().negate().toJac();
   },
 
   isValid: function() {
@@ -303,6 +312,14 @@ sjcl.ecc.curves = {
     "0xb3312fa7e23ee7e4988e056be3f82d19181d9c6efe8141120314088f5013875ac656398d8a2ed19d2a85c8edd3ec2aef",
     "0xaa87ca22be8b05378eb1c71ef320ad746e1d3b628ba79b9859f741e082542a385502f25dbf55296c3a545e3872760ab7",
     "0x3617de4a96262c6f5d9e98bf9292dc29f8f41dbd289a147ce9da3113b5f0b8c00a60b1ce1d7e819d7a431d7c90ea0e5f"),
+    
+  c521: new sjcl.ecc.curve(
+    sjcl.bn.prime.p521,
+    "0x1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFA51868783BF2F966B7FCC0148F709A5D03BB5C9B8899C47AEBB6FB71E91386409",
+    -3,
+    "0x051953EB9618E1C9A1F929A21A0B68540EEA2DA725B99B315F3B8B489918EF109E156193951EC7E937B1652C0BD3BB1BF073573DF883D2C34F1EF451FD46B503F00",
+    "0xC6858E06B70404E9CD9E3ECB662395B4429C648139053FB521F828AF606B4D3DBAA14B5E77EFE75928FE1DC127A2FFA8DE3348B3C1856A429BF97E7E31C2E5BD66",
+    "0x11839296A789A3BC0045C8A5FB42C7D1BD998F54449579B446817AFBD17273E662C97EE72995EF42640C550B9013FAD0761353C7086A272C24088BE94769FD16650"),
 
   k192: new sjcl.ecc.curve(
     sjcl.bn.prime.p192k,
@@ -330,10 +347,43 @@ sjcl.ecc.curves = {
 
 };
 
+sjcl.ecc.curveName = function (curve) {
+  var curcurve;
+  for (curcurve in sjcl.ecc.curves) {
+    if (sjcl.ecc.curves.hasOwnProperty(curcurve)) {
+      if (sjcl.ecc.curves[curcurve] === curve) {
+        return curcurve;
+      }
+    }
+  }
+
+  throw new sjcl.exception.invalid("no such curve");
+};
+
+sjcl.ecc.deserialize = function (key) {
+  var types = ["elGamal", "ecdsa"];
+
+  if (!key || !key.curve || !sjcl.ecc.curves[key.curve]) { throw new sjcl.exception.invalid("invalid serialization"); }
+  if (types.indexOf(key.type) === -1) { throw new sjcl.exception.invalid("invalid type"); }
+
+  var curve = sjcl.ecc.curves[key.curve];
+
+  if (key.secretKey) {
+    if (!key.exponent) { throw new sjcl.exception.invalid("invalid exponent"); }
+    var exponent = new sjcl.bn(key.exponent);
+    return new sjcl.ecc[key.type].secretKey(curve, exponent);
+  } else {
+    if (!key.point) { throw new sjcl.exception.invalid("invalid point"); }
+    
+    var point = curve.fromBits(sjcl.codec.hex.toBits(key.point));
+    return new sjcl.ecc[key.type].publicKey(curve, point);
+  }
+};
+
 /** our basicKey classes
 */
 sjcl.ecc.basicKey = {
-  /** ecc publicKey. 
+  /** ecc publicKey.
   * @constructor
   * @param {curve} curve the elliptic curve
   * @param {point} point the point on the curve
@@ -346,6 +396,16 @@ sjcl.ecc.basicKey = {
     } else {
       this._point = point;
     }
+
+    this.serialize = function () {
+      var curveName = sjcl.ecc.curveName(curve);
+      return {
+        type: this.getType(),
+        secretKey: false,
+        point: sjcl.codec.hex.fromBits(this._point.toBits()),
+        curve: curveName
+      };
+    };
 
     /** get this keys point data
     * @return x and y as bitArrays
@@ -368,6 +428,17 @@ sjcl.ecc.basicKey = {
     this._curve = curve;
     this._curveBitLength = curve.r.bitLength();
     this._exponent = exponent;
+
+    this.serialize = function () {
+      var exponent = this.get();
+      var curveName = sjcl.ecc.curveName(curve);
+      return {
+        type: this.getType(),
+        secretKey: true,
+        exponent: sjcl.codec.hex.fromBits(exponent),
+        curve: curveName
+      };
+    };
 
     /** get this keys exponent data
     * @return {bitArray} exponent
@@ -406,7 +477,7 @@ sjcl.ecc.elGamal = {
   * @param {secretKey} sec secret Key to use. used to get the publicKey for ones secretKey
   */
   generateKeys: sjcl.ecc.basicKey.generateKeys("elGamal"),
-  /** elGamal publicKey. 
+  /** elGamal publicKey.
   * @constructor
   * @augments sjcl.ecc.basicKey.publicKey
   */
@@ -432,6 +503,10 @@ sjcl.ecc.elGamal.publicKey.prototype = {
         tag = this._curve.G.mult(sec).toBits(),
         key = sjcl.hash.sha256.hash(this._point.mult(sec).toBits());
     return { key: key, tag: tag };
+  },
+  
+  getType: function() {
+    return "elGamal";
   }
 };
 
@@ -451,15 +526,19 @@ sjcl.ecc.elGamal.secretKey.prototype = {
   dh: function(pk) {
     return sjcl.hash.sha256.hash(pk._point.mult(this._exponent).toBits());
   },
-  
+
   /** Diffie-Hellmann function, compatible with Java generateSecret
-   * @param {elGamal.publicKey} pk The Public Key to do Diffie-Hellmann with
-   * @return {bitArray} undigested X value, diffie-hellmann result for this key combination,
-   * compatible with Java generateSecret().
-   */
-   dhJavaEc: function(pk) {
-     return pk._point.mult(this._exponent).x.toBits();
-   }
+  * @param {elGamal.publicKey} pk The Public Key to do Diffie-Hellmann with
+  * @return {bitArray} undigested X value, diffie-hellmann result for this key combination,
+  * compatible with Java generateSecret().
+  */
+  dhJavaEc: function(pk) {
+    return pk._point.mult(this._exponent).x.toBits();
+  }, 
+
+  getType: function() {
+    return "elGamal";
+  }
 };
 
 /** ecdsa keys */
@@ -473,7 +552,7 @@ sjcl.ecc.ecdsa = {
   generateKeys: sjcl.ecc.basicKey.generateKeys("ecdsa")
 };
 
-/** ecdsa publicKey. 
+/** ecdsa publicKey.
 * @constructor
 * @augments sjcl.ecc.basicKey.publicKey
 */
@@ -484,7 +563,7 @@ sjcl.ecc.ecdsa.publicKey = function (curve, point) {
 /** specific functions for ecdsa publicKey. */
 sjcl.ecc.ecdsa.publicKey.prototype = {
   /** Diffie-Hellmann function
-  * @param {bitArray} hash hash to verify. 
+  * @param {bitArray} hash hash to verify.
   * @param {bitArray} rs signature bitArray.
   * @param {boolean}  fakeLegacyVersion use old legacy version
   */
@@ -509,6 +588,10 @@ sjcl.ecc.ecdsa.publicKey.prototype = {
       }
     }
     return true;
+  },
+
+  getType: function() {
+    return "ecdsa";
   }
 };
 
@@ -523,7 +606,7 @@ sjcl.ecc.ecdsa.secretKey = function (curve, exponent) {
 /** specific functions for ecdsa secretKey. */
 sjcl.ecc.ecdsa.secretKey.prototype = {
   /** Diffie-Hellmann function
-  * @param {bitArray} hash hash to sign. 
+  * @param {bitArray} hash hash to sign.
   * @param {int} paranoia paranoia for random number generation
   * @param {boolean} fakeLegacyVersion use old legacy version
   */
@@ -539,5 +622,9 @@ sjcl.ecc.ecdsa.secretKey.prototype = {
         s  = fakeLegacyVersion ? ss.inverseMod(R).mul(k).mod(R)
              : ss.mul(k.inverseMod(R)).mod(R);
     return sjcl.bitArray.concat(r.toBits(l), s.toBits(l));
+  },
+
+  getType: function() {
+    return "ecdsa";
   }
 };
