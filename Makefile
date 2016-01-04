@@ -63,6 +63,7 @@ TEST_SCRIPTS= $(TEST_COMMON) \
               test/bitArray_vectors.js test/bitArray_test.js \
               test/bn_vectors.js test/bn_test.js \
               test/cbc_vectors.js test/cbc_test.js  \
+              test/ctr_vectors.js test/ctr_test.js  \
               test/ccm_vectors.js test/ccm_test.js  \
               test/ecc_vectors.js test/ecc_test.js \
               test/ecc_conv.js \
