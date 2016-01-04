@@ -90,21 +90,21 @@ sjcl.keyex.srp = {
 
   /**
   * Calculate SRP-6 u value.
-  * @param {Object} hash Hash function to use.
+  * @param {Object} Hash Hash function to use.
   * @param {Object} group Group to use (defines padding length).
   * @param {bitArray} A client A.
   * @param {bitArray} B server B.
   * @param {Boolean} omitpad If True do not pad A and B. If False pad as per rfc5054 TLS-SRP.
   * @return {sjcl.bn} SRP u value.
   */
-  _calculateU: function(hash, group, A, B, omitpad) {
+  _calculateU: function(Hash, group, A, B, omitpad) {
     var padlen, u;
     if (!omitpad) {
       padlen = group.N.bitLength();
       A = sjcl.bitArray.zeropadLeft(A, padlen);
       B = sjcl.bitArray.zeropadLeft(B, padlen);
     }
-    u = new hash();
+    u = new Hash();
     u.update(A);
     u.update(B);
     u = sjcl.bn.fromBits(u.finalize());
@@ -113,7 +113,7 @@ sjcl.keyex.srp = {
 
   /**
   * Calculate SRP-6 authentication message: M1 = H(H(N) xor H(g), H(I), s, A, B, K).
-  * @param {Object} hash Hash function to use.
+  * @param {Object} Hash Hash function to use.
   * @param {Object} group Group to use.
   * @param {String} username Username.
   * @param {bitArray} salt User salt.
@@ -122,10 +122,10 @@ sjcl.keyex.srp = {
   * @param {bitArray} K shared K.
   * @return {bitArray} SRP M1 client authentication
   */
-  _getAuth1: function(hash, group, username, salt, A, B, K) {
-    var M1 = new hash();
-    M1.update(group.calculatePM(hash));
-    M1.update(hash.hash(username));
+  _getAuth1: function(Hash, group, username, salt, A, B, K) {
+    var M1 = new Hash();
+    M1.update(group.calculatePM(Hash));
+    M1.update(Hash.hash(username));
     M1.update(salt);
     M1.update(A);
     M1.update(B);
@@ -135,14 +135,14 @@ sjcl.keyex.srp = {
 
   /**
   * Calculate SRP-6 authentication message: M2 = H(A, M1, K).
-  * @param {Object} hash Hash function to use.
+  * @param {Object} Hash Hash function to use.
   * @param {bitArray} A client A.
   * @param {bitArray} M1 client authentication message.
   * @param {bitArray} K shared K.
   * @return {bitArray} SRP M2 server authentication
   */
-  _getAuth2: function(hash, A, M1, K) {
-    var M2 = new hash();
+  _getAuth2: function(Hash, A, M1, K) {
+    var M2 = new Hash();
     M2.update(A);
     M2.update(M1);
     M2.update(K);
@@ -155,10 +155,10 @@ sjcl.keyex.srp = {
  * @constructor
  * @param {String} username Username.
  * @param {bitArray|String} password User password.
- * @param {Object} [hash=sjcl.keyex.srp.DEFAULT_HASH] Hash function to use.
+ * @param {Object} [Hash=sjcl.keyex.srp.DEFAULT_HASH] Hash function to use.
  * @param {Object} [group=sjcl.keyex.srp.DEFAULT_GROUP] Group to use.
  */
-sjcl.keyex.srp.client = function(username, password, hash, group) {
+sjcl.keyex.srp.client = function(username, password, Hash, group) {
   if (typeof username !== "string") {
     throw new sjcl.exception.invalid("username must be a string!");
   }
@@ -167,7 +167,7 @@ sjcl.keyex.srp.client = function(username, password, hash, group) {
   }
   this.username = username;
   this._password = password;
-  this._hash = hash || sjcl.hash[sjcl.keyex.srp.DEFAULT_HASH];
+  this._Hash = Hash || sjcl.hash[sjcl.keyex.srp.DEFAULT_HASH];
   this._group = group || sjcl.keyex.srp.getGroup(sjcl.keyex.srp.DEFAULT_GROUP);
 
   if (!sjcl.keyex.srp.group.prototype.isPrototypeOf(this._group)) {
@@ -230,7 +230,7 @@ sjcl.keyex.srp.client.prototype = {
     }
     this._publicB = publicB;
 
-    u = sjcl.keyex.srp._calculateU(this._hash, group,
+    u = sjcl.keyex.srp._calculateU(this._Hash, group,
                                          this._publicA.toBits(), this._publicB.toBits());
     if (u.mod(group.N).equals(0)) {
       throw new sjcl.exception.corrupt("u mod N == 0! SRP must be aborted!");
@@ -238,14 +238,14 @@ sjcl.keyex.srp.client.prototype = {
     this._u = u;
 
     /* S = (B - kg^x) ^ (a + ux) */
-    k = group.calculateK(this._hash);
+    k = group.calculateK(this._Hash);
     x = this._calculateX(this._salt);
     v = this._calculateV(this._salt, x);
     S = this._publicB.sub(v.mulmod(k, group.N));
     S = S.powermod(this._secretA.add(u.mulmod(x, group.N)), group.N);
     this._S = S;
 
-    this._K = this._hash.hash(this._S.toBits());
+    this._K = this._Hash.hash(this._S.toBits());
     return this._K;
   },
 
@@ -254,7 +254,7 @@ sjcl.keyex.srp.client.prototype = {
   * @return {bitArray} SRP M1 client authentication
   */
   getClientAuth: function() {
-    this._M1 = sjcl.keyex.srp._getAuth1(this._hash, this._group, this.username, this._salt,
+    this._M1 = sjcl.keyex.srp._getAuth1(this._Hash, this._group, this.username, this._salt,
                                               this._publicA.toBits(), this._publicB.toBits(), this._K);
     return this._M1;
   },
@@ -268,7 +268,7 @@ sjcl.keyex.srp.client.prototype = {
     if (typeof serverM !== "object" || sjcl.bitArray.bitLength(serverM) == 0) {
       throw new sjcl.exception.invalid("serverM must be a bitArray!");
     }
-    this._M2 = sjcl.keyex.srp._getAuth2(this._hash, this._publicA.toBits(), this._M1, this._K);
+    this._M2 = sjcl.keyex.srp._getAuth2(this._Hash, this._publicA.toBits(), this._M1, this._K);
     this.authenticated = sjcl.bitArray.equal(serverM, this._M2);
     return this.authenticated;
   },
@@ -281,13 +281,13 @@ sjcl.keyex.srp.client.prototype = {
   _calculateX: function(salt) {
     var password_hash, x;
 
-    password_hash = new this._hash();
+    password_hash = new this._Hash();
     password_hash.update(this.username);
     password_hash.update(":");
     password_hash.update(this._password);
     password_hash = password_hash.finalize();
 
-    x = new this._hash();
+    x = new this._Hash();
     x.update(salt);
     x.update(password_hash);
     return sjcl.bn.fromBits(x.finalize());
@@ -340,10 +340,10 @@ sjcl.keyex.srp.client.prototype = {
  * @param {String} username Username.
  * @param {bitArray} salt User salt.
  * @param {bitArray} verifier User password verifier.
- * @param {Object} [hash=sjcl.keyex.srp.DEFAULT_HASH] Hash function to use.
+ * @param {Object} [Hash=sjcl.keyex.srp.DEFAULT_HASH] Hash function to use.
  * @param {Object} [group=sjcl.keyex.srp.DEFAULT_GROUP] Group to use.
  */
-sjcl.keyex.srp.server = function(username, salt, verifier, hash, group) {
+sjcl.keyex.srp.server = function(username, salt, verifier, Hash, group) {
   if (typeof username !== "string") {
     throw new sjcl.exception.invalid("username must be a string!");
   }
@@ -356,7 +356,7 @@ sjcl.keyex.srp.server = function(username, salt, verifier, hash, group) {
   this.username = username;
   this._salt = salt;
   this._verifier = sjcl.bn.fromBits(verifier);
-  this._hash = hash || sjcl.hash[sjcl.keyex.srp.DEFAULT_HASH];
+  this._Hash = Hash || sjcl.hash[sjcl.keyex.srp.DEFAULT_HASH];
   this._group = group || sjcl.keyex.srp.getGroup(sjcl.keyex.srp.DEFAULT_GROUP);
 
   if (!sjcl.keyex.srp.group.prototype.isPrototypeOf(this._group)) {
@@ -380,7 +380,7 @@ sjcl.keyex.srp.server.prototype = {
 
     this._secretB = sjcl.bn.fromBits(secretB);
     g2b = group.g.powermod(this._secretB, group.N);
-    k = group.calculateK(this._hash);
+    k = group.calculateK(this._Hash);
     this._publicB = this._verifier.mulmod(k, group.N).addM(g2b).mod(group.N);
     return this._publicB.toBits();
   },
@@ -402,7 +402,7 @@ sjcl.keyex.srp.server.prototype = {
     }
     this._publicA = publicA;
 
-    u = sjcl.keyex.srp._calculateU(this._hash, group,
+    u = sjcl.keyex.srp._calculateU(this._Hash, group,
                                          this._publicA.toBits(), this._publicB.toBits());
     if (u.mod(group.N).equals(0)) {
       throw new sjcl.exception.corrupt("u mod N == 0! SRP must be aborted!");
@@ -414,7 +414,7 @@ sjcl.keyex.srp.server.prototype = {
     S = S.powermod(this._secretB, group.N);
     this._S = S;
 
-    this._K = this._hash.hash(this._S.toBits());
+    this._K = this._Hash.hash(this._S.toBits());
     return this._K;
   },
 
@@ -427,7 +427,7 @@ sjcl.keyex.srp.server.prototype = {
     if (typeof clientM !== "object" || sjcl.bitArray.bitLength(clientM) == 0) {
       throw new sjcl.exception.invalid("clientM must be a bitArray!");
     }
-    this._M1 = sjcl.keyex.srp._getAuth1(this._hash, this._group, this.username, this._salt,
+    this._M1 = sjcl.keyex.srp._getAuth1(this._Hash, this._group, this.username, this._salt,
                                               this._publicA.toBits(), this._publicB.toBits(), this._K);
     this.authenticated = sjcl.bitArray.equal(clientM, this._M1);
     return this.authenticated;
@@ -438,7 +438,7 @@ sjcl.keyex.srp.server.prototype = {
   * @return {bitArray} SRP M2 server authentication
   */
   getServerAuth: function() {
-    this._M2 = sjcl.keyex.srp._getAuth2(this._hash, this._publicA.toBits(), this._M1, this._K);
+    this._M2 = sjcl.keyex.srp._getAuth2(this._Hash, this._publicA.toBits(), this._M1, this._K);
     return this._M2;
   },
 
@@ -495,14 +495,14 @@ sjcl.keyex.srp.group.prototype = {
   * @param {Boolean} omitpad If True do not pad the generator. If False pad as per rfc5054 TLS-SRP.
   * @return {sjcl.bn}
   */
-  calculateK: function(hash, omitpad) {
+  calculateK: function(Hash, omitpad) {
     var Nbits, gbits, k;
     Nbits = this.N.toBits();
     gbits = this.g.toBits();
     if (!omitpad) {
       gbits = sjcl.bitArray.zeropadLeft(gbits, sjcl.bitArray.bitLength(Nbits));
     }
-    k = new hash();
+    k = new Hash();
     k.update(Nbits);
     k.update(gbits);
     return sjcl.bn.fromBits(k.finalize());
@@ -510,13 +510,13 @@ sjcl.keyex.srp.group.prototype = {
 
   /**
   * Calculate SRP authentication hash M prefix: H(N) xor H(g)
-  * @param {Object} Hash function to use.
+  * @param {Object} Hash Hash function to use.
   * @return {bitArray}
   */
-  calculatePM: function(hash) {
+  calculatePM: function(Hash) {
     var HN, Hg;
-    HN = hash.hash(this.N.toBits());
-    Hg = hash.hash(this.g.toBits());
+    HN = Hash.hash(this.N.toBits());
+    Hg = Hash.hash(this.g.toBits());
     return sjcl.bitArray.xorAll(HN, Hg);
   },
 };
