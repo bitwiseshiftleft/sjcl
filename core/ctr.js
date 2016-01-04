@@ -25,16 +25,10 @@ sjcl.beware["CTR mode is dangerous because it doesn't protect message integrity.
      * @param {bitArray} iv The initialization value.  It must be 128 bits.
      * @param {bitArray} [adata=[]] The authenticated data.  Must be empty.
      * @return The encrypted data, an array of bytes.
-     * @throws {sjcl.exception.invalid} if the IV isn't exactly 128 bits, or if any adata is specified.
+     * @throws {sjcl.exception.invalid} if the IV isn't exactly 128 bits or if any adata is specified.
      */
     encrypt: function(prf, plaintext, iv, adata) {
-      if (adata && adata.length) {
-        throw new sjcl.exception.invalid("ctr can't authenticate data");
-      }
-      if (sjcl.bitArray.bitLength(iv) !== 128) {
-        throw new sjcl.exception.invalid("ctr iv must be 128 bits");
-      }
-      return sjcl.mode.ctr._calculate(prf, plaintext, iv);
+      return sjcl.mode.ctr._calculate(prf, plaintext, iv, adata);
     },
 
     /** Decrypt in CTR mode.
@@ -43,31 +37,24 @@ sjcl.beware["CTR mode is dangerous because it doesn't protect message integrity.
      * @param {bitArray} iv The initialization value.  It must be 128 bits.
      * @param {bitArray} [adata=[]] The authenticated data.  It must be empty.
      * @return The decrypted data, an array of bytes.
-     * @throws {sjcl.exception.invalid} if the IV isn't exactly 128 bits, or if any adata is specified.
+     * @throws {sjcl.exception.invalid} if the IV isn't exactly 128 bits or if any adata is specified.
      * @throws {sjcl.exception.corrupt} if if the message is corrupt.
      */
     decrypt: function(prf, ciphertext, iv, adata) {
+      return sjcl.mode.ctr._calculate(prf, ciphertext, iv, adata);
+    },
+
+    _calculate: function(prf, data, iv, adata) {
+      var l, bl, res, c, d, e, i;
       if (adata && adata.length) {
         throw new sjcl.exception.invalid("ctr can't authenticate data");
       }
       if (sjcl.bitArray.bitLength(iv) !== 128) {
         throw new sjcl.exception.invalid("ctr iv must be 128 bits");
       }
-      return sjcl.mode.ctr._calculate(prf, ciphertext, iv);
-    },
-
-    /** Calculate CTR.
-     * Encrypt or decrypt data with CTR mode.
-     * @param {Object} prf The pseudorandom function.
-     * @param {bitArray} data The data to be encrypted or decrypted.
-     * @param {bitArray} iv The initialization vector.
-     * @return {Object} The en/decryption of the data values.
-     * @private
-     */
-    _calculate: function(prf, data, iv) {
-      var l, bl, res, c, d, e, i;
-      if (!(l = data.length))
-		  return [];
+      if (!(l = data.length)) {
+        return [];
+      }
       c = iv.slice(0);
       d = data.slice(0);
       bl = sjcl.bitArray.bitLength(d);
