@@ -4,6 +4,7 @@
  * @author Mike Hamburg
  * @author Dan Boneh
  * @author Michael Brooks
+ * @author Steve Thomas
  */
 
 /** @constructor
@@ -409,7 +410,7 @@ sjcl.prng.prototype = {
     }
 
     if (x != 0 && y!= 0) {
-      sjcl.random.addEntropy([x,y], 2, "mouse");
+      this.addEntropy([x,y], 2, "mouse");
     }
 
     this._addCurrentTimeToEntropy(0);
@@ -420,7 +421,7 @@ sjcl.prng.prototype = {
     var x = touch.pageX || touch.clientX,
         y = touch.pageY || touch.clientY;
 
-    sjcl.random.addEntropy([x,y],1,"touch");
+    this.addEntropy([x,y],1,"touch");
 
     this._addCurrentTimeToEntropy(0);
   },
@@ -432,9 +433,9 @@ sjcl.prng.prototype = {
   _addCurrentTimeToEntropy: function (estimatedEntropy) {
     if (typeof window !== 'undefined' && window.performance && typeof window.performance.now === "function") {
       //how much entropy do we want to add here?
-      sjcl.random.addEntropy(window.performance.now(), estimatedEntropy, "loadtime");
+      this.addEntropy(window.performance.now(), estimatedEntropy, "loadtime");
     } else {
-      sjcl.random.addEntropy((new Date()).valueOf(), estimatedEntropy, "loadtime");
+      this.addEntropy((new Date()).valueOf(), estimatedEntropy, "loadtime");
     }
   },
   _accelerometerCollector: function (ev) {
@@ -442,11 +443,11 @@ sjcl.prng.prototype = {
     if(window.orientation){
       var or = window.orientation;
       if (typeof or === "number") {
-        sjcl.random.addEntropy(or, 1, "accelerometer");
+        this.addEntropy(or, 1, "accelerometer");
       }
     }
     if (ac) {
-      sjcl.random.addEntropy(ac, 2, "accelerometer");
+      this.addEntropy(ac, 2, "accelerometer");
     }
     this._addCurrentTimeToEntropy(0);
   },
