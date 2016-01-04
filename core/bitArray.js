@@ -229,24 +229,16 @@ sjcl.bitArray = {
    * @return {bitArray} XOR'ed array
    */
   xorAll: function(a, b) {
-    if (a.length != b.length) {
+    var bitlen = sjcl.bitArray.bitLength(a);
+    if (bitlen !== sjcl.bitArray.bitLength(b)) {
       throw new sjcl.exception.invalid("trying to XOR arrays of unequal length!");
     }
 
     var out = [];
-    var len = a.length;
-    if (len == 0) {
-      return out;
-    }
-
-    var partlen = sjcl.bitArray.getPartial(a[len-1]);
-    for (var i=0; i<len; i++) {
+    for (var i=0; i<Math.ceil(bitlen / 32); i++) {
       out.push(a[i] ^ b[i]);
     }
 
-    if (partlen % 32) {
-      out[len-1] = sjcl.bitArray.partial(out[len-1], partlen, true);
-    }
-    return out;
+    return sjcl.bitArray.clamp(out, bitlen);
   },
 };
