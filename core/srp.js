@@ -231,7 +231,7 @@ sjcl.keyex.srp.client.prototype = {
     this._publicB = publicB;
 
     u = sjcl.keyex.srp._calculateU(this._Hash, group,
-                                         this._publicA.toBits(), this._publicB.toBits());
+                                   this._publicA.toBits(), this._publicB.toBits());
     if (u.mod(group.N).equals(0)) {
       throw new sjcl.exception.corrupt("u mod N == 0! SRP must be aborted!");
     }
@@ -255,7 +255,7 @@ sjcl.keyex.srp.client.prototype = {
   */
   getClientAuth: function() {
     this._M1 = sjcl.keyex.srp._getAuth1(this._Hash, this._group, this.username, this._salt,
-                                              this._publicA.toBits(), this._publicB.toBits(), this._K);
+                                        this._publicA.toBits(), this._publicB.toBits(), this._K);
     return this._M1;
   },
 
@@ -403,7 +403,7 @@ sjcl.keyex.srp.server.prototype = {
     this._publicA = publicA;
 
     u = sjcl.keyex.srp._calculateU(this._Hash, group,
-                                         this._publicA.toBits(), this._publicB.toBits());
+                                   this._publicA.toBits(), this._publicB.toBits());
     if (u.mod(group.N).equals(0)) {
       throw new sjcl.exception.corrupt("u mod N == 0! SRP must be aborted!");
     }
@@ -428,7 +428,7 @@ sjcl.keyex.srp.server.prototype = {
       throw new sjcl.exception.invalid("clientM must be a bitArray!");
     }
     this._M1 = sjcl.keyex.srp._getAuth1(this._Hash, this._group, this.username, this._salt,
-                                              this._publicA.toBits(), this._publicB.toBits(), this._K);
+                                        this._publicA.toBits(), this._publicB.toBits(), this._K);
     this.authenticated = sjcl.bitArray.equal(clientM, this._M1);
     return this.authenticated;
   },
