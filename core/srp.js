@@ -70,7 +70,7 @@ sjcl.keyex.srp = {
    */
   getGroup: function(name) {
     var group = sjcl.keyex.srp._groups[name];
-    if (!name) {
+    if (!group) {
       throw new sjcl.exception.invalid("No such group!");
     }
     group.initialize();
