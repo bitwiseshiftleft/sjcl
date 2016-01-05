@@ -1,6 +1,7 @@
 /** @fileOverview Really fast & small implementation of CCM using JS' array buffers
  *
  * @author Marco Munizaga
+ * @author Miha Stopar
  */
 
 /** @namespace CTR mode with CBC MAC. */

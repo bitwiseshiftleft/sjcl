@@ -1,6 +1,7 @@
 /** @fileOverview Bit array codec implementations.
  *
  * @author Marco Munizaga
+ * @author Miha Stopar
  */
 
 //patch arraybuffers if they don't exist
@@ -65,7 +66,6 @@ sjcl.codec.arrayBuffer = {
     return out;
   },
 
-  /** Add padding with zero bytes if needed. **/
   padBuffer: function (buffer, padding, padding_count) {
     var ol, out, i;
     padding = padding==undefined  ? true : padding
