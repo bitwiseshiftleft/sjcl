@@ -34,7 +34,30 @@ sjcl.codec.arrayBuffer = {
     for (i=0; i<arr.length; i++) {
       tmp.setUint32(i*4, (arr[i]<<32)); //get rid of the higher bits
     }
-    var buffer = tmp.buffer.slice(0, sjcl.bitArray.bitLength(arr)/8);
+
+    if (!ArrayBuffer.prototype.slice) {
+        ArrayBuffer.prototype.slice = function (start, end) {
+            var that = new Uint8Array(this);
+            if (end == undefined) end = that.length;
+            var result = new ArrayBuffer(end - start);
+            var resultArray = new Uint8Array(result);
+            for (var i = 0; i < resultArray.length; i++)
+                resultArray[i] = that[i + start];
+            return result;
+	}
+    }
+    var buffer;
+    if(tmp.buffer.hasOwnProperty("slice")){
+        buffer = tmp.buffer.slice(0, sjcl.bitArray.bitLength(arr)/8);
+    } else {
+	// for node 0.8
+	var n = new Uint8Array(tmp.buffer);
+        var result = new ArrayBuffer(sjcl.bitArray.bitLength(arr)/8);
+        var resultArray = new Uint8Array(result);
+        for (var i = 0; i < resultArray.length; i++)
+            resultArray[i] = n[i];
+        buffer = result;
+    }
 
     return sjcl.codec.arrayBuffer.padBuffer(buffer, padding, padding_count);
   },
@@ -85,7 +108,6 @@ sjcl.codec.arrayBuffer = {
     return out.buffer;
   },
   
-  /** Prints a hex output of the buffer contents, akin to hexdump **/
   hexDumpBuffer: function(buffer){
       var stringBufferView = new DataView(buffer)
       var string = ''
