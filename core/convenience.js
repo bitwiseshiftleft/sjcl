@@ -136,7 +136,7 @@
     } else {
       ct = sjcl.mode[p.mode].decrypt(prp, p.ct, p.iv, adata, p.ts);
     }
-    
+
     /* return the json data */
     j._add(rp, p);
     rp.key = password;
