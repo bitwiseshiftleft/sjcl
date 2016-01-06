@@ -239,7 +239,7 @@ sjcl.keyex.srp.client.prototype = {
 
     /* S = (B - kg^x) ^ (a + ux) */
     k = group.calculateK(this._Hash);
-    x = this._calculateX(this._salt);
+    x = this.calculateX(this._salt);
     v = this._calculateV(this._salt, x);
     S = this._publicB.sub(v.mulmod(k, group.N));
     S = S.powermod(this._secretA.add(u.mulmod(x, group.N)), group.N);
@@ -278,7 +278,7 @@ sjcl.keyex.srp.client.prototype = {
   * @param {bitArray} salt User salt.
   * @return {sjcl.bn} SRP x.
   */
-  _calculateX: function(salt) {
+  calculateX: function(salt) {
     var password_hash, x;
 
     password_hash = new this._Hash();
@@ -301,36 +301,8 @@ sjcl.keyex.srp.client.prototype = {
   _calculateV: function(salt, x) {
     var group = this._group;
 
-    x = x || this._calculateX(salt);
+    x = x || this.calculateX(salt);
     return group.g.powermod(x, group.N);
-  },
-
-  /**
-  * Test helper. Compare computed x against provided
-  * @param {bitArray} salt User salt.
-  * @param {bitArray} x SRP x
-  * @return {Boolean} True is equal.
-  */
-  testX: function(salt, x) {
-    return sjcl.bitArray.equal(this._calculateX(salt).toBits(), x);
-  },
-
-  /**
-  * Test helper. Compare computed u against provided
-  * @param {bitArray} u SRP u
-  * @return {Boolean} True is equal.
-  */
-  testU: function(u) {
-    return sjcl.bitArray.equal(this._u.toBits(), u);
-  },
-
-  /**
-  * Test helper. Compare computed S against provided
-  * @param {bitArray} S SRP S
-  * @return {Boolean} True is equal.
-  */
-  testS: function(S) {
-    return sjcl.bitArray.equal(this._S.toBits(), S);
   },
 };
 
@@ -440,24 +412,6 @@ sjcl.keyex.srp.server.prototype = {
   getServerAuth: function() {
     this._M2 = sjcl.keyex.srp._getAuth2(this._Hash, this._publicA.toBits(), this._M1, this._K);
     return this._M2;
-  },
-
-  /**
-  * Test helper. Compare computed u against provided
-  * @param {bitArray} u SRP u
-  * @return {Boolean} True is equal.
-  */
-  testU: function(u) {
-    return sjcl.bitArray.equal(this._u.toBits(), u);
-  },
-
-  /**
-  * Test helper. Compare computed S against provided
-  * @param {bitArray} S SRP S
-  * @return {Boolean} True is equal.
-  */
-  testS: function(S) {
-    return sjcl.bitArray.equal(this._S.toBits(), S);
   },
 };
 
