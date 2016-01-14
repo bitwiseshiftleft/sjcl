@@ -49,7 +49,7 @@ sjcl.codec.arrayBuffer = {
       buffer = result;
     }
 
-    return sjcl.codec.arrayBuffer.padBuffer(buffer, padding, padding_count);
+    return buffer;
   },
 
   toBits: function (buffer) {
@@ -96,6 +96,64 @@ sjcl.codec.arrayBuffer = {
     var out = new Uint8Array(ol);
     out.set(new Uint8Array(buffer), 0);
     return out.buffer;
+  },
+
+  _chars: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
+  _lookup: {43: 62, 47: 63, 48: 52, 49: 53, 50: 54, 51: 55, 52: 56, 53: 57, 
+  			54: 58, 55: 59, 56: 60, 57: 61, 65: 0, 66: 1, 67: 2, 68: 3, 69: 4, 
+  			70: 5, 71: 6, 72: 7, 73: 8, 74: 9, 75: 10, 76: 11, 77: 12, 78: 13, 
+  			79: 14, 80: 15, 81: 16, 82: 17, 83: 18, 84: 19, 85: 20, 86: 21, 87: 22, 
+  			88: 23, 89: 24, 90: 25, 97: 26, 98: 27, 99: 28, 100: 29, 101: 30, 
+  			102: 31, 103: 32, 104: 33, 105: 34, 106: 35, 107: 36, 108: 37, 109: 38, 
+  			110: 39, 111: 40, 112: 41, 113: 42, 114: 43, 115: 44, 116: 45, 117: 46, 
+  			118: 47, 119: 48, 120: 49, 121: 50, 122: 51},
+
+  toBase64: function(arraybuffer) {
+    var bytes = new Uint8Array(arraybuffer), i, len = bytes.length, base64 = "";
+
+    for (i = 0; i < len; i+=3) {
+      base64 += sjcl.codec.arrayBuffer._chars[bytes[i] >> 2];
+      base64 += sjcl.codec.arrayBuffer._chars[((bytes[i] & 3) << 4) | (bytes[i + 1] >> 4)];
+      base64 += sjcl.codec.arrayBuffer._chars[((bytes[i + 1] & 15) << 2) | (bytes[i + 2] >> 6)];
+      base64 += sjcl.codec.arrayBuffer._chars[bytes[i + 2] & 63];
+    }
+
+    if ((len % 3) === 2) {
+      base64 = base64.substring(0, base64.length - 1) + "=";
+    } else if (len % 3 === 1) {
+      base64 = base64.substring(0, base64.length - 2) + "==";
+    }
+
+    return base64;
+  },
+
+  fromBase64: function(base64) {
+    var bufferLength = base64.length * 3 / 4; // compression turns 0.75 into 10
+    var len = base64.length;
+    var i, p = 0, encoded1, encoded2, encoded3, encoded4;
+
+    if (base64[base64.length - 1] === "=") {
+      bufferLength--;
+      if (base64[base64.length - 2] === "=") {
+        bufferLength--;
+      }
+    }
+
+    var arraybuffer = new ArrayBuffer(bufferLength),
+    bytes = new Uint8Array(arraybuffer);
+
+    for (i = 0; i < len; i+=4) {
+      encoded1 = sjcl.codec.arrayBuffer._lookup[base64.charCodeAt(i)];
+      encoded2 = sjcl.codec.arrayBuffer._lookup[base64.charCodeAt(i+1)];
+      encoded3 = sjcl.codec.arrayBuffer._lookup[base64.charCodeAt(i+2)];
+      encoded4 = sjcl.codec.arrayBuffer._lookup[base64.charCodeAt(i+3)];
+
+      bytes[p++] = (encoded1 << 2) | (encoded2 >> 4);
+      bytes[p++] = ((encoded2 & 15) << 4) | (encoded3 >> 2);
+      bytes[p++] = ((encoded3 & 3) << 6) | (encoded4 & 63);
+    }
+
+    return arraybuffer;
   },
   
   hexDumpBuffer: function(buffer){

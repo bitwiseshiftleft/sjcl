@@ -8,17 +8,18 @@ new sjcl.test.TestCase("CCM arrayBuffer tests", function (cb) {
   var sessionKey = sjcl.codec.hex.toBits("b058d2931f46abb2a6062abcddf61d88");
   var params = {};
   params.mode = 'ccm';
-  var p = 'aaa';
-  var ciphertext = sjcl.encrypt(sessionKey, p, params);
-  var p1 = sjcl.decrypt(sessionKey, ciphertext, params);
-  this.require(p === p1);
- 
-  // test with buffer input:
+  var plaintext = 'aaa';
+  var plaintextBits = sjcl.codec.utf8String.toBits(plaintext);
+  var plaintextArrayBuffer = sjcl.codec.arrayBuffer.fromBits(plaintextBits);
+  var ciphertext = sjcl.encrypt(sessionKey, plaintextArrayBuffer, params);
+  var decryptedInArrayBuffer = sjcl.decrypt(sessionKey, ciphertext, params);
+  var decryptedInBits = sjcl.codec.arrayBuffer.toBits(decryptedInArrayBuffer);
+  var decryptedInPlaintext = sjcl.codec.utf8String.fromBits(decryptedInBits);
+  this.require(plaintext === decryptedInPlaintext);
+  
   var buffer = new ArrayBuffer(131);
   ciphertext = sjcl.encrypt(sessionKey, buffer, params);
-  params.raw = 1; // to prevent sjcl converting to utf8String
-  p1 = sjcl.decrypt(sessionKey, ciphertext, params);
-  var buffer1 = sjcl.codec.arrayBuffer.fromBits(p1, false);
+  buffer1 = sjcl.decrypt(sessionKey, ciphertext, params);
   var a = new Uint8Array(buffer);
   var a1 = new Uint8Array(buffer1);
   var a_values = "";
@@ -44,12 +45,16 @@ new sjcl.test.TestCase("CCM arrayBuffer tests", function (cb) {
       ct = h.toBits(tv.ct + tv.tag);
       tlen = tv.tag.length * 4;
 
-      thiz.require(w.equal(sjcl.arrayBuffer.ccm.compat_encrypt(aes, pt, iv, ad, tlen), ct), "aes-"+len+"-ccm-encrypt #"+i);
-      try {
-        thiz.require(w.equal(sjcl.arrayBuffer.ccm.compat_decrypt(aes, ct, iv, ad, tlen), pt), "aes-"+len+"-ccm-decrypt #"+i);
-      } catch (e) {
-        thiz.fail("aes-ccm-decrypt #"+i+" (exn "+e+")");
-      }
+      arrayBuffer = sjcl.codec.arrayBuffer.fromBits(pt);
+      encrypted = sjcl.arrayBuffer.ccm.encrypt(aes, arrayBuffer, iv, ad, tlen);
+      ciphertextInArrayBuffer = encrypted["ciphertextBuffer"];
+      ciphertextTag = encrypted["ciphertextTag"];
+      ciphertextInArrayBits = sjcl.codec.arrayBuffer.toBits(ciphertextInArrayBuffer);
+      decryptedInArrayBuffer = sjcl.arrayBuffer.ccm.decrypt(aes, ciphertextInArrayBuffer, iv, ciphertextTag, ad, tlen);
+      decryptedInBits = sjcl.codec.arrayBuffer.toBits(decryptedInArrayBuffer);
+
+      thiz.require(w.equal(ct, sjcl.bitArray.concat(ciphertextInArrayBits, ciphertextTag)), "aes-"+len+"-ccm-encrypt #"+i);
+      thiz.require(w.equal(pt, decryptedInBits), "aes-"+len+"-ccm-decrypt #"+i);
     }
     cbb();
   }, 0, kat.length / 100, true, cb);

@@ -64,8 +64,10 @@
     rp.key = password;
 
     /* do the encryption */
-    if (p.mode === "ccm" && sjcl.arrayBuffer && sjcl.arrayBuffer.ccm) {
-      p.ct = sjcl.arrayBuffer.ccm.compat_encrypt(prp, plaintext, p.iv, adata, p.ts);
+    if (p.mode === "ccm" && sjcl.arrayBuffer && sjcl.arrayBuffer.ccm && plaintext instanceof ArrayBuffer) {
+      var c = sjcl.arrayBuffer.ccm.encrypt(prp, plaintext, p.iv, adata, p.ts);
+      p.ciphertextBuffer = c["ciphertextBuffer"]
+      p.ciphertextTag = c["ciphertextTag"]	
     } else {
       p.ct = sjcl.mode[p.mode].encrypt(prp, plaintext, p.iv, adata, p.ts);
     }
@@ -131,8 +133,10 @@
     prp = new sjcl.cipher[p.cipher](password);
 
     /* do the decryption */
-    if (p.mode === "ccm" && sjcl.arrayBuffer && sjcl.arrayBuffer.ccm) {
-      ct = sjcl.arrayBuffer.ccm.compat_decrypt(prp, p.ct, p.iv, adata, p.ts);
+    if (p.mode === "ccm" && sjcl.arrayBuffer && sjcl.arrayBuffer.ccm && 
+    	p.hasOwnProperty("ciphertextBuffer")) {
+      ct = sjcl.arrayBuffer.ccm.decrypt(prp, p.ciphertextBuffer, p.iv, p.ciphertextTag, adata, p.ts);
+      params.raw = 1
     } else {
       ct = sjcl.mode[p.mode].decrypt(prp, p.ct, p.iv, adata, p.ts);
     }
@@ -189,7 +193,12 @@
             break;
 
           case 'object':
-            out += '"' + sjcl.codec.base64.fromBits(obj[i],0) + '"';
+	    if (i === "ciphertextBuffer"){
+              var b = sjcl.codec.arrayBuffer.toBase64(obj[i])
+              out += '"' + b + '"';
+            } else {
+              out += '"' + sjcl.codec.base64.fromBits(obj[i],0) + '"';
+            }
             break;
 
           default:
@@ -219,7 +228,11 @@
       if (m[3] != null) {
         out[m[2]] = parseInt(m[3],10);
       } else if (m[4] != null) {
-        out[m[2]] = m[2].match(/^(ct|adata|salt|iv)$/) ? sjcl.codec.base64.toBits(m[4]) : unescape(m[4]);
+	if (m[2] === "ciphertextBuffer"){
+      	  out[m[2]] = sjcl.codec.arrayBuffer.fromBase64(m[4]);
+      	} else {
+          out[m[2]] = m[2].match(/^(ct|adata|salt|iv|ciphertextTag)$/) ? sjcl.codec.base64.toBits(m[4]) : unescape(m[4]);
+        }
       } else if (m[5] != null) {
         out[m[2]] = m[5] === 'true';
       }

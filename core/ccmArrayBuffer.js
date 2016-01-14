@@ -25,61 +25,6 @@ sjcl.arrayBuffer.ccm = {
     tlen:128 //this is M in the NIST paper
   },
 
-  /** Encrypt in CCM mode. Meant to return the same exact thing as the bitArray ccm to work as a drop in replacement
-   * @static
-   * @param {Object} prf The pseudorandom function.  It must have a block size of 16 bytes.
-   * @param {bitArray} plaintext The plaintext data.
-   * @param {bitArray} iv The initialization value.
-   * @param {bitArray} [adata=[]] The authenticated data.
-   * @param {Number} [tlen=64] the desired tag length, in bits.
-   * @return {bitArray} The encrypted data, an array of bytes.
-   */
-  compat_encrypt: function(prf, plaintext, iv, adata, tlen){
-    var plaintext_buffer, ol, encrypted_obj, ct, tag;
-    if (plaintext instanceof ArrayBuffer) {
-      ol = plaintext.byteLength;
-      plaintext_buffer = sjcl.codec.arrayBuffer.padBuffer(plaintext);
-    } else {
-      ol = sjcl.bitArray.bitLength(plaintext)/8;
-      plaintext_buffer = sjcl.codec.arrayBuffer.fromBits(plaintext);
-    }
-
-    tlen = tlen || 64;
-    adata = adata || [];
-
-    encrypted_obj = sjcl.arrayBuffer.ccm.encrypt(prf, plaintext_buffer, iv, adata, tlen, ol);
-    ct = sjcl.codec.arrayBuffer.toBits(encrypted_obj.ciphertext_buffer);
-
-    ct = sjcl.bitArray.clamp(ct, ol*8);
-
-
-    return sjcl.bitArray.concat(ct, encrypted_obj.tag);
-  },
-
-  /** Decrypt in CCM mode. Meant to imitate the bitArray ccm 
-   * @static
-   * @param {Object} prf The pseudorandom function.  It must have a block size of 16 bytes.
-   * @param {bitArray} ciphertext The ciphertext data.
-   * @param {bitArray} iv The initialization value.
-   * @param {bitArray} [[]] adata The authenticated data.
-   * @param {Number} [64] tlen the desired tag length, in bits.
-   * @return {bitArray} The decrypted data.
-   */
-  compat_decrypt: function(prf, ciphertext, iv, adata, tlen){
-    tlen = tlen || 64;
-    adata = adata || [];
-    var L, i, 
-        w=sjcl.bitArray,
-        ol = w.bitLength(ciphertext), 
-        out = w.clamp(ciphertext, ol - tlen),
-        tag = w.bitSlice(ciphertext, ol - tlen), tag2,
-        ciphertext_buffer = sjcl.codec.arrayBuffer.fromBits(out, true, 16);
-
-    var plaintext_buffer = sjcl.arrayBuffer.ccm.decrypt(prf, ciphertext_buffer, iv, tag, adata, tlen, (ol-tlen)/8);
-    return sjcl.bitArray.clamp(sjcl.codec.arrayBuffer.toBits(plaintext_buffer), ol-tlen);
-
-  },
-
   /** Really fast ccm encryption, uses arraybufer and mutates the plaintext buffer
    * @static
    * @param {Object} prf The pseudorandom function.  It must have a block size of 16 bytes. 
@@ -90,13 +35,15 @@ sjcl.arrayBuffer.ccm = {
    * @return {ArrayBuffer} The encrypted data, in the same array buffer as the given plaintext, but given back anyways
    */
   encrypt: function(prf, plaintext_buffer, iv, adata, tlen, ol){
-    var auth_blocks, mac, L, w = sjcl.bitArray,
-      ivl = w.bitLength(iv) / 8;
+    var plaintext_buffer, ol, encrypted_obj, ct, tag;
+    ol = plaintext_buffer.byteLength;
+    plaintext_buffer = sjcl.codec.arrayBuffer.padBuffer(plaintext_buffer);
+
+    var auth_blocks, mac, L, w = sjcl.bitArray, ivl = w.bitLength(iv) / 8;
 
     //set up defaults
     adata = adata || [];
     tlen = tlen || sjcl.arrayBuffer.ccm.defaults.tlen;
-    ol = ol || plaintext_buffer.byteLength;
     tlen = Math.ceil(tlen/8);
 
     if (ivl < 7) {
@@ -108,18 +55,18 @@ sjcl.arrayBuffer.ccm = {
     iv = w.clamp(iv,8*(15-L));
 
     //prf should use a 256 bit key to make precomputation attacks infeasible
-
     mac = sjcl.arrayBuffer.ccm._computeTag(prf, plaintext_buffer, iv, adata, tlen, ol, L);
 
     //encrypt the plaintext and the mac 
     //returns the mac since the plaintext will be left encrypted inside the buffer
     mac = sjcl.arrayBuffer.ccm._ctrMode(prf, plaintext_buffer, iv, mac, tlen, L);
 
-
     //the plaintext_buffer has been modified so it is now the ciphertext_buffer
-    return {'ciphertext_buffer':plaintext_buffer, 'tag':mac};
-  },
+    encrypted_obj = {'ciphertextBuffer':plaintext_buffer.slice(0, ol), 'ciphertextTag':mac};
 
+    return encrypted_obj
+  },
+  
   /** Really fast ccm decryption, uses arraybufer and mutates the given buffer
    * @static
    * @param {Object} prf The pseudorandom function.  It must have a block size of 16 bytes. 
@@ -131,13 +78,14 @@ sjcl.arrayBuffer.ccm = {
    * @return {ArrayBuffer} The decrypted data, in the same array buffer as the given buffer, but given back anyways
    */
   decrypt: function(prf, ciphertext_buffer, iv, tag, adata, tlen, ol){
-    var mac, mac2, i, L, w = sjcl.bitArray, 
-      ivl = w.bitLength(iv) / 8;
+    var mac, mac2, i, L, w = sjcl.bitArray, ivl = w.bitLength(iv) / 8;
+
+    ol = ciphertext_buffer.byteLength;
+    ciphertext_buffer = sjcl.codec.arrayBuffer.padBuffer(ciphertext_buffer);
 
     //set up defaults
     adata = adata || [];
     tlen = tlen || sjcl.arrayBuffer.ccm.defaults.tlen;
-    ol = ol || ciphertext_buffer.byteLength;
     tlen = Math.ceil(tlen/8) ;
 
     for (L=2; L<4 && ol >>> 8*L; L++) {}
@@ -156,10 +104,9 @@ sjcl.arrayBuffer.ccm = {
       throw new sjcl.exception.corrupt("ccm: tag doesn't match");
     }
 
-    return ciphertext_buffer;
-
+    return ciphertext_buffer.slice(0, ol);
   },
-
+  
   /* Compute the (unencrypted) authentication tag, according to the CCM specification
    * @param {Object} prf The pseudorandom function.
    * @param {ArrayBuffer} data_buffer The plaintext data in an arraybuffer.
