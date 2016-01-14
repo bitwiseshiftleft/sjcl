@@ -62,7 +62,12 @@ sjcl.arrayBuffer.ccm = {
     mac = sjcl.arrayBuffer.ccm._ctrMode(prf, plaintext_buffer, iv, mac, tlen, L);
 
     //the plaintext_buffer has been modified so it is now the ciphertext_buffer
-    encrypted_obj = {'ciphertextBuffer':plaintext_buffer.slice(0, ol), 'ciphertextTag':mac};
+    if(plaintext_buffer.hasOwnProperty("slice")){
+      plaintext_buffer = plaintext_buffer.slice(0, ol)
+    } else {
+      plaintext_buffer = sjcl.codec.arrayBuffer.slice(plaintext_buffer, ol);
+    }
+    encrypted_obj = {'ciphertextBuffer':plaintext_buffer, 'ciphertextTag':mac};
 
     return encrypted_obj
   },
@@ -104,7 +109,13 @@ sjcl.arrayBuffer.ccm = {
       throw new sjcl.exception.corrupt("ccm: tag doesn't match");
     }
 
-    return ciphertext_buffer.slice(0, ol);
+    if(ciphertext_buffer.hasOwnProperty("slice")){
+      ciphertext_buffer = ciphertext_buffer.slice(0, ol)
+    } else {
+      ciphertext_buffer = sjcl.codec.arrayBuffer.slice(ciphertext_buffer, ol);
+    }
+
+    return ciphertext_buffer;
   },
   
   /* Compute the (unencrypted) authentication tag, according to the CCM specification

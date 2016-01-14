@@ -39,14 +39,7 @@ sjcl.codec.arrayBuffer = {
     if(tmp.buffer.hasOwnProperty("slice")){
       buffer = tmp.buffer.slice(0, sjcl.bitArray.bitLength(arr)/8);
     } else {
-      // for node 0.8
-      var n = new Uint8Array(tmp.buffer);
-      var result = new ArrayBuffer(sjcl.bitArray.bitLength(arr)/8);
-      var resultArray = new Uint8Array(result);
-      for (var i = 0; i < resultArray.length; i++) {
-        resultArray[i] = n[i];
-      }
-      buffer = result;
+      buffer = sjcl.codec.arrayBuffer.slice(tmp.buffer, sjcl.bitArray.bitLength(arr)/8);
     }
 
     return buffer;
@@ -154,6 +147,17 @@ sjcl.codec.arrayBuffer = {
     }
 
     return arraybuffer;
+  },
+
+  slice: function(buffer, length){
+    // for node 0.8
+    var n = new Uint8Array(buffer);
+    var result = new ArrayBuffer(length);
+    var resultArray = new Uint8Array(result);
+    for (var i = 0; i < resultArray.length; i++) {
+      resultArray[i] = n[i];
+    }
+    return result;
   },
   
   hexDumpBuffer: function(buffer){
