@@ -705,13 +705,13 @@ sjcl.bn.pseudoMersennePrime = function(exponent, coeff) {
 
       // modulus = 5 (mod 8)
       if (this.sqrtConst) {
-	    if (!out.square().equals(this)) {
+        if (!out.square().equals(this)) {
           out = out.mul(this.sqrtConst);
         }
       }
 
-	  // Verify it's correct
-	  if (!out.square().equals(this)) {
+      // Verify it's correct
+      if (!out.square().equals(this)) {
         throw new sjcl.exception.invalid("invalid prime modulus");
       }
       return out;
