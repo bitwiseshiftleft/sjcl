@@ -16,12 +16,13 @@
  * @param {Bool}            [useSpake2=false]            Use SPAKE2 or PAKE2+
  * @param {Bool}            [ee=false]                   Use elligator edition
  * @param {sjcl.ecc.curve}  [curve=sjcl.ecc.curves.c256] The curve to use for SPAKE2/PAKE2+
- * @param {Object}          [Hash=sjcl.hash.sha512]      The hash function for finish()
+ * @param {Object}          [Hash=sjcl.hash.sha256]      The hash function for finish()
  * @param {Bool}            [compressPoints=true]        Whether to compress points
+ * @param {Bool}            [littleEndian=true]          Whether points are in little endian
  */
-sjcl.pake = function(clientIdOrAId, serverIdOrBId, useSpake2, ee, curve, Hash, compressPoints) {
+sjcl.pake = function(clientIdOrAId, serverIdOrBId, useSpake2, ee, curve, Hash, compressPoints, littleEndian) {
   curve = curve || 256;
-  Hash = Hash || sjcl.hash.sha512;
+  Hash = Hash || sjcl.hash.sha256;
   if (typeof curve === "number") {
     curve = sjcl.ecc.curves['c'+curve];
     if (curve === undefined) {
@@ -34,6 +35,7 @@ sjcl.pake = function(clientIdOrAId, serverIdOrBId, useSpake2, ee, curve, Hash, c
   this.curve = curve;
   this.Hash = Hash;
   this.compressPoints = !compressPoints;
+  this.littleEndian = !littleEndian;
   this.started = false;
   this.finished = false;
   this.ee = !!ee;
@@ -59,11 +61,12 @@ sjcl.pake = function(clientIdOrAId, serverIdOrBId, useSpake2, ee, curve, Hash, c
  * @param {String|bitArray} bId                          ID of user B
  * @param {Bool}            [ee=false]                   Use elligator edition
  * @param {sjcl.ecc.curve}  [curve=sjcl.ecc.curves.c256] The curve to use for SPAKE2
- * @param {Object}          [Hash=sjcl.hash.sha512]      The hash function for finish()
+ * @param {Object}          [Hash=sjcl.hash.sha256]      The hash function for finish()
  * @param {Bool}            [compressPoints=true]        Whether to compress points
+ * @param {Bool}            [littleEndian=true]          Whether points are in little endian
  */
-sjcl.pake.createSpake2 = function(aId, bId, ee, curve, Hash, compressPoints) {
-  var spake2 = new sjcl.pake(aId, bId, true, ee, curve, Hash, compressPoints);
+sjcl.pake.createSpake2 = function(aId, bId, ee, curve, Hash, compressPoints, littleEndian) {
+  var spake2 = new sjcl.pake(aId, bId, true, ee, curve, Hash, compressPoints, littleEndian);
 
   spake2.startClient = undefined;
   spake2.startServer = undefined;
@@ -78,11 +81,12 @@ sjcl.pake.createSpake2 = function(aId, bId, ee, curve, Hash, compressPoints) {
  * @param {String|bitArray} serverId                     ID of server (domain name)
  * @param {Bool}            [ee=false]                   Use elligator edition
  * @param {sjcl.ecc.curve}  [curve=sjcl.ecc.curves.c256] The curve to use for PAKE2+
- * @param {Object}          [Hash=sjcl.hash.sha512]      The hash function for finish()
+ * @param {Object}          [Hash=sjcl.hash.sha256]      The hash function for finish()
  * @param {Bool}            [compressPoints=true]        Whether to compress points
+ * @param {Bool}            [littleEndian=true]          Whether points are in little endian
  */
-sjcl.pake.createPake2Plus = function(clientId, serverId, ee, curve, Hash, compressPoints) {
-  var pake2Plus = new sjcl.pake(clientId, serverId, false, ee, curve, Hash, compressPoints);
+sjcl.pake.createPake2Plus = function(clientId, serverId, ee, curve, Hash, compressPoints, littleEndian) {
+  var pake2Plus = new sjcl.pake(clientId, serverId, false, ee, curve, Hash, compressPoints, littleEndian);
 
   pake2Plus.startA = undefined;
   pake2Plus.startB = undefined;
@@ -219,8 +223,8 @@ sjcl.pake.prototype = {
       // a*G + pwScalar*{M|N}
       myData = this.curve.G.mult2(this.sec, this.pwScalar, this.myPt);
     }
-	this.myData = myData.toBits(this.compressPoints);
-    return this.myData.slice(0);
+    this.myData = myData.toBits(this.compressPoints, this.littleEndian);
+    return sjcl.bitArray.concat(sjcl.codec.utf8String.toBits(!isA ? "B" : "A"), this.myData);
   },
 
   /**
@@ -275,6 +279,7 @@ sjcl.pake.prototype = {
     key.update(this.Hash.hash(this.bId));
 
     // aData || bData
+    othersData = sjcl.bitArray.bitSlice(othersData, 8);
     if (this.isA) {
       key.update(this.myData);
       key.update(othersData);
@@ -284,7 +289,7 @@ sjcl.pake.prototype = {
     }
 
     // Check others point
-    othersData = this.curve.fromBits(othersData);
+    othersData = this.curve.fromBits(othersData, this.littleEndian);
     if (!othersData.isValid() || !othersData.mult(this.curve.r).isIdentity) {
       throw new sjcl.exception.invalid("othersData is not a valid point");
     }
@@ -295,16 +300,16 @@ sjcl.pake.prototype = {
     } else {
       othersPub = othersData.toJac().add(this.othersPt.negate().mult(this.pwScalar)).toAffine();
     }
-    dhKey = othersPub.mult(this.sec).toBits(this.compressPoints);
+    dhKey = othersPub.mult(this.sec).toBits(this.compressPoints, this.littleEndian);
 
     // dhKey || pw [|| pw2Scalar*serverSec*G]
     key.update(dhKey);
     key.update(this.pw);
     if (!this.useSpake2) {
       if (this.isA) {
-        pw2_serverSec_G = othersPub.mult(this.pw2Scalar).toBits(this.compressPoints);
+        pw2_serverSec_G = othersPub.mult(this.pw2Scalar).toBits(this.compressPoints, this.littleEndian);
       } else {
-        pw2_serverSec_G = this.pw2_G.mult(this.sec).toBits(this.compressPoints);
+        pw2_serverSec_G = this.pw2_G.mult(this.sec).toBits(this.compressPoints, this.littleEndian);
       }
       key.update(pw2_serverSec_G);
     }

@@ -177,7 +177,7 @@ sjcl.bitArray = {
     out.push(sjcl.bitArray.partial(shift+shift2 & 31, (shift + shift2 > 32) ? carry : out.pop(),1));
     return out;
   },
-  
+
   /** xor a block of 4 words together.
    * @private
    */
@@ -197,5 +197,16 @@ sjcl.bitArray = {
       a[i] = (v >>> 24) | ((v >>> 8) & m) | ((v & m) << 8) | (v << 24);
     }
     return a;
+  },
+
+  /**
+   * Swap endian.
+   *
+   * @param {bitArray} data The data to be endian swapped
+   * @return {bitArray} data
+   */
+  swapEndian: function(data) {
+    var start = 31 - ((sjcl.bitArray.bitLength(data) + 31) % 32);
+    return sjcl.bitArray.bitSlice(sjcl.bitArray.byteswapM(data.slice(0)).reverse(), start);
   }
 };

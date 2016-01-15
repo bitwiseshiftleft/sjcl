@@ -71,17 +71,26 @@ sjcl.ecc.point.prototype = {
     return this.y.square().equals(this.curve.b.add(this.x.mul(this.curve.a.add(this.x.square()))));
   },
 
-  toBits: function(compress) {
-    var out;
+  toBits: function(compress, littleEndian) {
+    var out, x, y;
 
     if (!compress) {
-      out = sjcl.bitArray.concat(this.x.toBits(), this.y.toBits());
+      x = this.x.toBits();
+      y = this.y.toBits();
+      if (!!littleEndian) {
+        x = sjcl.bitArray.swapEndian(x);
+        y = sjcl.bitArray.swapEndian(y);
+      }
+      out = sjcl.bitArray.concat(x, y);
     } else {
       out = new sjcl.bn(this.x.fullReduce());
       if (this.y.fullReduce().mod(2).equals(1)) {
-        out.addM(new sjcl.bn(2).power(this.x.exponent));
+        out.addM(new sjcl.bn(Math.pow(2, this.x.exponent)));
       }
-	  out = out.toBits(this.x.exponent + 1)
+      out = out.toBits(this.x.exponent + 1);
+      if (!!littleEndian) {
+        out = sjcl.bitArray.swapEndian(out);
+      }
     }
     return out;
   }
@@ -289,24 +298,32 @@ sjcl.ecc.curve = function(Field, r, a, b, x, y, mx, my, nx, ny) {
 };
 
 sjcl.ecc.curve.prototype = {
-  fromBits: function(bits) {
-    var w = sjcl.bitArray, n = this.field.prototype.exponent, l = n + 7 & -8, p;
+  fromBits: function(bits, littleEndian) {
+    var w = sjcl.bitArray, n = this.field.prototype.exponent, l = n + 7 & -8, p, x, y;
     if (w.bitLength(bits) == 2*l) {
-      p = new sjcl.ecc.point(this, this.field.fromBits(w.bitSlice(bits, 0, l)),
-                             this.field.fromBits(w.bitSlice(bits, l, 2*l)));
+      x = w.bitSlice(bits, 0, l);
+      y = w.bitSlice(bits, l, 2*l);
+      if (littleEndian) {
+        x = sjcl.bitArray.swapEndian(x);
+        y = sjcl.bitArray.swapEndian(y);
+      }
+      p = new sjcl.ecc.point(this, this.field.fromBits(x), this.field.fromBits(y));
     } else if (w.bitLength(bits) == (n + 8 & -8)) {
-      var bit = new sjcl.bn(2).power(this.field.prototype.exponent),
+      if (littleEndian) {
+        bits = sjcl.bitArray.swapEndian(bits);
+      }
+      var bit = new sjcl.bn(Math.pow(2, this.field.prototype.exponent)),
           x = sjcl.bn.fromBits(bits);
-	  if (x.greaterEquals(bit)) {
+      if (x.greaterEquals(bit)) {
         x.subM(bit);
-		bit = 1;
-	  } else {
-		bit = 0;
-	  }
-	  p = this.recoverPt(x);
-	  if (!p.y.fullReduce().mod(2).equals(bit)) {
+        bit = 1;
+      } else {
+        bit = 0;
+      }
+      p = this.recoverPt(x);
+      if (!p.y.fullReduce().mod(2).equals(bit)) {
         p = p.negate();
-	  }
+      }
     } else {
       throw new sjcl.exception.corrupt("not on the curve!");
     }
@@ -323,9 +340,9 @@ sjcl.ecc.curve.prototype = {
    * @return {sjcl.ecc.point}
    */
   recoverPt: function(x) {
-	// y = sqrt(x^3 + ax + b)
-	x = new this.field(x);
-	return new sjcl.ecc.point(this, x, x.mul(x.square()).add(x.mul(this.a)).add(this.b).sqrtMod().fullReduce());
+    // y = sqrt(x^3 + ax + b)
+    x = new this.field(x);
+    return new sjcl.ecc.point(this, x, x.mul(x.square()).add(x.mul(this.a)).add(this.b).sqrtMod().fullReduce());
   },
 
   /**
