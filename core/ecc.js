@@ -71,8 +71,19 @@ sjcl.ecc.point.prototype = {
     return this.y.square().equals(this.curve.b.add(this.x.mul(this.curve.a.add(this.x.square()))));
   },
 
-  toBits: function() {
-    return sjcl.bitArray.concat(this.x.toBits(), this.y.toBits());
+  toBits: function(compress) {
+    var out;
+
+    if (!compress) {
+      out = sjcl.bitArray.concat(this.x.toBits(), this.y.toBits());
+    } else {
+      out = new sjcl.bn(this.x.fullReduce());
+      if (this.y.fullReduce().mod(2).equals(1)) {
+        out.addM(new sjcl.bn(2).power(this.x.exponent));
+      }
+	  out = out.toBits(this.x.exponent + 1)
+    }
+    return out;
   }
 };
 
@@ -278,14 +289,43 @@ sjcl.ecc.curve = function(Field, r, a, b, x, y, mx, my, nx, ny) {
 };
 
 sjcl.ecc.curve.prototype = {
-  fromBits: function (bits) {
-    var w = sjcl.bitArray, l = this.field.prototype.exponent + 7 & -8,
-        p = new sjcl.ecc.point(this, this.field.fromBits(w.bitSlice(bits, 0, l)),
-                               this.field.fromBits(w.bitSlice(bits, l, 2*l)));
+  fromBits: function(bits) {
+    var w = sjcl.bitArray, n = this.field.prototype.exponent, l = n + 7 & -8, p;
+    if (w.bitLength(bits) == 2*l) {
+      p = new sjcl.ecc.point(this, this.field.fromBits(w.bitSlice(bits, 0, l)),
+                             this.field.fromBits(w.bitSlice(bits, l, 2*l)));
+    } else if (w.bitLength(bits) == (n + 8 & -8)) {
+      var bit = new sjcl.bn(2).power(this.field.prototype.exponent),
+          x = sjcl.bn.fromBits(bits);
+	  if (x.greaterEquals(bit)) {
+        x.subM(bit);
+		bit = 1;
+	  } else {
+		bit = 0;
+	  }
+	  p = this.recoverPt(x);
+	  if (!p.y.fullReduce().mod(2).equals(bit)) {
+        p = p.negate();
+	  }
+    } else {
+      throw new sjcl.exception.corrupt("not on the curve!");
+    }
     if (!p.isValid()) {
       throw new sjcl.exception.corrupt("not on the curve!");
     }
     return p;
+  },
+
+  /**
+   * Recovers the y value from x.
+   *
+   * @param {bigInt} x The x value.
+   * @return {sjcl.ecc.point}
+   */
+  recoverPt: function(x) {
+	// y = sqrt(x^3 + ax + b)
+	x = new this.field(x);
+	return new sjcl.ecc.point(this, x, x.mul(x.square()).add(x.mul(this.a)).add(this.b).sqrtMod().fullReduce());
   },
 
   /**
@@ -298,7 +338,7 @@ sjcl.ecc.curve.prototype = {
    * @param {bigInt} num A number 0 <= x < sjcl.ecc.curve.field.modulus.
    * @return {sjcl.ecc.point} A deterministic random point.
    */
-  deterministicRandomPoint: function (num) {
+  deterministicRandomPoint: function(num) {
     var u, c, x2, x3, h2, h3, p, y2, y3, pow, zero = new this.field(0), one = new this.field(1);
 
     if (!this.canDeterministicRandomPoint()) {

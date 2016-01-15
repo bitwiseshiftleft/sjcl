@@ -79,7 +79,7 @@ new sjcl.test.TestCase("SPAKE2/PAKE2+ test", function (cb) {
   bPake = sjcl.pake.createPake2Plus("Alice", "example.com", false);
   aData = aPake.startClient(sharedKey1); // send aData to server
   dbData = bPake.generateServerData(sharedKey1); // read from DB
-  bData = bPake.startServer(dbData.pwKey1_M, dbData.pwKey1_N, dbData.pwKey2, dbData.pwKey3_G); // send bData to client
+  bData = bPake.startServer(dbData.pw_M, dbData.pw_N, dbData.pw, dbData.pw2_G); // send bData to client
   aKey = aPake.finish(bData);
   bKey = bPake.finish(aData);
   this.require(sjcl.bitArray.equal(aKey, bKey), "PAKE2+ Correct PW");
@@ -89,7 +89,7 @@ new sjcl.test.TestCase("SPAKE2/PAKE2+ test", function (cb) {
   bPake = sjcl.pake.createPake2Plus("Alice", "example.com", false);
   aData = aPake.startClient(sharedKey1); // send aData to server
   dbData = bPake.generateServerData(sharedKey2); // read from DB
-  bData = bPake.startServer(dbData.pwKey1_M, dbData.pwKey1_N, dbData.pwKey2, dbData.pwKey3_G); // send bData to client
+  bData = bPake.startServer(dbData.pw_M, dbData.pw_N, dbData.pw, dbData.pw2_G); // send bData to client
   aKey = aPake.finish(bData);
   bKey = bPake.finish(aData);
   this.require(!sjcl.bitArray.equal(aKey, bKey), "PAKE2+ Wrong PW");
@@ -99,7 +99,7 @@ new sjcl.test.TestCase("SPAKE2/PAKE2+ test", function (cb) {
   bPake = sjcl.pake.createPake2Plus("Alice", "example.com");
   aData = aPake.startClient(sharedKey1); // send aData to server
   dbData = bPake.generateServerData(sharedKey1); // read from DB
-  bData = bPake.startServer(dbData.pwKey1_M, dbData.pwKey1_N, dbData.pwKey2, dbData.pwKey3_G); // send bData to client
+  bData = bPake.startServer(dbData.pw_M, dbData.pw_N, dbData.pw, dbData.pw2_G); // send bData to client
   aKey = aPake.finish(bData);
   bKey = bPake.finish(aData);
   this.require(sjcl.bitArray.equal(aKey, bKey), "PAKE2+ Default");
@@ -109,7 +109,7 @@ new sjcl.test.TestCase("SPAKE2/PAKE2+ test", function (cb) {
   bPake = sjcl.pake.createPake2Plus("Alice", "example.com", true);
   aData = aPake.startClient(sharedKey1); // send aData to server
   dbData = bPake.generateServerData(sharedKey1); // read from DB
-  bData = bPake.startServer(dbData.pwKey1_M, dbData.pwKey1_N, dbData.pwKey2, dbData.pwKey3_G); // send bData to client
+  bData = bPake.startServer(dbData.pw_M, dbData.pw_N, dbData.pw, dbData.pw2_G); // send bData to client
   aKey = aPake.finish(bData);
   bKey = bPake.finish(aData);
   this.require(sjcl.bitArray.equal(aKey, bKey), "PAKE2+EE Correct PW");
@@ -119,7 +119,7 @@ new sjcl.test.TestCase("SPAKE2/PAKE2+ test", function (cb) {
   bPake = sjcl.pake.createPake2Plus("Alice", "example.com", true);
   aData = aPake.startClient(sharedKey1); // send aData to server
   dbData = bPake.generateServerData(sharedKey2); // read from DB
-  bData = bPake.startServer(dbData.pwKey1_M, dbData.pwKey1_N, dbData.pwKey2, dbData.pwKey3_G); // send bData to client
+  bData = bPake.startServer(dbData.pw_M, dbData.pw_N, dbData.pw, dbData.pw2_G); // send bData to client
   aKey = aPake.finish(bData);
   bKey = bPake.finish(aData);
   this.require(!sjcl.bitArray.equal(aKey, bKey), "PAKE2+EE Wrong PW");

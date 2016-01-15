@@ -16,13 +16,12 @@
  * @param {Bool}            [useSpake2=false]            Use SPAKE2 or PAKE2+
  * @param {Bool}            [ee=false]                   Use elligator edition
  * @param {sjcl.ecc.curve}  [curve=sjcl.ecc.curves.c256] The curve to use for SPAKE2/PAKE2+
- * @param {Object}          [hash=sjcl.hash.sha256]      The hash function to use for HKDF
+ * @param {Object}          [Hash=sjcl.hash.sha512]      The hash function for finish()
+ * @param {Bool}            [compressPoints=true]        Whether to compress points
  */
-sjcl.pake = function(clientIdOrAId, serverIdOrBId, useSpake2, ee, curve, Hash) {
-  var algoName;
-
+sjcl.pake = function(clientIdOrAId, serverIdOrBId, useSpake2, ee, curve, Hash, compressPoints) {
   curve = curve || 256;
-  Hash = Hash || sjcl.hash.sha256;
+  Hash = Hash || sjcl.hash.sha512;
   if (typeof curve === "number") {
     curve = sjcl.ecc.curves['c'+curve];
     if (curve === undefined) {
@@ -34,24 +33,19 @@ sjcl.pake = function(clientIdOrAId, serverIdOrBId, useSpake2, ee, curve, Hash) {
   this.bId = serverIdOrBId;
   this.curve = curve;
   this.Hash = Hash;
+  this.compressPoints = !compressPoints;
   this.started = false;
   this.finished = false;
   this.ee = !!ee;
   this.useSpake2 = !!useSpake2;
-  if (!useSpake2) {
-    algoName = "PAKE2+" + (!ee ? "" : "EE");
-  } else {
-    algoName = "SPAKE2" + (!ee ? "" : "-EE");
-  }
-  this.algoName = algoName;
 
   if (!ee) {
     if (this.curve.N && this.curve.M) {
       this.N = this.curve.N;
       this.M = this.curve.M;
     } else {
-      this.N = this._generatePoint(algoName + " N");
-      this.M = this._generatePoint(algoName + " M");
+      this.N = this._generatePoint("N");
+      this.M = this._generatePoint("M");
     }
   } else if (!this.curve.canDeterministicRandomPoint()) {
     throw new sjcl.exception.invalid("Curve doesn't support creating a deterministic random point in constant time");
@@ -65,10 +59,11 @@ sjcl.pake = function(clientIdOrAId, serverIdOrBId, useSpake2, ee, curve, Hash) {
  * @param {String|bitArray} bId                          ID of user B
  * @param {Bool}            [ee=false]                   Use elligator edition
  * @param {sjcl.ecc.curve}  [curve=sjcl.ecc.curves.c256] The curve to use for SPAKE2
- * @param {Object}          [hash=sjcl.hash.sha256]      The hash function to use for HKDF
+ * @param {Object}          [Hash=sjcl.hash.sha512]      The hash function for finish()
+ * @param {Bool}            [compressPoints=true]        Whether to compress points
  */
-sjcl.pake.createSpake2 = function(aId, bId, ee, curve, Hash) {
-  var spake2 = new sjcl.pake(aId, bId, true, ee, curve, Hash);
+sjcl.pake.createSpake2 = function(aId, bId, ee, curve, Hash, compressPoints) {
+  var spake2 = new sjcl.pake(aId, bId, true, ee, curve, Hash, compressPoints);
 
   spake2.startClient = undefined;
   spake2.startServer = undefined;
@@ -83,10 +78,11 @@ sjcl.pake.createSpake2 = function(aId, bId, ee, curve, Hash) {
  * @param {String|bitArray} serverId                     ID of server (domain name)
  * @param {Bool}            [ee=false]                   Use elligator edition
  * @param {sjcl.ecc.curve}  [curve=sjcl.ecc.curves.c256] The curve to use for PAKE2+
- * @param {Object}          [hash=sjcl.hash.sha256]      The hash function to use for HKDF
+ * @param {Object}          [Hash=sjcl.hash.sha512]      The hash function for finish()
+ * @param {Bool}            [compressPoints=true]        Whether to compress points
  */
-sjcl.pake.createPake2Plus = function(clientId, serverId, ee, curve, Hash) {
-  var pake2Plus = new sjcl.pake(clientId, serverId, false, ee, curve, Hash);
+sjcl.pake.createPake2Plus = function(clientId, serverId, ee, curve, Hash, compressPoints) {
+  var pake2Plus = new sjcl.pake(clientId, serverId, false, ee, curve, Hash, compressPoints);
 
   pake2Plus.startA = undefined;
   pake2Plus.startB = undefined;
@@ -139,14 +135,14 @@ sjcl.pake.prototype = {
   /**
    * Starts the server side operation.
    *
-   * @param {point|bitArray} pwKey1_M Server's "pwKey1*M"
-   * @param {point|bitArray} pwKey1_N Server's "pwKey1*N"
-   * @param {bitArray}       pwKey2   Shared key pwKey2
-   * @param {point|bitArray} pwKey3_G Server's pwKey3*G
+   * @param {point|bitArray} pw_M     Server's "pw*M"
+   * @param {point|bitArray} pw_N     Server's "pw*N"
+   * @param {bitArray}       pw       Shared key pw
+   * @param {point|bitArray} pw2_G    Server's pw2*G
    * @param {Number}         paranoia Paranoia for generation (default 6)
    * @return {bitArray} Data to send to client
    */
-  startServer: function(pwKey1_M, pwKey1_N, pwKey2, pwKey3_G, paranoia) {
+  startServer: function(pw_M, pw_N, pw, pw2_G, paranoia) {
     if (this.started) {
       throw new sjcl.exception.invalid("PAKE already started");
     }
@@ -155,19 +151,19 @@ sjcl.pake.prototype = {
     }
 
     // Copy info
-    if (pwKey1_M instanceof Array) {
-      pwKey1_M = this.curve.fromBits(pwKey1_M);
+    if (pw_M instanceof Array) {
+      pw_M = this.curve.fromBits(pw_M);
     }
-    if (pwKey1_N instanceof Array) {
-      pwKey1_N = this.curve.fromBits(pwKey1_N);
+    if (pw_N instanceof Array) {
+      pw_N = this.curve.fromBits(pw_N);
     }
-    if (pwKey3_G instanceof Array) {
-      pwKey3_G = this.curve.fromBits(pwKey3_G);
+    if (pw2_G instanceof Array) {
+      pw2_G = this.curve.fromBits(pw2_G);
     }
-    this.myPwKey1Pt    = pwKey1_M;
-    this.otherPwKey1Pt = pwKey1_N;
-    this.pwKey2        = pwKey2;
-    this.pwKey3_G      = pwKey3_G;
+    this.myPt     = pw_N;
+    this.othersPt = pw_M;
+    this.pw       = pw;
+    this.pw2_G    = pw2_G;
 
     return this._start(null, false, paranoia);
   },
@@ -183,7 +179,7 @@ sjcl.pake.prototype = {
    * @return {bitArray} Data to send to other side
    */
   _start: function(sharedKey, isA, paranoia) {
-    var rBits = this.curve.r.bitLength(), keys, tmp;
+    var rBits = this.curve.r.bitLength(), keys, tmp, myData;
 
     if (this.started) {
       throw new sjcl.exception.invalid("PAKE already started");
@@ -197,33 +193,34 @@ sjcl.pake.prototype = {
     if (this.useSpake2 || !!isA) {
       keys = this._generateKeys(sharedKey);
       if (this.ee) {
-        this.myPwKey1Pt = keys.pwKey1_N;
-        this.otherPwKey1Pt = keys.pwKey1_M;
+        this.myPt = keys.pw_M;
+        this.othersPt = keys.pw_N;
       } else {
-        this.myPwKey1Pt = this.N;
-        this.otherPwKey1Pt = this.M;
-        this.pwKey1 = keys.pwKey1;
+        this.myPt = this.M;
+        this.othersPt = this.N;
+        this.pwScalar = keys.pwScalar;
       }
       if (!isA) {
-        tmp = this.myPwKey1Pt;
-        this.myPwKey1Pt = this.otherPwKey1Pt;
-        this.otherPwKey1Pt = tmp;
+        tmp = this.myPt;
+        this.myPt = this.othersPt;
+        this.othersPt = tmp;
       }
-      this.pwKey2 = keys.pwKey2;
-      this.pwKey3 = keys.pwKey3;
+      this.pw = keys.pw;
+      this.pw2Scalar = keys.pw2Scalar;
     }
 
     // Generate data
     this.sec = sjcl.bn.random(this.curve.r, paranoia);
     // ee or server
     if (this.ee || (!this.useSpake2 && !isA)) {
-      // a*G + {pwKey1_N|pwKey1_M}
-      this.myData = this.curve.G.toJac().mult(this.sec, this.curve.G).add(this.myPwKey1Pt).toAffine().toBits();
+      // a*G + {pw_M|pw_N}
+      myData = this.curve.G.toJac().mult(this.sec, this.curve.G).add(this.myPt).toAffine();
     } else {
-      // a*G + pwKey1*{N|M}
-      this.myData = this.curve.G.mult2(this.sec, this.pwKey1, this.myPwKey1Pt).toBits();
+      // a*G + pwScalar*{M|N}
+      myData = this.curve.G.mult2(this.sec, this.pwScalar, this.myPt);
     }
-    return this.myData;
+	this.myData = myData.toBits(this.compressPoints);
+    return this.myData.slice(0);
   },
 
   /**
@@ -233,7 +230,7 @@ sjcl.pake.prototype = {
    * @return {Array} Server data
    */
   generateServerData: function(sharedKey) {
-    var pwKey1_M, pwKey1_N, pwKey3_G, keys;
+    var pw_M, pw_N, pw2_G, keys;
 
     if (this.useSpake2) {
       throw new sjcl.exception.invalid("This is SPAKE2 not PAKE2+");
@@ -242,15 +239,15 @@ sjcl.pake.prototype = {
     // Generate password keys
     keys = this._generateKeys(sharedKey);
     if (this.ee) {
-      pwKey1_M = keys.pwKey1_M; // Server's deterministicRandomPoint(pwKey1, "M").
-      pwKey1_N = keys.pwKey1_N; // Server's deterministicRandomPoint(pwKey1, "N").
+      pw_M = keys.pw_M; // Server's deterministicRandomPoint(pw, "M").
+      pw_N = keys.pw_N; // Server's deterministicRandomPoint(pw, "N").
     } else {
-      pwKey1_M = this.M.mult(keys.pwKey1); // Server's pwKey1*M.
-      pwKey1_N = this.N.mult(keys.pwKey1); // Server's pwKey1*N.
+      pw_M = this.M.mult(keys.pwScalar); // Server's pwScalar*M.
+      pw_N = this.N.mult(keys.pwScalar); // Server's pwScalar*N.
     }
-    pwKey3_G = this.curve.G.mult(keys.pwKey3); // Server's pwKey3*G.
+    pw2_G = this.curve.G.mult(keys.pw2Scalar); // Server's pwKey3*G.
 
-    return { "pwKey1_M": pwKey1_M, "pwKey1_N": pwKey1_N, "pwKey2": keys.pwKey2, "pwKey3_G": pwKey3_G };
+    return { "pw_M": pw_M, "pw_N": pw_N, "pw": keys.pw, "pw2_G": pw2_G };
   },
 
   /**
@@ -260,7 +257,7 @@ sjcl.pake.prototype = {
    * @return {bitArray} Key
    */
   finish: function(othersData) {
-    var key = new this.Hash(), aIdLen, bIdLen, othersPub, dhKey, pw3_serverSec_G;
+    var key = new this.Hash(), othersPub, dhKey, pw2_serverSec_G;
 
     if (!this.started) {
       throw new sjcl.exception.invalid("PAKE hasn't started");
@@ -271,26 +268,11 @@ sjcl.pake.prototype = {
     this.started  = false; // reset
     this.finished = true;
 
-    // key = H(
-    //         bitLen32bitBE(aId) || aId ||
-    //         bitLen32bitBE(bId) || bId ||
-    //         aData || bData || dhKey || pw2 [|| pw3*serverSec*G])
+    // key = H(H(aId) || H(bId) || aData || bData || dhKey || pw [|| pw2Scalar*serverSec*G])
 
-    // bitLen32bitBE(aId) || aId || bitLen32bitBE(bId) || bId
-    if (typeof this.aId === "string") {
-      aIdLen = 8 * this.aId.length;
-    } else {
-      aIdLen = sjcl.bitArray.bitLength(this.aId);
-    }
-    if (typeof this.bId === "string") {
-      bIdLen = 8 * this.bId.length;
-    } else {
-      bIdLen = sjcl.bitArray.bitLength(this.bId);
-    }
-    key.update([sjcl.bitArray.partial(32, aIdLen & 0xffffffff)]);
-    key.update(this.aId);
-    key.update([sjcl.bitArray.partial(32, bIdLen & 0xffffffff)]);
-    key.update(this.bId);
+    // H(aId) || H(bId)
+    key.update(this.Hash.hash(this.aId));
+    key.update(this.Hash.hash(this.bId));
 
     // aData || bData
     if (this.isA) {
@@ -301,59 +283,69 @@ sjcl.pake.prototype = {
       key.update(this.myData);
     }
 
+    // Check others point
     othersData = this.curve.fromBits(othersData);
     if (!othersData.isValid() || !othersData.mult(this.curve.r).isIdentity) {
       throw new sjcl.exception.invalid("othersData is not a valid point");
     }
+
     // ee or server
     if (this.ee || (!this.useSpake2 && !this.isA)) {
-      othersPub = othersData.toJac().add(this.otherPwKey1Pt.negate()).toAffine();
+      othersPub = othersData.toJac().add(this.othersPt.negate()).toAffine();
     } else {
-      othersPub = othersData.toJac().add(this.otherPwKey1Pt.negate().mult(this.pwKey1)).toAffine();
+      othersPub = othersData.toJac().add(this.othersPt.negate().mult(this.pwScalar)).toAffine();
     }
-    dhKey = othersPub.mult(this.sec).toBits();
+    dhKey = othersPub.mult(this.sec).toBits(this.compressPoints);
 
-    // dhKey || pw2 [|| pw3*serverSec*G]
+    // dhKey || pw [|| pw2Scalar*serverSec*G]
     key.update(dhKey);
-    key.update(this.pwKey2);
+    key.update(this.pw);
     if (!this.useSpake2) {
       if (this.isA) {
-        pw3_serverSec_G = othersPub.mult(this.pwKey3).toBits();
+        pw2_serverSec_G = othersPub.mult(this.pw2Scalar).toBits(this.compressPoints);
       } else {
-        pw3_serverSec_G = this.pwKey3_G.mult(this.sec).toBits();
+        pw2_serverSec_G = this.pw2_G.mult(this.sec).toBits(this.compressPoints);
       }
-      key.update(pw3_serverSec_G);
+      key.update(pw2_serverSec_G);
     }
     return key.finalize();
   },
 
   /**
-   * Generates pw1 (or pw1 points), pw2, pw3 keys.
+   * Generates keys.
    *
    * @private
    * @param {String|bitArray} sharedKey The shared key between the client and server (ie salted and iterated password hash)
    * @return {Object} The key data
    */
   _generateKeys: function(sharedKey) {
-    var rBits = 8 * ((this.curve.r.bitLength() + 7) >> 3),
-      mBits = 8 * ((this.curve.field.modulus.bitLength() + 7) >> 3),
-      keys = {};
+    var keys = {}, pw, sha512 = new sjcl.hash.sha512();
 
-    if (this.ee) {
-      keys.pwKey1_M = this.curve.deterministicRandomPoint(
-        sjcl.bn.fromBits(sjcl.misc.hkdf(sharedKey, mBits + 128, null, this.algoName + " PW1 M", this.Hash))
-        .mod(this.curve.field.modulus));
-      keys.pwKey1_N = this.curve.deterministicRandomPoint(
-        sjcl.bn.fromBits(sjcl.misc.hkdf(sharedKey, mBits + 128, null, this.algoName + " PW1 N", this.Hash))
-        .mod(this.curve.field.modulus));
+    // Copy sharedKey
+    if (sharedKey instanceof Array) {
+      pw = sharedKey.slice(0);
     } else {
-      keys.pwKey1 = sjcl.bn.fromBits(sjcl.misc.hkdf(sharedKey, rBits + 128, null, this.algoName + " PW1", this.Hash))
-        .mod(this.curve.r);
+      pw = sjcl.codec.utf8String.toBits(sharedKey);
     }
-    keys.pwKey2 =                  sjcl.misc.hkdf(sharedKey,         256, null, this.algoName + " PW2", this.Hash);
-    keys.pwKey3 = sjcl.bn.fromBits(sjcl.misc.hkdf(sharedKey, rBits + 128, null, this.algoName + " PW3", this.Hash))
-        .mod(this.curve.r);
 
+    // Generate keys
+    if (this.useSpake2) {
+      keys.pw = pw;
+      pw = sjcl.hash.sha512.hash(pw);
+    } else {
+      sha512.update("2");
+      sha512.update(pw);
+      keys.pw2Scalar = sjcl.bn.fromBits(sha512.finalize()).mod(this.curve.r);
+      sha512.update("1");
+      sha512.update(pw);
+      keys.pw = pw = sha512.finalize();
+    }
+    if (this.ee) {
+      keys.pw_M = this._generatePoint("M", pw);
+      keys.pw_N = this._generatePoint("N", pw);
+    } else {
+      keys.pwScalar = sjcl.bn.fromBits(pw).mod(this.curve.r);
+    }
     return keys;
   },
 
@@ -361,19 +353,17 @@ sjcl.pake.prototype = {
    * Generates a deterministic random point on the curve given a name.
    *
    * @private
-   * @param {String} name The name of point
+   * @param {String|bitArray} name The name of point
+   * @param {String|bitArray} name2 The name of point
    * @return {point} Point
    */
-  _generatePoint: function(name) {
-    var mBits = 8 * ((this.curve.field.modulus.bitLength() + 7) >> 3);
+  _generatePoint: function(name, name2) {
+    var sha512 = new sjcl.hash.sha512();
 
-    if (!this.curve.canDeterministicRandomPoint()) {
-      throw new sjcl.exception.bug(
-        "_generatePoint isn't fully implemented and curve doesn't " +
-        "support creating a deterministic random point in constant time");
-    }
+    sha512.update(name || "");
+    sha512.update(name2 || "");
     return this.curve.deterministicRandomPoint(
-      sjcl.bn.fromBits(sjcl.misc.hkdf(name, mBits + 128, null, "", this.Hash))
+      sjcl.bn.fromBits(sha512.finalize())
       .mod(this.curve.field.modulus));
   }
 };

@@ -683,6 +683,41 @@ sjcl.bn.pseudoMersennePrime = function(exponent, coeff) {
     return (this.power(this.modulus.sub(2)));
   };
 
+  // Only works if modulus = 3 (mod 4) or modulus = 5 (mod 8)
+  // If needed replace with generic one
+  if (ppr.modulus.mod(4).equals(3) || ppr.modulus.mod(8).equals(5)) {
+    if (ppr.modulus.mod(4).equals(3)) {
+      // (p + 1) / 4
+      ppr.sqrtPow = ppr.modulus.add(1).normalize().halveM().halveM();
+    } else {
+      // (p + 3) / 8
+      ppr.sqrtPow = ppr.modulus.add(3).normalize().halveM().halveM().halveM();
+      // 2 ^ ((p - 1) / 4) mod p
+      ppr.sqrtConst = new sjcl.bn(2).powermod(ppr.modulus.sub(1).normalize().halveM().halveM(), ppr.modulus);
+    }
+
+    /** sqrt(this) mod p
+    * @memberof sjcl.bn
+    * @this { sjcl.bn }
+    */
+    ppr.sqrtMod = function() {
+      var out = this.power(this.sqrtPow);
+
+      // modulus = 5 (mod 8)
+      if (this.sqrtConst) {
+	    if (!out.square().equals(this)) {
+          out = out.mul(this.sqrtConst);
+        }
+      }
+
+	  // Verify it's correct
+	  if (!out.square().equals(this)) {
+        throw new sjcl.exception.invalid("invalid prime modulus");
+      }
+      return out;
+    };
+  }
+
   p.fromBits = sjcl.bn.fromBits;
 
   return p;
