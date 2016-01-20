@@ -133,10 +133,11 @@
     prp = new sjcl.cipher[p.cipher](password);
 
     /* do the decryption */
+    var arrayBufferUsed = false;
     if (p.mode === "ccm" && sjcl.arrayBuffer && sjcl.arrayBuffer.ccm && 
     	p.hasOwnProperty("ciphertextBuffer")) {
       ct = sjcl.arrayBuffer.ccm.decrypt(prp, p.ciphertextBuffer, p.iv, p.ciphertextTag, adata, p.ts);
-      params.raw = 1
+      arrayBufferUsed = true;
     } else {
       ct = sjcl.mode[p.mode].decrypt(prp, p.ct, p.iv, adata, p.ts);
     }
@@ -145,7 +146,7 @@
     j._add(rp, p);
     rp.key = password;
 
-    if (params.raw === 1) {
+    if (params.raw === 1 || arrayBufferUsed) {
       return ct;
     } else {
       return sjcl.codec.utf8String.fromBits(ct);
