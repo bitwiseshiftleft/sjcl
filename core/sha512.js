@@ -214,11 +214,10 @@ sjcl.hash.sha512.prototype = {
 
   /**
    * Perform one cycle of SHA-512.
-   * @param {bitArray} words one block of words.
+   * @param {Uint32Array|bitArray} words one block of words.
    * @private
    */
   _block:function (words) {
-    //se za uint32array undefined
     var i, wrh, wrl,
         h = this._h,
         k = this._key,

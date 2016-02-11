@@ -143,7 +143,7 @@ sjcl.hash.sha1.prototype = {
   
   /**
    * Perform one cycle of SHA-1.
-   * @param {bitArray} words one block of words.
+   * @param {Uint32Array|bitArray} words one block of words.
    * @private
    */
   _block:function (words) {

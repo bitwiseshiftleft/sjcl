@@ -167,7 +167,7 @@ sjcl.hash.sha256.prototype = {
   
   /**
    * Perform one cycle of SHA-256.
-   * @param {bitArray} words one block of words.
+   * @param {Uint32Array|bitArray} words one block of words.
    * @private
    */
   _block:function (w) {  
