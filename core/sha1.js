@@ -156,7 +156,7 @@ sjcl.hash.sha1.prototype = {
         // The problem is that if we use Uint32Array instead of Array, 
         // the length of Uint32Array cannot be changed. Thus, we replace words with a 
         // normal Array here.
-        w = Array(80);
+        w = Array(80); // do not use Uint32Array here as the instantiation is slower
         for (var j=0; j<16; j++){
             w[j] = words[j];
         }
