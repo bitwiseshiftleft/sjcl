@@ -61,9 +61,20 @@ sjcl.hash.sha1.prototype = {
     var i, b = this._buffer = sjcl.bitArray.concat(this._buffer, data),
         ol = this._length,
         nl = this._length = ol + sjcl.bitArray.bitLength(data);
-    for (i = this.blockSize+ol & -this.blockSize; i <= nl;
-         i+= this.blockSize) {
-      this._block(b.splice(0,16));
+    if (typeof Uint32Array !== 'undefined') {
+	var c = new Uint32Array(b);
+    	var j = 0;
+    	for (i = this.blockSize+ol & -this.blockSize; i <= nl; 
+		i+= this.blockSize) {
+      	    this._block(c.subarray(16 * j, 16 * (j+1)));
+      	    j += 1;
+    	}
+    	b.splice(0, 16 * j);
+    } else {
+    	for (i = this.blockSize+ol & -this.blockSize; i <= nl;
+             i+= this.blockSize) {
+      	     this._block(b.splice(0,16));
+      	}
     }
     return this;
   },
@@ -132,14 +143,27 @@ sjcl.hash.sha1.prototype = {
   
   /**
    * Perform one cycle of SHA-1.
-   * @param {bitArray} words one block of words.
+   * @param {Uint32Array|bitArray} words one block of words.
    * @private
    */
-  _block:function (words) {  
+  _block:function (words) {
     var t, tmp, a, b, c, d, e,
-    w = words.slice(0),
     h = this._h;
-   
+    var w;
+    if (typeof Uint32Array !== 'undefined') {
+        // When words is passed to _block, it has 16 elements. SHA1 _block
+        // function extends words with new elements (at the end there are 80 elements). 
+        // The problem is that if we use Uint32Array instead of Array, 
+        // the length of Uint32Array cannot be changed. Thus, we replace words with a 
+        // normal Array here.
+        w = Array(80); // do not use Uint32Array here as the instantiation is slower
+        for (var j=0; j<16; j++){
+            w[j] = words[j];
+        }
+    } else {
+        w = words;
+    }
+
     a = h[0]; b = h[1]; c = h[2]; d = h[3]; e = h[4]; 
 
     for (t=0; t<=79; t++) {

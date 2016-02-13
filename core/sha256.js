@@ -69,8 +69,19 @@ sjcl.hash.sha256.prototype = {
     var i, b = this._buffer = sjcl.bitArray.concat(this._buffer, data),
         ol = this._length,
         nl = this._length = ol + sjcl.bitArray.bitLength(data);
-    for (i = 512+ol & -512; i <= nl; i+= 512) {
-      this._block(b.splice(0,16));
+
+    if (typeof Uint32Array !== 'undefined') {
+	var c = new Uint32Array(b);
+    	var j = 0;
+    	for (i = 512+ol & -512; i <= nl; i+= 512) {
+      	    this._block(c.subarray(16 * j, 16 * (j+1)));
+      	    j += 1;
+    	}
+    	b.splice(0, 16 * j);
+    } else {
+	for (i = 512+ol & -512; i <= nl; i+= 512) {
+      	    this._block(b.splice(0,16));
+      	}
     }
     return this;
   },
@@ -156,12 +167,11 @@ sjcl.hash.sha256.prototype = {
   
   /**
    * Perform one cycle of SHA-256.
-   * @param {bitArray} words one block of words.
+   * @param {Uint32Array|bitArray} words one block of words.
    * @private
    */
-  _block:function (words) {  
+  _block:function (w) {  
     var i, tmp, a, b,
-      w = words.slice(0),
       h = this._h,
       k = this._key,
       h0 = h[0], h1 = h[1], h2 = h[2], h3 = h[3],
