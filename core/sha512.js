@@ -189,26 +189,28 @@ sjcl.hash.sha512.prototype = {
   _precompute: function () {
     // XXX: This code is for precomputing the SHA256 constants, change for
     //      SHA512 and re-enable.
-    var i = 0, prime = 2, factor;
+    var i = 0, prime = 2, factor , isPrime;
 
     function frac(x)  { return (x-Math.floor(x)) * 0x100000000 | 0; }
     function frac2(x) { return (x-Math.floor(x)) * 0x10000000000 & 0xff; }
 
-    outer: for (; i<80; prime++) {
+    for (; i<80; prime++) {
+      isPrime = true;
       for (factor=2; factor*factor <= prime; factor++) {
         if (prime % factor === 0) {
-          // not a prime
-          continue outer;
+          isPrime = false;
+          break;
         }
       }
-
-      if (i<8) {
-        this._init[i*2] = frac(Math.pow(prime, 1/2));
-        this._init[i*2+1] = (frac2(Math.pow(prime, 1/2)) << 24) | this._initr[i];
+      if (isPrime) {
+        if (i<8) {
+          this._init[i*2] = frac(Math.pow(prime, 1/2));
+          this._init[i*2+1] = (frac2(Math.pow(prime, 1/2)) << 24) | this._initr[i];
+        }
+        this._key[i*2] = frac(Math.pow(prime, 1/3));
+        this._key[i*2+1] = (frac2(Math.pow(prime, 1/3)) << 24) | this._keyr[i];
+        i++;
       }
-      this._key[i*2] = frac(Math.pow(prime, 1/3));
-      this._key[i*2+1] = (frac2(Math.pow(prime, 1/3)) << 24) | this._keyr[i];
-      i++;
     }
   },
 
