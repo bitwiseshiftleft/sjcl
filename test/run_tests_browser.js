@@ -17,6 +17,7 @@ function testCore(coreName, cb) {
     "ecdsa_test.js",
     "ecdsa_vectors.js",
     "gcm_test.js",
+    "gcmProgressive_test.js",
     "gcm_vectors.js",
     "hkdf_test.js",
     "hkdf_vectors.js",

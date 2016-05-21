@@ -63,6 +63,7 @@ TEST_SCRIPTS= $(TEST_COMMON) \
               test/ecc_conv.js \
               test/ecdsa_test.js test/ecdsa_vectors.js test/ecdh_test.js \
               test/gcm_vectors.js test/gcm_test.js  \
+              test/gcmProgressive_test.js  \
               test/hmac_vectors.js test/hmac_test.js \
               test/json_test.js \
               test/ocb2_vectors.js test/ocb2_test.js  \
