@@ -145,23 +145,25 @@ sjcl.hash.sha256.prototype = {
    * @private
    */
   _precompute: function () {
-    var i = 0, prime = 2, factor;
+    var i = 0, prime = 2, factor, isPrime;
 
     function frac(x) { return (x-Math.floor(x)) * 0x100000000 | 0; }
 
-    outer: for (; i<64; prime++) {
+    for (; i<64; prime++) {
+      isPrime = true;
       for (factor=2; factor*factor <= prime; factor++) {
         if (prime % factor === 0) {
-          // not a prime
-          continue outer;
+          isPrime = false;
+          break;
         }
       }
-      
-      if (i<8) {
-        this._init[i] = frac(Math.pow(prime, 1/2));
+      if (isPrime) {
+        if (i<8) {
+          this._init[i] = frac(Math.pow(prime, 1/2));
+        }
+        this._key[i] = frac(Math.pow(prime, 1/3));
+        i++;
       }
-      this._key[i] = frac(Math.pow(prime, 1/3));
-      i++;
     }
   },
   

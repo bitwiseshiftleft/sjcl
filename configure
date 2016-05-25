@@ -34,6 +34,7 @@ my %deps = ('aes'=>'sjcl',
             'codecArrayBuffer'=>'bitArray');
 
 my $compress = "closure";
+my $exported = 1;
 
 my %enabled = ();
 $enabled{$_} = 0 foreach (@targets);
@@ -73,6 +74,8 @@ while (my $arg = shift @ARGV) {
     $enabled{$targ} = -1;
   } elsif ($arg =~ /^--?compress(?:or|ion)?=(none|closure|yui)$/) {
     $compress = $1;
+  } elsif ($arg =~ /^--?no-export$/) {
+    $exported = 0;
   } else {
     my $targets = join " ", @targets;
     $targets =~ s/sjcl //;
@@ -88,6 +91,8 @@ Valid arguments are:
 
   --with-TARGET: require TARGET
   --without-TARGET: forbid TARGET
+
+  --no-export: do not export sjcl
 
   --help: show this message
 
@@ -119,6 +124,8 @@ foreach my $i (@targets) {
     }
   }
 }
+
+$config = "exports $config" if $exported;
 
 # reverse
 foreach my $i (reverse @targets) {
