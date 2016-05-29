@@ -16,7 +16,6 @@
 /**
  * Context for a SHA-256 operation in progress.
  * @constructor
- * @class Secure Hash Algorithm, 256 bits.
  */
 sjcl.hash.sha256 = function (hash) {
   if (!this._key[0]) { this._precompute(); }

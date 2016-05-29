@@ -12,7 +12,10 @@ if (typeof(ArrayBuffer) === 'undefined') {
   }(this));
 }
 
-/** @namespace ArrayBuffer */
+/**
+ * ArrayBuffer
+ * @namespace
+ */
 sjcl.codec.arrayBuffer = {
   /** Convert from a bitArray to an ArrayBuffer. 
    * Will default to 8byte padding if padding is undefined*/

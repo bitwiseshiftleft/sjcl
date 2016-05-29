@@ -7,7 +7,6 @@
 /**
  * Context for a RIPEMD-160 operation in progress.
  * @constructor
- * @class RIPEMD, 160 bits.
  */
 sjcl.hash.ripemd160 = function (hash) {
     if (hash) {

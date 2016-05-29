@@ -3,7 +3,10 @@
  * @author Nils Kenneweg
  */
 
-/** @namespace Base32 encoding/decoding */
+/**
+ * Base32 encoding/decoding
+ * @namespace
+ */
 sjcl.codec.base32 = {
   /** The base32 alphabet.
    * @private

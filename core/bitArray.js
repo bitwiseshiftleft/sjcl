@@ -5,8 +5,9 @@
  * @author Dan Boneh
  */
 
-/** @namespace Arrays of bits, encoded as arrays of Numbers.
- *
+/**
+ * Arrays of bits, encoded as arrays of Numbers.
+ * @namespace
  * @description
  * <p>
  * These objects are the currency accepted by SJCL's crypto functions.

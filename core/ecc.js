@@ -1,5 +1,6 @@
 /**
  * base class for all ecc operations.
+ * @namespace
  */
 sjcl.ecc = {};
 

@@ -21,8 +21,6 @@
  *
  * @constructor
  * @param {Array} key The key as an array of 4, 6 or 8 words.
- *
- * @class Advanced Encryption Standard (low-level interface)
  */
 sjcl.cipher.aes = function (key) {
   if (!this._tables[0][0][0]) {

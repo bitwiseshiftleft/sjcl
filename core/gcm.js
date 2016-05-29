@@ -3,9 +3,13 @@
  * @author Juho Vähä-Herttua
  */
 
-/** @namespace Galois/Counter mode. */
+/**
+ * Galois/Counter mode.
+ * @namespace
+ */ 
 sjcl.mode.gcm = {
-  /** The name of the mode.
+  /**
+   * The name of the mode.
    * @constant
    */
   name: "gcm",

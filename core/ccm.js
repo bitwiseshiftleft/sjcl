@@ -8,7 +8,10 @@
  * @author Dan Boneh
  */
 
-/** @namespace CTR mode with CBC MAC. */
+/**
+ * CTR mode with CBC MAC.
+ * @namespace
+ */
 sjcl.mode.ccm = {
   /** The name of the mode.
    * @constant
