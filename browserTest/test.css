@@ -57,3 +57,23 @@ h1 {
   height: 1.3em;
   vertical-align: middle;
 }
+
+.table {
+  width: 100%;
+  border-spacing: 0;
+  border-collapse: collapse;
+  margin: 5px 0;
+}
+
+.table td, .table th {
+  padding: 3px;
+  border: 1px solid #ddd;
+}
+
+.table td {
+  text-align: right;
+}
+
+.table tr:nth-of-type(odd) {
+  background: #f9f9f9;
+}

@@ -123,6 +123,35 @@ browserUtil.write = function(type, message) {
   }};
 };
 
+browserUtil.writeTable = function (headers) {
+  var d1 = document.getElementById("print"), d2 = document.createElement("table"), d3 = document.createElement("tr");
+  d2.className = 'table';
+
+  // write the headers
+  for (var i = 0; i < headers.length; i++) {
+    var header = document.createElement("th");
+    header.appendChild(document.createTextNode(headers[i]));
+    d3.appendChild(header);
+  }
+
+  d2.appendChild(d3);
+  d1.appendChild(d2);
+
+  return { update: function (row) {
+    var d4 = document.createElement("tr");
+
+    // write the rows
+    for (var i = 0; i < row.length; i++) {
+      var cell = document.createElement("td");
+
+      cell.appendChild(document.createTextNode(row[i]));
+      d4.appendChild(cell);
+    }
+
+    d2.appendChild(d4);
+  }};
+}
+
 /** Write a newline.  Does nothing in the browser. */
 browserUtil.writeNewline = function () { };
 
