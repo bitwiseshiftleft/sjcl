@@ -47,7 +47,7 @@ sjcl.bitArray = {
    * Extract a number packed into a bit array.
    * @param {bitArray} a The array to slice.
    * @param {Number} bstart The offset to the start of the slice, in bits.
-   * @param {Number} length The length of the number to extract.
+   * @param {Number} blength The length of the number to extract.
    * @return {Number} The requested slice.
    */
   extract: function(a, bstart, blength) {
@@ -116,7 +116,7 @@ sjcl.bitArray = {
    * Make a partial word for a bit array.
    * @param {Number} len The number of bits in the word.
    * @param {Number} x The bits.
-   * @param {Number} [0] _end Pass 1 if x has already been shifted to the high side.
+   * @param {Number} [_end=0] Pass 1 if x has already been shifted to the high side.
    * @return {Number} The partial word.
    */
   partial: function (len, x, _end) {

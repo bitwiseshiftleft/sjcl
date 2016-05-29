@@ -57,8 +57,8 @@ sjcl.arrayBuffer.ccm = {
    * @param {Object} prf The pseudorandom function.  It must have a block size of 16 bytes.
    * @param {bitArray} ciphertext The ciphertext data.
    * @param {bitArray} iv The initialization value.
-   * @param {bitArray} [[]] adata The authenticated data.
-   * @param {Number} [64] tlen the desired tag length, in bits.
+   * @param {bitArray} [adata=[]] adata The authenticated data.
+   * @param {Number} [tlen=64] tlen the desired tag length, in bits.
    * @return {bitArray} The decrypted data.
    */
   compat_decrypt: function(prf, ciphertext, iv, adata, tlen){

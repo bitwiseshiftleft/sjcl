@@ -26,7 +26,7 @@ sjcl.mode.ocb2 = {
    * @param {bitArray} iv The initialization value.
    * @param {bitArray} [adata=[]] The authenticated data.
    * @param {Number} [tlen=64] the desired tag length, in bits.
-   * @param [false] premac 1 if the authentication data is pre-macced with PMAC.
+   * @param {boolean} [premac=false] true if the authentication data is pre-macced with PMAC.
    * @return The encrypted data, an array of bytes.
    * @throws {sjcl.exception.invalid} if the IV isn't exactly 128 bits.
    */
