@@ -1,8 +1,3 @@
-JSDOCSTYLE= codeview
-JSDOCDIR= jsdoc_toolkit-2.3.3-beta
-JSDOC= $(JSDOCDIR)/jsrun.sh
-JSTEMPLATEDIR= $(JSDOCDIR)/templates/$(JSDOCSTYLE)/
-
 YUICOMPRESSOR= yuicompressor-2.4.2.jar
 
 include config.mk
@@ -43,11 +38,11 @@ compression_stats: core.js core_closure.js core_yui.js
 
 doc: $(SOURCES)
 	rm -fr $@
-	JSDOCDIR=$(JSDOCDIR) $(JSDOC) -t=$(JSTEMPLATEDIR) $(SOURCES) -d=$@
+	npm run jsdoc -- $(SOURCES) --destination $@
 
 doc_private: $(SOURCES)
 	rm -fr $@
-	JSDOCDIR=$(JSDOCDIR) $(JSDOC) -t=$(JSTEMPLATEDIR) $(SOURCES) --private -d=$@
+	npm run jsdoc -- $(SOURCES) --destination $@ --private
 
 lint: core.js core/*.js test/*.js browserTest/*.js lint/coding_guidelines.pl
 	rhino lint/jslint_rhino.js core.js

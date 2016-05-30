@@ -5,7 +5,10 @@
  * @author Dan Boneh
  */
  
-/** @namespace UTF-8 strings */
+/**
+ * UTF-8 strings
+ * @namespace
+ */
 sjcl.codec.utf8String = {
   /** Convert from a bitArray to a UTF-8 string. */
   fromBits: function (arr) {

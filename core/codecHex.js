@@ -5,7 +5,10 @@
  * @author Dan Boneh
  */
 
-/** @namespace Hexadecimal */
+/**
+ * Hexadecimal
+ * @namespace
+ */
 sjcl.codec.hex = {
   /** Convert from a bitArray to a hex string. */
   fromBits: function (arr) {

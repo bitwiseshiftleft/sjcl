@@ -9,7 +9,6 @@
 /**
  * Context for a SHA-1 operation in progress.
  * @constructor
- * @class Secure Hash Algorithm, 160 bits.
  */
 sjcl.hash.sha1 = function (hash) {
   if (hash) {

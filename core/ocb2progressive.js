@@ -11,10 +11,11 @@
  * @author Dan Boneh
  */
 
-/** @namespace
+/** 
  * Phil Rogaway's Offset CodeBook mode, version 2.0.
  * May be covered by US and international patents.
  *
+ * @namespace
  * @author Emily Stark
  * @author Mike Hamburg
  * @author Dan Boneh

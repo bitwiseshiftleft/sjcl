@@ -16,7 +16,6 @@
 /**
  * Context for a SHA-512 operation in progress.
  * @constructor
- * @class Secure Hash Algorithm, 512 bits.
  */
 sjcl.hash.sha512 = function (hash) {
   if (!this._key[0]) { this._precompute(); }

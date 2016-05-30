@@ -12,7 +12,7 @@
 
 /**
  * Compute the SRP verifier from the username, password, salt, and group.
- * @class SRP
+ * @namespace
  */
 sjcl.keyexchange.srp = {
   /**

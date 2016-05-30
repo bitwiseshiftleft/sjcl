@@ -5,7 +5,10 @@
  * @author Dan Boneh
  */
 
-/** @namespace Base64 encoding/decoding */
+/**
+ * Base64 encoding/decoding 
+ * @namespace
+ */
 sjcl.codec.base64 = {
   /** The base64 alphabet.
    * @private

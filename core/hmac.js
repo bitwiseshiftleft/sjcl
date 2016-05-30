@@ -8,7 +8,7 @@
 /** HMAC with the specified hash function.
  * @constructor
  * @param {bitArray} key the key for HMAC.
- * @param {Object} [hash=sjcl.hash.sha256] The hash function to use.
+ * @param {Object} [Hash=sjcl.hash.sha256] The hash function to use.
  */
 sjcl.misc.hmac = function (key, Hash) {
   this._hash = Hash = Hash || sjcl.hash.sha256;

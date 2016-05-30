@@ -7,7 +7,7 @@
  * @author Steve Thomas
  */
 
-/** @constructor
+/** 
  * @class Random number generator
  * @description
  * <b>Use sjcl.random as a singleton for this class!</b>
@@ -41,6 +41,7 @@
  * state files in local storage; cookies containing randomness; etc.  So
  * look for improvements in future versions.
  * </p>
+ * @constructor
  */
 sjcl.prng = function(defaultParanoia) {
   
