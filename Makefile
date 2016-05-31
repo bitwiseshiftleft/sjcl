@@ -45,7 +45,7 @@ doc_private: $(SOURCES)
 	npm run jsdoc -- $(SOURCES) --destination $@ --private
 
 lint:
-	eslint .
+	npm run lint
 
 
 TEST_COMMON=  browserTest/nodeUtil.js test/test.js
