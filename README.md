@@ -32,3 +32,7 @@ Upgrade Guide
 Documentation
 ====
 The documentation is available [here](http://bitwiseshiftleft.github.io/sjcl/doc/)
+
+Demo
+====
+Test it by yourself: [Live Demo](https://cdn.rawgit.com/bitwiseshiftleft/sjcl/master/demo/index.html)
