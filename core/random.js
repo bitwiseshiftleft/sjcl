@@ -108,7 +108,7 @@ sjcl.prng.prototype = {
   
   setDefaultParanoia: function (paranoia, allowZeroParanoia) {
     if (paranoia === 0 && allowZeroParanoia !== "Setting paranoia=0 will ruin your security; use it only for testing") {
-      throw "Setting paranoia=0 will ruin your security; use it only for testing";
+      throw new sjcl.exception.invalid("Setting paranoia=0 will ruin your security; use it only for testing");
     }
 
     this._defaultParanoia = paranoia;
