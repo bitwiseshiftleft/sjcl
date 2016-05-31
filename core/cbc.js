@@ -10,9 +10,9 @@ if (sjcl.beware === undefined) {
 }
 sjcl.beware["CBC mode is dangerous because it doesn't protect message integrity."
 ] = function() {
-  /** @namespace
+  /**
    * Dangerous: CBC mode with PKCS#5 padding.
-   *
+   * @namespace
    * @author Emily Stark
    * @author Mike Hamburg
    * @author Dan Boneh

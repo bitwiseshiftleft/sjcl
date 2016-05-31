@@ -3,8 +3,10 @@
  * @author Marco Munizaga
  */
 
-/** @namespace CTR mode with CBC MAC. */
-
+/**
+ * CTR mode with CBC MAC.
+ * @namespace
+ */
 sjcl.arrayBuffer = sjcl.arrayBuffer || {};
 
 //patch arraybuffers if they don't exist
