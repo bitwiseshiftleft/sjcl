@@ -1,6 +1,6 @@
 /**
- * @constructor
  * Constructs a new bignum from another bignum, a number or a hex string.
+ * @constructor
  */
 sjcl.bn = function(it) {
   this.initWith(it);

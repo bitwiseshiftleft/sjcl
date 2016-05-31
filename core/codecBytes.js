@@ -5,7 +5,10 @@
  * @author Dan Boneh
  */
 
-/** @namespace Arrays of bytes */
+/**
+ * Arrays of bytes
+ * @namespace
+ */
 sjcl.codec.bytes = {
   /** Convert from a bitArray to an array of bytes. */
   fromBits: function (arr) {

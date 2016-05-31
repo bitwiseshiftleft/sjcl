@@ -8,9 +8,9 @@ if (sjcl.beware === undefined) {
 }
 sjcl.beware["CTR mode is dangerous because it doesn't protect message integrity."
 ] = function() {
-  /** @namespace
+  /**
    * Dangerous: CTR mode.
-   *
+   * @namespace
    * @author Torben Haase
    */
   sjcl.mode.ctr = {
