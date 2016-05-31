@@ -15,12 +15,14 @@
     },
     "scripts": {
       "test": "make test",
-      "jsdoc": "jsdoc"
+      "jsdoc": "jsdoc",
+      "lint": "eslint . || true"
     },
     "engines": {
       "node": "*"
     },
     "devDependencies": {
+      "eslint": "^2.11.1",
       "jsdoc": "3.4.0"
     }
 }

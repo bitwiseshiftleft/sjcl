@@ -44,9 +44,8 @@ doc_private: $(SOURCES)
 	rm -fr $@
 	npm run jsdoc -- $(SOURCES) --destination $@ --private
 
-lint: core.js core/*.js test/*.js browserTest/*.js lint/coding_guidelines.pl
-	rhino lint/jslint_rhino.js core.js
-	lint/coding_guidelines.pl core/*.js test/*.js browserTest/*.js
+lint:
+	npm run lint
 
 
 TEST_COMMON=  browserTest/nodeUtil.js test/test.js

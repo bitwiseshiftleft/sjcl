@@ -1,0 +1,29 @@
+{
+    "rules": {
+        "indent": [
+            0,
+            2
+        ],
+        "quotes": [
+            0,
+            "double"
+        ],
+        "linebreak-style": [
+            2,
+            "unix"
+        ],
+        "semi": [
+            2,
+            "always"
+        ]
+    },
+    "globals": {
+      "sjcl": true,
+      "browserUtil": true
+    },
+    "env": {
+        "node": true,
+        "browser": true
+    },
+    "extends": "eslint:recommended"
+}

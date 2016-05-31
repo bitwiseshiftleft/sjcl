@@ -21,8 +21,8 @@ sjcl.codec.arrayBuffer = {
    * Will default to 8byte padding if padding is undefined*/
   fromBits: function (arr, padding, padding_count) {
     var out, i, ol, tmp, smallest;
-    padding = padding==undefined  ? true : padding
-    padding_count = padding_count || 8
+    padding = padding==undefined  ? true : padding;
+    padding_count = padding_count || 8;
 
     if (arr.length === 0) {
       return new ArrayBuffer(0);
@@ -33,7 +33,7 @@ sjcl.codec.arrayBuffer = {
     //check to make sure the bitLength is divisible by 8, if it isn't 
     //we can't do anything since arraybuffers work with bytes, not bits
     if ( sjcl.bitArray.bitLength(arr)%8 !== 0 ) {
-      throw new sjcl.exception.invalid("Invalid bit size, must be divisble by 8 to fit in an arraybuffer correctly")
+      throw new sjcl.exception.invalid("Invalid bit size, must be divisble by 8 to fit in an arraybuffer correctly");
     }
 
     if (padding && ol%padding_count !== 0){
@@ -61,7 +61,7 @@ sjcl.codec.arrayBuffer = {
     }
 
 
-    return out.buffer
+    return out.buffer;
   },
 
   toBits: function (buffer) {
@@ -95,22 +95,22 @@ sjcl.codec.arrayBuffer = {
 
   /** Prints a hex output of the buffer contents, akin to hexdump **/
   hexDumpBuffer: function(buffer){
-      var stringBufferView = new DataView(buffer)
-      var string = ''
+      var stringBufferView = new DataView(buffer);
+      var string = '';
       var pad = function (n, width) {
           n = n + '';
           return n.length >= width ? n : new Array(width - n.length + 1).join('0') + n;
-      }
+      };
 
       for (var i = 0; i < stringBufferView.byteLength; i+=2) {
-          if (i%16 == 0) string += ('\n'+(i).toString(16)+'\t')
-          string += ( pad(stringBufferView.getUint16(i).toString(16),4) + ' ')
+          if (i%16 == 0) string += ('\n'+(i).toString(16)+'\t');
+          string += ( pad(stringBufferView.getUint16(i).toString(16),4) + ' ');
       }
 
       if ( typeof console === undefined ){
-        console = console || {log:function(){}} //fix for IE
+        console = console || {log:function(){}}; //fix for IE
       }
-      console.log(string.toUpperCase())
+      console.log(string.toUpperCase());
   }
 };
 

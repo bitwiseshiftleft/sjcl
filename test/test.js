@@ -84,7 +84,7 @@ sjcl.test.TestCase.prototype = {
       thiz.doRun(function () {
         thiz.report(repo);
         cb && cb();
-      })
+      });
     });
   }
 };

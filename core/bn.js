@@ -370,7 +370,7 @@ sjcl.bn.prototype = {
     RP = RP.normalize();
     NP = NP.normalize();
 
-    RR.doubleM()
+    RR.doubleM();
     var R2 = RR.mulmod(RR, N);
 
     // Check whether the invariant holds.
@@ -379,7 +379,7 @@ sjcl.bn.prototype = {
       return false;
     }
 
-    var montIn = function(c) { return montMul(c, R2) },
+    var montIn = function(c) { return montMul(c, R2); },
     montMul = function(a, b) {
       // Standard Montgomery reduction
       var k, carry, ab, right, abBar, mask = (1 << (s + 1)) - 1;
@@ -401,14 +401,14 @@ sjcl.bn.prototype = {
       // Division.  Equivelent to calling *.halveM() s times.
       for (k=0; k < abBar.limbs.length; k++) {
         if (k > 0) {
-          abBar.limbs[k - 1] |= (abBar.limbs[k] & mask) << (radix - s - 1)
+          abBar.limbs[k - 1] |= (abBar.limbs[k] & mask) << (radix - s - 1);
         }
 
-        abBar.limbs[k] = abBar.limbs[k] >> (s + 1)
+        abBar.limbs[k] = abBar.limbs[k] >> (s + 1);
       }
 
       if (abBar.greaterEquals(N)) {
-        abBar.subM(N)
+        abBar.subM(N);
       }
 
       return abBar;
@@ -432,13 +432,13 @@ sjcl.bn.prototype = {
       var off = i % exp.radix;
 
       return (exp.limbs[Math.floor(i / exp.radix)] & (1 << off)) >> off;
-    }
+    };
 
     for (i = x.bitLength() - 1; i >= 0; ) {
       if (getBit(x, i) == 0) {
         // If the next bit is zero:
         //   Square, move forward one bit.
-        out = montMul(out, out)
+        out = montMul(out, out);
         i = i - 1;
       } else {
         // If the next bit is one:
@@ -453,11 +453,11 @@ sjcl.bn.prototype = {
 
         var indx = 0;
         for (j = l; j <= i; j++) {
-          indx += getBit(x, j) << (j - l)
+          indx += getBit(x, j) << (j - l);
           out = montMul(out, out);
         }
 
-        out = montMul(out, precomp[indx])
+        out = montMul(out, precomp[indx]);
 
         i = l - 1;
       }

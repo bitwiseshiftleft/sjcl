@@ -54,7 +54,7 @@ sjcl.codec.base32 = {
 
     if (_hex) {
       c = sjcl.codec.base32._hexChars;
-      format = "base32hex"
+      format = "base32hex";
     }
 
     for (i=0; i<str.length; i++) {

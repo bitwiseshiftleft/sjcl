@@ -45,7 +45,7 @@ formElement.prototype = {
     }
     el.value = x;
   }
-}
+};
 
 function radioGroup(name) {
   this.name = name;
@@ -66,7 +66,7 @@ radioGroup.prototype = {
       els[i].checked = (els[i].value == x);
     }
   }
-}
+};
 
 function formHandler(formName, enterActions) {
   var i, els = [], tmp, name;
@@ -100,7 +100,7 @@ function formHandler(formName, enterActions) {
         } else if (hasClass(e, 'hex') && ev.charCode && !keyst.match(/[0-9a-fA-F ]/)) {
           stopPropagation(ev); return false;
         }
-      }
+      };
     })(els[i]);
     
     if (els[i].type == 'radio') {
@@ -133,5 +133,5 @@ formHandler.prototype = {
       }
     }
   }
-}
+};
 
