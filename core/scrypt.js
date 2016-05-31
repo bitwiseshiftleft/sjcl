@@ -50,10 +50,10 @@ sjcl.misc.scrypt = function (password, salt, N, r, p, length, Prff) {
   self.reverse(blocks);
 
   return sjcl.misc.pbkdf2(password, blocks, 1, length, Prff);
-}
+};
 
 sjcl.misc.scrypt.salsa20Core = function (word, rounds) {
-  var R = function(a, b) { return (a << b) | (a >>> (32 - b)); }
+  var R = function(a, b) { return (a << b) | (a >>> (32 - b)); };
   var x = word.slice(0);
 
   for (var i = rounds; i > 0; i -= 2) {
@@ -76,7 +76,7 @@ sjcl.misc.scrypt.salsa20Core = function (word, rounds) {
   }
 
   for (i = 0; i < 16; i++) word[i] = x[i]+word[i];
-}
+};
 
 sjcl.misc.scrypt.blockMix = function(blocks) {
   var X = blocks.slice(-16),
@@ -96,7 +96,7 @@ sjcl.misc.scrypt.blockMix = function(blocks) {
   }
 
   return out;
-}
+};
 
 sjcl.misc.scrypt.ROMix = function(block, N) {
   var X = block.slice(0),
@@ -116,7 +116,7 @@ sjcl.misc.scrypt.ROMix = function(block, N) {
   }
 
   return X;
-}
+};
 
 sjcl.misc.scrypt.reverse = function (words) { // Converts Big <-> Little Endian words
   for (var i in words) {
@@ -127,7 +127,7 @@ sjcl.misc.scrypt.reverse = function (words) { // Converts Big <-> Little Endian 
 
     words[i] = out;
   }
-}
+};
 
 sjcl.misc.scrypt.blockcopy = function (S, Si, D, Di, len) {
   var i;
@@ -135,7 +135,7 @@ sjcl.misc.scrypt.blockcopy = function (S, Si, D, Di, len) {
   len = len || (S.length - Si);
 
   for (i = 0; i < len; i++) D[Di + i] = S[Si + i] | 0;
-}
+};
 
 sjcl.misc.scrypt.blockxor = function(S, Si, D, Di, len) {
   var i;
@@ -143,4 +143,4 @@ sjcl.misc.scrypt.blockxor = function(S, Si, D, Di, len) {
   len = len || (S.length - Si);
 
   for (i = 0; i < len; i++) D[Di + i] = (D[Di + i] ^ S[Si + i]) | 0;
-}
+};

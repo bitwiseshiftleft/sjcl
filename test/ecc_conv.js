@@ -17,7 +17,7 @@ new sjcl.test.TestCase("ECC convenience test", function (cb) {
       -200096675,
       -1271344660 ];
 
-    sjcl.random.addEntropy(random, 8 * 4 * random.length, "crypto.randomBytes")
+    sjcl.random.addEntropy(random, 8 * 4 * random.length, "crypto.randomBytes");
 
     var keys = sjcl.ecc.elGamal.generateKeys(192,0);
 
@@ -26,7 +26,7 @@ new sjcl.test.TestCase("ECC convenience test", function (cb) {
 
     this.require(plaintext == "hello world");
   } catch(e) {
-    console.log(e.stack)
+    console.log(e.stack);
     this.fail(e);
   }
   cb && cb();

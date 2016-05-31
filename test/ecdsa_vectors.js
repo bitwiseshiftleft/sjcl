@@ -1117,4 +1117,4 @@ sjcl.test.vector.ecdsa = {
       S: "bbf6424a3b70166fa799f49e918439d515327039258ef9bd88435a59c9c19659f8ec3c8660720b0c08354ff60e0f5a76"
     }
   ]
-}
+};

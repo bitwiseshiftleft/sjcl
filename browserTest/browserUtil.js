@@ -34,10 +34,10 @@ browserUtil.cpsIterate = function (f, start, end, pause, callback) {
 browserUtil.cpsMap = function (map, list, pause, callback) {
   browserUtil.cpsIterate(function (i, cb) { map(list[i], i, list.length, cb); },
                          0, list.length, pause, callback);
-}
+};
 
 /** Cache for remotely loaded scripts. */
-browserUtil.scriptCache = {}
+browserUtil.scriptCache = {};
 
 /** Load several scripts, then call back */
 browserUtil.loadScripts = function(scriptNames, cbSuccess, cbError) {
@@ -101,7 +101,7 @@ browserUtil.loadScripts = function(scriptNames, cbSuccess, cbError) {
             cbError && cbError(script, xhr.status, cb);
           }
         }
-      }
+      };
       xhr.open("GET", script+"?"+(new Date().valueOf()), true);
       xhr.send();
     }
@@ -150,7 +150,7 @@ browserUtil.writeTable = function (headers) {
 
     d2.appendChild(d4);
   }};
-}
+};
 
 /** Write a newline.  Does nothing in the browser. */
 browserUtil.writeNewline = function () { };
