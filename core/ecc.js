@@ -111,7 +111,7 @@ sjcl.ecc.pointJac.prototype = {
   add: function(T) {
     var S = this, sz2, c, d, c2, x1, x2, x, y1, y2, y, z;
     if (S.curve !== T.curve) {
-      throw("sjcl.ecc.add(): Points must be on the same curve to add them!");
+      throw new sjcl.exception.invalid("sjcl.ecc.add(): Points must be on the same curve to add them!");
     }
 
     if (S.isIdentity) {

@@ -23,7 +23,7 @@ sjcl.misc.pbkdf2 = function (password, salt, count, length, Prff) {
   count = count || 10000;
   
   if (length < 0 || count < 0) {
-    throw sjcl.exception.invalid("invalid params to pbkdf2");
+    throw new sjcl.exception.invalid("invalid params to pbkdf2");
   }
   
   if (typeof password === "string") {
