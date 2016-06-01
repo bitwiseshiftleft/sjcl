@@ -15,7 +15,7 @@
     },
     "scripts": {
       "test": "make test",
-      "jsdoc": "jsdoc",
+      "jsdoc": "jsdoc -c jsdoc.conf.json",
       "lint": "eslint . || true"
     },
     "engines": {
