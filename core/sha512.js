@@ -71,13 +71,13 @@ sjcl.hash.sha512.prototype = {
     if (typeof Uint32Array !== 'undefined') {
         var c = new Uint32Array(b);
         var j = 0;
-        for (i = 1024+ol & -1024; i <= nl; i+= 1024) {
+        for (i = 1024+ol - ((1024+ol) & 1023); i <= nl; i+= 1024) {
             this._block(c.subarray(32 * j, 32 * (j+1)));
             j += 1;
         }
         b.splice(0, 32 * j);
     } else {
-        for (i = 1024+ol & -1024; i <= nl; i+= 1024) {
+        for (i = 1024+ol - ((1024+ol) & 1023); i <= nl; i+= 1024) {
             this._block(b.splice(0,32));
         }
     }

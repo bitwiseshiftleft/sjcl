@@ -63,14 +63,14 @@ sjcl.hash.sha1.prototype = {
     if (typeof Uint32Array !== 'undefined') {
 	var c = new Uint32Array(b);
     	var j = 0;
-    	for (i = this.blockSize+ol & -this.blockSize; i <= nl; 
+    	for (i = this.blockSize+ol - ((this.blockSize+ol) & (this.blockSize-1)); i <= nl;
 		i+= this.blockSize) {
       	    this._block(c.subarray(16 * j, 16 * (j+1)));
       	    j += 1;
     	}
     	b.splice(0, 16 * j);
     } else {
-    	for (i = this.blockSize+ol & -this.blockSize; i <= nl;
+    	for (i = this.blockSize+ol - ((this.blockSize+ol) & (this.blockSize-1)); i <= nl;
              i+= this.blockSize) {
       	     this._block(b.splice(0,16));
       	}
