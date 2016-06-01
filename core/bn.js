@@ -712,7 +712,7 @@ sjcl.bn.pseudoMersennePrime = function(exponent, coeff) {
 
       // Verify it's correct
       if (!out.square().equals(this)) {
-        throw new sjcl.exception.invalid("invalid prime modulus");
+        throw new sjcl.exception.invalid("number is not a square");
       }
       return out;
     };

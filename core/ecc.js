@@ -342,7 +342,13 @@ sjcl.ecc.curve.prototype = {
   recoverPt: function(x) {
     // y = sqrt(x^3 + ax + b)
     x = new this.field(x);
-    return new sjcl.ecc.point(this, x, x.mul(x.square()).add(x.mul(this.a)).add(this.b).sqrtMod().fullReduce());
+    var y, yy = x.mul(x.square()).add(x.mul(this.a)).add(this.b);
+    try {
+      y = yy.sqrtMod();
+    } catch (e) {
+      throw new sjcl.exception.invalid("invalid point");
+    }
+    return new sjcl.ecc.point(this, x, y.fullReduce());
   },
 
   /**
