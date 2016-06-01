@@ -34,8 +34,14 @@ sjcl.pake = function(clientIdOrAId, serverIdOrBId, useSpake2, ee, curve, Hash, c
   this.bId = serverIdOrBId;
   this.curve = curve;
   this.Hash = Hash;
-  this.compressPoints = !compressPoints;
-  this.littleEndian = !littleEndian;
+  if (compressPoints === undefined) {
+    compressPoints = true;
+  }
+  this.compressPoints = !!compressPoints;
+  if (littleEndian === undefined) {
+    littleEndian = true;
+  }
+  this.littleEndian = !!littleEndian;
   this.started = false;
   this.finished = false;
   this.ee = !!ee;
@@ -272,11 +278,17 @@ sjcl.pake.prototype = {
     this.started  = false; // reset
     this.finished = true;
 
-    // key = H(H(aId) || H(bId) || aData || bData || dhKey || pw [|| pw2Scalar*serverSec*G])
+    // SPAKE2:  key = H(H(pw) || H(aId) || H(bId) || aData || bData || dhKey)
+    // SPAKE2+: key = H(  pw                      || aData || bData || dhKey || pw2Scalar*serverSec*G)
 
-    // H(aId) || H(bId)
-    key.update(this.Hash.hash(this.aId));
-    key.update(this.Hash.hash(this.bId));
+    // pw
+    key.update(this.pw);
+
+    if (this.useSpake2) {
+      // H(aId) || H(bId)
+      key.update(this.Hash.hash(this.aId));
+      key.update(this.Hash.hash(this.bId));
+    }
 
     // aData || bData
     othersData = sjcl.bitArray.bitSlice(othersData, 8);
@@ -302,10 +314,11 @@ sjcl.pake.prototype = {
     }
     dhKey = othersPub.mult(this.sec).toBits(this.compressPoints, this.littleEndian);
 
-    // dhKey || pw [|| pw2Scalar*serverSec*G]
+    // dhKey
     key.update(dhKey);
-    key.update(this.pw);
+
     if (!this.useSpake2) {
+      // pw2Scalar*serverSec*G
       if (this.isA) {
         pw2_serverSec_G = othersPub.mult(this.pw2Scalar).toBits(this.compressPoints, this.littleEndian);
       } else {
@@ -324,32 +337,36 @@ sjcl.pake.prototype = {
    * @return {Object} The key data
    */
   _generateKeys: function(sharedKey) {
-    var keys = {}, pw, sha512 = new sjcl.hash.sha512();
+    var keys = {}, pw, salt, rBits = 8 * ((this.curve.r.bitLength() + 7) >> 3);
 
     // Copy sharedKey
     if (sharedKey instanceof Array) {
-      pw = sharedKey.slice(0);
+      pw = sharedKey;
     } else {
       pw = sjcl.codec.utf8String.toBits(sharedKey);
     }
 
     // Generate keys
     if (this.useSpake2) {
-      keys.pw = pw;
-      pw = sjcl.hash.sha512.hash(pw);
+      keys.pw = this.Hash.hash(pw);
+      if (this.ee) {
+        keys.pw_M = this._generatePoint("SPAKE2 pw M", pw);
+        keys.pw_N = this._generatePoint("SPAKE2 pw N", pw);
+      } else {
+        keys.pwScalar = sjcl.bn.fromBits(sjcl.misc.hkdf(pw, rBits + 128, null, "SPAKE2 pw", this.Hash))
+          .mod(this.curve.r);
+      }
     } else {
-      sha512.update("2");
-      sha512.update(pw);
-      keys.pw2Scalar = sjcl.bn.fromBits(sha512.finalize()).mod(this.curve.r);
-      sha512.update("1");
-      sha512.update(pw);
-      keys.pw = pw = sha512.finalize();
-    }
-    if (this.ee) {
-      keys.pw_M = this._generatePoint("M", pw);
-      keys.pw_N = this._generatePoint("N", pw);
-    } else {
-      keys.pwScalar = sjcl.bn.fromBits(pw).mod(this.curve.r);
+      salt = sjcl.bitArray.concat(this.Hash.hash(this.aId), this.Hash.hash(this.bId));
+      keys.pw2Scalar = sjcl.bn.fromBits(sjcl.misc.hkdf(pw, rBits + 128, salt, "SPAKE2+ pw1 scalar", this.Hash)).mod(this.curve.r);
+      keys.pw = pw = sjcl.misc.hkdf(pw, 256, salt, "SPAKE2+ pw0 bytes", this.Hash);
+      if (this.ee) {
+        keys.pw_M = this._generatePoint("SPAKE2+ pw0 M", pw);
+        keys.pw_N = this._generatePoint("SPAKE2+ pw0 N", pw);
+      } else {
+        keys.pwScalar = sjcl.bn.fromBits(sjcl.misc.hkdf(pw, rBits + 128, null, "SPAKE2+ pw0 scalar", this.Hash))
+          .mod(this.curve.r);
+      }
     }
     return keys;
   },
@@ -359,16 +376,14 @@ sjcl.pake.prototype = {
    *
    * @private
    * @param {String|bitArray} name The name of point
-   * @param {String|bitArray} name2 The name of point
+   * @param {bitArray} name2 The name of point
    * @return {point} Point
    */
   _generatePoint: function(name, name2) {
-    var sha512 = new sjcl.hash.sha512();
+    var mBits = 8 * ((this.curve.field.modulus.bitLength() + 7) >> 3);
 
-    sha512.update(name || "");
-    sha512.update(name2 || "");
     return this.curve.deterministicRandomPoint(
-      sjcl.bn.fromBits(sha512.finalize())
+      sjcl.bn.fromBits(sjcl.misc.hkdf(name2 || [], mBits + 128, null, name, this.Hash))
       .mod(this.curve.field.modulus));
   }
 };
