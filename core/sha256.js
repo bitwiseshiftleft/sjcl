@@ -72,13 +72,13 @@ sjcl.hash.sha256.prototype = {
     if (typeof Uint32Array !== 'undefined') {
 	var c = new Uint32Array(b);
     	var j = 0;
-    	for (i = 512+ol & -512; i <= nl; i+= 512) {
+    	for (i = 512+ol - ((512+ol) & 511); i <= nl; i+= 512) {
       	    this._block(c.subarray(16 * j, 16 * (j+1)));
       	    j += 1;
     	}
     	b.splice(0, 16 * j);
     } else {
-	for (i = 512+ol & -512; i <= nl; i+= 512) {
+	for (i = 512+ol - ((512+ol) & 511); i <= nl; i+= 512) {
       	    this._block(b.splice(0,16));
       	}
     }
