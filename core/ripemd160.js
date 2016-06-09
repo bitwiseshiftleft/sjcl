@@ -52,6 +52,9 @@ sjcl.hash.ripemd160.prototype = {
         var i, b = this._buffer = sjcl.bitArray.concat(this._buffer, data),
             ol = this._length,
             nl = this._length = ol + sjcl.bitArray.bitLength(data);
+        if (nl > 9007199254740991){
+            throw new sjcl.exception.invalid("Cannot hash more than 2^53 - 1 bits");
+        }
         for (i = 512+ol - ((512+ol) & 511); i <= nl; i+= 512) {
             var words = b.splice(0,16);
             for ( var w = 0; w < 16; ++w )
