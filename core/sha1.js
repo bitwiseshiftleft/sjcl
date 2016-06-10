@@ -60,6 +60,10 @@ sjcl.hash.sha1.prototype = {
     var i, b = this._buffer = sjcl.bitArray.concat(this._buffer, data),
         ol = this._length,
         nl = this._length = ol + sjcl.bitArray.bitLength(data);
+    if (nl > 9007199254740991){
+      throw new sjcl.exception.invalid("Cannot hash more than 2^53 - 1 bits");
+    }
+
     if (typeof Uint32Array !== 'undefined') {
 	var c = new Uint32Array(b);
     	var j = 0;
