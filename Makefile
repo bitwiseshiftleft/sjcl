@@ -80,7 +80,8 @@ TEST_SCRIPTS= $(TEST_COMMON) \
               test/sha512_vectors_long_messages.js test/sha512_test_long_messages.js \
               test/sha512_huge_test_messages.js test/sha512_huge_test.js \
               test/sha512_test_brute_force.js \
-              test/srp_vectors.js test/srp_test.js
+              test/srp_vectors.js test/srp_test.js \
+	      test/z85_vectors.js test/z85_test.js
 
 # Run all tests in node.js.
 test: sjcl.js $(TEST_SCRIPTS) test/run_tests_node.js

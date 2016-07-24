@@ -47,6 +47,8 @@ function testCore(coreName, cb) {
     "sha512_huge_test.js",
     "srp_test.js",
     "srp_vectors.js",
+    "z85_test.js",
+    "z85_vectors.js",
   ], i;
 
   for (i=1; i<testFiles.length; i++) {
