@@ -3,3 +3,8 @@ core_closure.js
 node_modules/
 doc/
 doc_private/
+
+# Swap Files #
+# ########## #
+~*
+*.swp

@@ -4,7 +4,7 @@ use strict;
 
 my ($arg, $i, $j, $targ);
 
-my @targets = qw/sjcl aes bitArray codecString codecHex codecBase32 codecBase64 codecBytes sha256 sha512 sha1 ccm ctr cbc ocb2 ocb2progressive gcm hmac pbkdf2 scrypt random convenience bn ecc srp ccmArrayBuffer codecArrayBuffer ripemd160/;
+my @targets = qw/sjcl aes bitArray codecString codecHex codecBase32 codecBase64 codecBytes codecZ85 sha256 sha512 sha1 ccm ctr cbc ocb2 ocb2progressive gcm hmac pbkdf2 scrypt random convenience bn ecc srp ccmArrayBuffer codecArrayBuffer ripemd160/;
 my %deps = ('aes'=>'sjcl',
             'bitArray'=>'sjcl',
             'codecString'=>'bitArray',
@@ -12,6 +12,7 @@ my %deps = ('aes'=>'sjcl',
             'codecBase64'=>'bitArray',
             'codecBase32'=>'bitArray',
             'codecBytes'=>'bitArray',
+            'codecZ85'=>'bitArray',
             'sha256'=>'codecString',
             'sha512'=>'codecString',
             'sha1'=>'codecString',
@@ -39,7 +40,7 @@ my $exported = 1;
 my %enabled = ();
 $enabled{$_} = 0 foreach (@targets);
 
-# by default, all but codecBytes, srp, bn
+# by default, all but codecBytes, codecZ85, srp, bn
 $enabled{$_} = 1 foreach (qw/aes bitArray codecString codecHex codecBase32 codecBase64 sha256 ccm ocb2 gcm hmac pbkdf2 random convenience/);
 
 # argument parsing
