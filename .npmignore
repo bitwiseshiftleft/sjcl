@@ -1,0 +1,9 @@
+core.js
+core_closure.js
+doc/
+doc_private/
+
+# Swap Files #
+# ########## #
+~*
+*.swp
