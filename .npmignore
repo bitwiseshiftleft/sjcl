@@ -1,4 +1,5 @@
-compress/
+compress/*.jar
+compress/*.zip
 
 core.js
 core_closure.js
