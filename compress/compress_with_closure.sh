@@ -1,5 +1,8 @@
 #!/bin/bash
 
+set -x
+set -e
+
 DIR=`dirname $0`
 
 URL="https://dl.google.com/closure-compiler/compiler-latest.zip"
@@ -21,7 +24,10 @@ if [ $? -eq 0 ] ; then
   if [ -s $DIR/$FILE ] ; then
     pushd . > /dev/null
     cd $DIR
-    unzip -o $FILE compiler.jar > /dev/null 2> /dev/null
+    mkdir -p extracted
+    unzip -o $FILE -d extracted/ > /dev/null 2> /dev/null
+    cp extracted/closure-compiler*.jar compiler.jar
+    rm -rf extracted
     popd > /dev/null
   fi
 fi
@@ -33,7 +39,6 @@ java -jar $DIR/compiler.jar --compilation_level ADVANCED_OPTIMIZATIONS \
      --js ._tmpRC.js \
      | $DIR/digitize.pl \
      | $DIR/dewindowize.pl
-     
+
 
 rm -f ._tmpRC.js
-
