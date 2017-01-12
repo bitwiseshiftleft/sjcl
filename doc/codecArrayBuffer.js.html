@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: codecArrayBuffer.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: codecArrayBuffer.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/** @fileOverview Bit array codec implementations.
+ *
+ * @author Marco Munizaga
+ */
+
+//patch arraybuffers if they don't exist
+if (typeof(ArrayBuffer) === 'undefined') {
+  (function(globals){
+      "use strict";
+      globals.ArrayBuffer = function(){};
+      globals.DataView = function(){};
+  }(this));
+}
+
+/**
+ * ArrayBuffer
+ * @namespace
+ */
+sjcl.codec.arrayBuffer = {
+  /** Convert from a bitArray to an ArrayBuffer. 
+   * Will default to 8byte padding if padding is undefined*/
+  fromBits: function (arr, padding, padding_count) {
+    var out, i, ol, tmp, smallest;
+    padding = padding==undefined  ? true : padding;
+    padding_count = padding_count || 8;
+
+    if (arr.length === 0) {
+      return new ArrayBuffer(0);
+    }
+
+    ol = sjcl.bitArray.bitLength(arr)/8;
+
+    //check to make sure the bitLength is divisible by 8, if it isn't 
+    //we can't do anything since arraybuffers work with bytes, not bits
+    if ( sjcl.bitArray.bitLength(arr)%8 !== 0 ) {
+      throw new sjcl.exception.invalid("Invalid bit size, must be divisble by 8 to fit in an arraybuffer correctly");
+    }
+
+    if (padding &amp;&amp; ol%padding_count !== 0){
+      ol += padding_count - (ol%padding_count);
+    }
+
+
+    //padded temp for easy copying
+    tmp = new DataView(new ArrayBuffer(arr.length*4));
+    for (i=0; i&lt;arr.length; i++) {
+      tmp.setUint32(i*4, (arr[i]&lt;&lt;32)); //get rid of the higher bits
+    }
+
+    //now copy the final message if we are not going to 0 pad
+    out = new DataView(new ArrayBuffer(ol));
+
+    //save a step when the tmp and out bytelength are ===
+    if (out.byteLength === tmp.byteLength){
+      return tmp.buffer;
+    }
+
+    smallest = tmp.byteLength &lt; out.byteLength ? tmp.byteLength : out.byteLength;
+    for(i=0; i&lt;smallest; i++){
+      out.setUint8(i,tmp.getUint8(i));
+    }
+
+
+    return out.buffer;
+  },
+
+  toBits: function (buffer) {
+    var i, out=[], len, inView, tmp;
+
+    if (buffer.byteLength === 0) {
+      return [];
+    }
+
+    inView = new DataView(buffer);
+    len = inView.byteLength - inView.byteLength%4;
+
+    for (var i = 0; i &lt; len; i+=4) {
+      out.push(inView.getUint32(i));
+    }
+
+    if (inView.byteLength%4 != 0) {
+      tmp = new DataView(new ArrayBuffer(4));
+      for (var i = 0, l = inView.byteLength%4; i &lt; l; i++) {
+        //we want the data to the right, because partial slices off the starting bits
+        tmp.setUint8(i+4-l, inView.getUint8(len+i)); // big-endian, 
+      }
+      out.push(
+        sjcl.bitArray.partial( (inView.byteLength%4)*8, tmp.getUint32(0) )
+      ); 
+    }
+    return out;
+  },
+
+
+
+  /** Prints a hex output of the buffer contents, akin to hexdump **/
+  hexDumpBuffer: function(buffer){
+      var stringBufferView = new DataView(buffer);
+      var string = '';
+      var pad = function (n, width) {
+          n = n + '';
+          return n.length >= width ? n : new Array(width - n.length + 1).join('0') + n;
+      };
+
+      for (var i = 0; i &lt; stringBufferView.byteLength; i+=2) {
+          if (i%16 == 0) string += ('\n'+(i).toString(16)+'\t');
+          string += ( pad(stringBufferView.getUint16(i).toString(16),4) + ' ');
+      }
+
+      if ( typeof console === undefined ){
+        console = console || {log:function(){}}; //fix for IE
+      }
+      console.log(string.toUpperCase());
+  }
+};
+
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="sjcl.bn.html">sjcl.bn</a></li><li><a href="sjcl.cipher.aes.html">sjcl.cipher.aes</a></li><li><a href="sjcl.ecc.basicKey.publicKey.html">sjcl.ecc.basicKey.publicKey</a></li><li><a href="sjcl.ecc.basicKey.secretKey.html">sjcl.ecc.basicKey.secretKey</a></li><li><a href="sjcl.ecc.curve.html">sjcl.ecc.curve</a></li><li><a href="sjcl.ecc.ecdsa.publicKey.html">sjcl.ecc.ecdsa.publicKey</a></li><li><a href="sjcl.ecc.ecdsa.secretKey.html">sjcl.ecc.ecdsa.secretKey</a></li><li><a href="sjcl.ecc.elGamal.publicKey.html">sjcl.ecc.elGamal.publicKey</a></li><li><a href="sjcl.ecc.elGamal.secretKey.html">sjcl.ecc.elGamal.secretKey</a></li><li><a href="sjcl.ecc.point.html">sjcl.ecc.point</a></li><li><a href="sjcl.ecc.pointJac.html">sjcl.ecc.pointJac</a></li><li><a href="sjcl.exception.bug.html">sjcl.exception.bug</a></li><li><a href="sjcl.exception.corrupt.html">sjcl.exception.corrupt</a></li><li><a href="sjcl.exception.invalid.html">sjcl.exception.invalid</a></li><li><a href="sjcl.exception.notReady.html">sjcl.exception.notReady</a></li><li><a href="sjcl.hash.ripemd160.html">sjcl.hash.ripemd160</a></li><li><a href="sjcl.hash.sha1.html">sjcl.hash.sha1</a></li><li><a href="sjcl.hash.sha256.html">sjcl.hash.sha256</a></li><li><a href="sjcl.hash.sha512.html">sjcl.hash.sha512</a></li><li><a href="sjcl.misc.hmac.html">sjcl.misc.hmac</a></li><li><a href="sjcl.prng.html">sjcl.prng</a></li></ul><h3>Namespaces</h3><ul><li><a href="sjcl.html">sjcl</a></li><li><a href="sjcl.arrayBuffer.html">sjcl.arrayBuffer</a></li><li><a href="sjcl.bitArray.html">sjcl.bitArray</a></li><li><a href="sjcl.cipher.html">sjcl.cipher</a></li><li><a href="sjcl.codec.html">sjcl.codec</a></li><li><a href="sjcl.codec.arrayBuffer.html">sjcl.codec.arrayBuffer</a></li><li><a href="sjcl.codec.base32.html">sjcl.codec.base32</a></li><li><a href="sjcl.codec.base64.html">sjcl.codec.base64</a></li><li><a href="sjcl.codec.bytes.html">sjcl.codec.bytes</a></li><li><a href="sjcl.codec.hex.html">sjcl.codec.hex</a></li><li><a href="sjcl.codec.utf8String.html">sjcl.codec.utf8String</a></li><li><a href="sjcl.codec.z85.html">sjcl.codec.z85</a></li><li><a href="sjcl.ecc.html">sjcl.ecc</a></li><li><a href="sjcl.exception.html">sjcl.exception</a></li><li><a href="sjcl.hash.html">sjcl.hash</a></li><li><a href="sjcl.json.html">sjcl.json</a></li><li><a href="sjcl.keyexchange.html">sjcl.keyexchange</a></li><li><a href="sjcl.keyexchange.srp.html">sjcl.keyexchange.srp</a></li><li><a href="sjcl.misc.html">sjcl.misc</a></li><li><a href="sjcl.mode.html">sjcl.mode</a></li><li><a href="sjcl.mode.cbc.html">sjcl.mode.cbc</a></li><li><a href="sjcl.mode.ccm.html">sjcl.mode.ccm</a></li><li><a href="sjcl.mode.ctr.html">sjcl.mode.ctr</a></li><li><a href="sjcl.mode.gcm.html">sjcl.mode.gcm</a></li><li><a href="sjcl.mode.ocb2.html">sjcl.mode.ocb2</a></li><li><a href="sjcl.mode.ocb2progressive.html">sjcl.mode.ocb2progressive</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Jan 11 2017 22:49:26 GMT-0300 (ART)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

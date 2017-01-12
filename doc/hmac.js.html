@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: hmac.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: hmac.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/** @fileOverview HMAC implementation.
+ *
+ * @author Emily Stark
+ * @author Mike Hamburg
+ * @author Dan Boneh
+ */
+
+/** HMAC with the specified hash function.
+ * @constructor
+ * @param {bitArray} key the key for HMAC.
+ * @param {Object} [Hash=sjcl.hash.sha256] The hash function to use.
+ */
+sjcl.misc.hmac = function (key, Hash) {
+  this._hash = Hash = Hash || sjcl.hash.sha256;
+  var exKey = [[],[]], i,
+      bs = Hash.prototype.blockSize / 32;
+  this._baseHash = [new Hash(), new Hash()];
+
+  if (key.length > bs) {
+    key = Hash.hash(key);
+  }
+  
+  for (i=0; i&lt;bs; i++) {
+    exKey[0][i] = key[i]^0x36363636;
+    exKey[1][i] = key[i]^0x5C5C5C5C;
+  }
+  
+  this._baseHash[0].update(exKey[0]);
+  this._baseHash[1].update(exKey[1]);
+  this._resultHash = new Hash(this._baseHash[0]);
+};
+
+/** HMAC with the specified hash function.  Also called encrypt since it's a prf.
+ * @param {bitArray|String} data The data to mac.
+ */
+sjcl.misc.hmac.prototype.encrypt = sjcl.misc.hmac.prototype.mac = function (data) {
+  if (!this._updated) {
+    this.update(data);
+    return this.digest(data);
+  } else {
+    throw new sjcl.exception.invalid("encrypt on already updated hmac called!");
+  }
+};
+
+sjcl.misc.hmac.prototype.reset = function () {
+  this._resultHash = new this._hash(this._baseHash[0]);
+  this._updated = false;
+};
+
+sjcl.misc.hmac.prototype.update = function (data) {
+  this._updated = true;
+  this._resultHash.update(data);
+};
+
+sjcl.misc.hmac.prototype.digest = function () {
+  var w = this._resultHash.finalize(), result = new (this._hash)(this._baseHash[1]).update(w).finalize();
+
+  this.reset();
+
+  return result;
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="sjcl.bn.html">sjcl.bn</a></li><li><a href="sjcl.cipher.aes.html">sjcl.cipher.aes</a></li><li><a href="sjcl.ecc.basicKey.publicKey.html">sjcl.ecc.basicKey.publicKey</a></li><li><a href="sjcl.ecc.basicKey.secretKey.html">sjcl.ecc.basicKey.secretKey</a></li><li><a href="sjcl.ecc.curve.html">sjcl.ecc.curve</a></li><li><a href="sjcl.ecc.ecdsa.publicKey.html">sjcl.ecc.ecdsa.publicKey</a></li><li><a href="sjcl.ecc.ecdsa.secretKey.html">sjcl.ecc.ecdsa.secretKey</a></li><li><a href="sjcl.ecc.elGamal.publicKey.html">sjcl.ecc.elGamal.publicKey</a></li><li><a href="sjcl.ecc.elGamal.secretKey.html">sjcl.ecc.elGamal.secretKey</a></li><li><a href="sjcl.ecc.point.html">sjcl.ecc.point</a></li><li><a href="sjcl.ecc.pointJac.html">sjcl.ecc.pointJac</a></li><li><a href="sjcl.exception.bug.html">sjcl.exception.bug</a></li><li><a href="sjcl.exception.corrupt.html">sjcl.exception.corrupt</a></li><li><a href="sjcl.exception.invalid.html">sjcl.exception.invalid</a></li><li><a href="sjcl.exception.notReady.html">sjcl.exception.notReady</a></li><li><a href="sjcl.hash.ripemd160.html">sjcl.hash.ripemd160</a></li><li><a href="sjcl.hash.sha1.html">sjcl.hash.sha1</a></li><li><a href="sjcl.hash.sha256.html">sjcl.hash.sha256</a></li><li><a href="sjcl.hash.sha512.html">sjcl.hash.sha512</a></li><li><a href="sjcl.misc.hmac.html">sjcl.misc.hmac</a></li><li><a href="sjcl.prng.html">sjcl.prng</a></li></ul><h3>Namespaces</h3><ul><li><a href="sjcl.html">sjcl</a></li><li><a href="sjcl.arrayBuffer.html">sjcl.arrayBuffer</a></li><li><a href="sjcl.bitArray.html">sjcl.bitArray</a></li><li><a href="sjcl.cipher.html">sjcl.cipher</a></li><li><a href="sjcl.codec.html">sjcl.codec</a></li><li><a href="sjcl.codec.arrayBuffer.html">sjcl.codec.arrayBuffer</a></li><li><a href="sjcl.codec.base32.html">sjcl.codec.base32</a></li><li><a href="sjcl.codec.base64.html">sjcl.codec.base64</a></li><li><a href="sjcl.codec.bytes.html">sjcl.codec.bytes</a></li><li><a href="sjcl.codec.hex.html">sjcl.codec.hex</a></li><li><a href="sjcl.codec.utf8String.html">sjcl.codec.utf8String</a></li><li><a href="sjcl.codec.z85.html">sjcl.codec.z85</a></li><li><a href="sjcl.ecc.html">sjcl.ecc</a></li><li><a href="sjcl.exception.html">sjcl.exception</a></li><li><a href="sjcl.hash.html">sjcl.hash</a></li><li><a href="sjcl.json.html">sjcl.json</a></li><li><a href="sjcl.keyexchange.html">sjcl.keyexchange</a></li><li><a href="sjcl.keyexchange.srp.html">sjcl.keyexchange.srp</a></li><li><a href="sjcl.misc.html">sjcl.misc</a></li><li><a href="sjcl.mode.html">sjcl.mode</a></li><li><a href="sjcl.mode.cbc.html">sjcl.mode.cbc</a></li><li><a href="sjcl.mode.ccm.html">sjcl.mode.ccm</a></li><li><a href="sjcl.mode.ctr.html">sjcl.mode.ctr</a></li><li><a href="sjcl.mode.gcm.html">sjcl.mode.gcm</a></li><li><a href="sjcl.mode.ocb2.html">sjcl.mode.ocb2</a></li><li><a href="sjcl.mode.ocb2progressive.html">sjcl.mode.ocb2progressive</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Jan 11 2017 22:49:26 GMT-0300 (ART)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

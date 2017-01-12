@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Class: prng</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Class: prng</h1>
+
+    
+
+
+
+
+<section>
+
+<header>
+    
+        <h2>
+            <span class="ancestors"><a href="sjcl.html">sjcl</a>.</span>prng</h2>
+        
+            <div class="class-description">Random number generator</div>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+
+    
+    <h2>Constructor</h2>
+    
+
+    <h4 class="name" id="prng"><span class="type-signature"></span>new prng<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <b>Use sjcl.random as a singleton for this class!</b>
+<p>
+This random number generator is a derivative of Ferguson and Schneier's
+generator Fortuna.  It collects entropy from various events into several
+pools, implemented by streaming SHA-256 instances.  It differs from
+ordinary Fortuna in a few ways, though.
+</p>
+
+<p>
+Most importantly, it has an entropy estimator.  This is present because
+there is a strong conflict here between making the generator available
+as soon as possible, and making sure that it doesn't "run on empty".
+In Fortuna, there is a saved state file, and the system is likely to have
+time to warm up.
+</p>
+
+<p>
+Second, because users are unlikely to stay on the page for very long,
+and to speed startup time, the number of pools increases logarithmically:
+a new pool is created when the previous one is actually used for a reseed.
+This gives the same asymptotic guarantees as Fortuna, but gives more
+entropy to early reseeds.
+</p>
+
+<p>
+The entire mechanism here feels pretty klunky.  Furthermore, there are
+several improvements that should be made, including support for
+dedicated cryptographic functions that may be present in some browsers;
+state files in local storage; cookies containing randomness; etc.  So
+look for improvements in future versions.
+</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="random.js.html">random.js</a>, <a href="random.js.html#line46">line 46</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    </div>
+
+    
+
+    
+
+    
+
+     
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    <h4 class="name" id="_reseedFromPools"><span class="type-signature"></span>_reseedFromPools<span class="signature">(full)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    reseed the data from the entropy pools
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>full</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">If set, use all the entropy pools in the reseed.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="random.js.html">random.js</a>, <a href="random.js.html#line360">line 360</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="addEntropy"><span class="type-signature"></span>addEntropy<span class="signature">(data, estimatedEntropy, source)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Add entropy to the pools.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>data</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The entropic value.  Should be a 32-bit integer, array of 32-bit integers, or string</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>estimatedEntropy</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The estimated entropy of data, in bits</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>source</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The source of the entropy, eg "mouse"</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="random.js.html">random.js</a>, <a href="random.js.html#line123">line 123</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="addEventListener"><span class="type-signature"></span>addEventListener<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    add an event listener for progress or seeded-ness.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="random.js.html">random.js</a>, <a href="random.js.html#line295">line 295</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="getProgress"><span class="type-signature"></span>getProgress<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Get the generator's progress toward readiness, as a fraction
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="random.js.html">random.js</a>, <a href="random.js.html#line229">line 229</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="isReady"><span class="type-signature"></span>isReady<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Is the generator ready?
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="random.js.html">random.js</a>, <a href="random.js.html#line214">line 214</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="randomWords"><span class="type-signature"></span>randomWords<span class="signature">(nwords)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Generate several random words, and return them in an array.
+A word consists of 32 bits (4 bytes)
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>nwords</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The number of words to generate.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="random.js.html">random.js</a>, <a href="random.js.html#line87">line 87</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="removeEventListener"><span class="type-signature"></span>removeEventListener<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    remove an event listener for progress or seeded-ness
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="random.js.html">random.js</a>, <a href="random.js.html#line300">line 300</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="startCollectors"><span class="type-signature"></span>startCollectors<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    start the built-in entropy collectors
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="random.js.html">random.js</a>, <a href="random.js.html#line242">line 242</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="stopCollectors"><span class="type-signature"></span>stopCollectors<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    stop the built-in entropy collectors
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="random.js.html">random.js</a>, <a href="random.js.html#line271">line 271</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="sjcl.bn.html">sjcl.bn</a></li><li><a href="sjcl.cipher.aes.html">sjcl.cipher.aes</a></li><li><a href="sjcl.ecc.basicKey.publicKey.html">sjcl.ecc.basicKey.publicKey</a></li><li><a href="sjcl.ecc.basicKey.secretKey.html">sjcl.ecc.basicKey.secretKey</a></li><li><a href="sjcl.ecc.curve.html">sjcl.ecc.curve</a></li><li><a href="sjcl.ecc.ecdsa.publicKey.html">sjcl.ecc.ecdsa.publicKey</a></li><li><a href="sjcl.ecc.ecdsa.secretKey.html">sjcl.ecc.ecdsa.secretKey</a></li><li><a href="sjcl.ecc.elGamal.publicKey.html">sjcl.ecc.elGamal.publicKey</a></li><li><a href="sjcl.ecc.elGamal.secretKey.html">sjcl.ecc.elGamal.secretKey</a></li><li><a href="sjcl.ecc.point.html">sjcl.ecc.point</a></li><li><a href="sjcl.ecc.pointJac.html">sjcl.ecc.pointJac</a></li><li><a href="sjcl.exception.bug.html">sjcl.exception.bug</a></li><li><a href="sjcl.exception.corrupt.html">sjcl.exception.corrupt</a></li><li><a href="sjcl.exception.invalid.html">sjcl.exception.invalid</a></li><li><a href="sjcl.exception.notReady.html">sjcl.exception.notReady</a></li><li><a href="sjcl.hash.ripemd160.html">sjcl.hash.ripemd160</a></li><li><a href="sjcl.hash.sha1.html">sjcl.hash.sha1</a></li><li><a href="sjcl.hash.sha256.html">sjcl.hash.sha256</a></li><li><a href="sjcl.hash.sha512.html">sjcl.hash.sha512</a></li><li><a href="sjcl.misc.hmac.html">sjcl.misc.hmac</a></li><li><a href="sjcl.prng.html">sjcl.prng</a></li></ul><h3>Namespaces</h3><ul><li><a href="sjcl.html">sjcl</a></li><li><a href="sjcl.arrayBuffer.html">sjcl.arrayBuffer</a></li><li><a href="sjcl.bitArray.html">sjcl.bitArray</a></li><li><a href="sjcl.cipher.html">sjcl.cipher</a></li><li><a href="sjcl.codec.html">sjcl.codec</a></li><li><a href="sjcl.codec.arrayBuffer.html">sjcl.codec.arrayBuffer</a></li><li><a href="sjcl.codec.base32.html">sjcl.codec.base32</a></li><li><a href="sjcl.codec.base64.html">sjcl.codec.base64</a></li><li><a href="sjcl.codec.bytes.html">sjcl.codec.bytes</a></li><li><a href="sjcl.codec.hex.html">sjcl.codec.hex</a></li><li><a href="sjcl.codec.utf8String.html">sjcl.codec.utf8String</a></li><li><a href="sjcl.codec.z85.html">sjcl.codec.z85</a></li><li><a href="sjcl.ecc.html">sjcl.ecc</a></li><li><a href="sjcl.exception.html">sjcl.exception</a></li><li><a href="sjcl.hash.html">sjcl.hash</a></li><li><a href="sjcl.json.html">sjcl.json</a></li><li><a href="sjcl.keyexchange.html">sjcl.keyexchange</a></li><li><a href="sjcl.keyexchange.srp.html">sjcl.keyexchange.srp</a></li><li><a href="sjcl.misc.html">sjcl.misc</a></li><li><a href="sjcl.mode.html">sjcl.mode</a></li><li><a href="sjcl.mode.cbc.html">sjcl.mode.cbc</a></li><li><a href="sjcl.mode.ccm.html">sjcl.mode.ccm</a></li><li><a href="sjcl.mode.ctr.html">sjcl.mode.ctr</a></li><li><a href="sjcl.mode.gcm.html">sjcl.mode.gcm</a></li><li><a href="sjcl.mode.ocb2.html">sjcl.mode.ocb2</a></li><li><a href="sjcl.mode.ocb2progressive.html">sjcl.mode.ocb2progressive</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Jan 11 2017 22:49:26 GMT-0300 (ART)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
