@@ -153,7 +153,7 @@ sjcl.prng.prototype = {
         }
         data = tmp;
       } else {
-        if (objName !== "[object Array]") {
+        if (data[0] == null) {
           err = 1;
         }
         for (i=0; i<data.length && !err; i++) {
