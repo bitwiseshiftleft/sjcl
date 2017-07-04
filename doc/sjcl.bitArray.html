@@ -1,0 +1,1783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Namespace: bitArray</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Namespace: bitArray</h1>
+
+    
+
+
+
+
+<section>
+
+<header>
+    
+        <h2>
+            <span class="ancestors"><a href="sjcl.html">sjcl</a>.</span>bitArray</h2>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+            <div class="description"><p>
+These objects are the currency accepted by SJCL's crypto functions.
+</p>
+
+<p>
+Most of our crypto primitives operate on arrays of 4-byte words internally,
+but many of them can take arguments that are not a multiple of 4 bytes.
+This library encodes arrays of bits (whose size need not be a multiple of 8
+bits) as arrays of 32-bit words.  The bits are packed, big-endian, into an
+array of words, 32 bits at a time.  Since the words are double-precision
+floating point numbers, they fit some extra data.  We use this (in a private,
+possibly-changing manner) to encode the number of bits actually  present
+in the last word of the array.
+</p>
+
+<p>
+Because bitwise ops clear this out-of-band data, these arrays can be passed
+to ciphers like AES which want arrays of words.
+</p></div>
+        
+
+        
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="bitArray.js.html">bitArray.js</a>, <a href="bitArray.js.html#line32">line 32</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+    
+    </div>
+
+    
+
+    
+
+    
+
+     
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    <h4 class="name" id=".bitLength"><span class="type-signature">(static) </span>bitLength<span class="signature">(a)</span><span class="type-signature"> &rarr; {Number}</span></h4>
+
+    
+
+
+
+<div class="description">
+    Find the length of an array of bits.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>a</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">bitArray</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The array.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="bitArray.js.html">bitArray.js</a>, <a href="bitArray.js.html#line91">line 91</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    The length of a, in bits.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Number</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".bitSlice"><span class="type-signature">(static) </span>bitSlice<span class="signature">(a, bstart, bend)</span><span class="type-signature"> &rarr; {bitArray}</span></h4>
+
+    
+
+
+
+<div class="description">
+    Array slices in units of bits.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>a</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">bitArray</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The array to slice.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>bstart</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The offset to the start of the slice, in bits.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>bend</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The offset to the end of the slice, in bits.  If this is undefined,
+slice until the end of the array.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="bitArray.js.html">bitArray.js</a>, <a href="bitArray.js.html#line41">line 41</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    The requested slice.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">bitArray</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".byteswapM"><span class="type-signature">(static) </span>byteswapM<span class="signature">(a)</span><span class="type-signature"> &rarr; {<a href="sjcl.bitArray.html">sjcl.bitArray</a>}</span></h4>
+
+    
+
+
+
+<div class="description">
+    byteswap a word array inplace.
+(does not handle partial words)
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>a</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="sjcl.bitArray.html">sjcl.bitArray</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">word array</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="bitArray.js.html">bitArray.js</a>, <a href="bitArray.js.html#line194">line 194</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    byteswapped array
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="sjcl.bitArray.html">sjcl.bitArray</a></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".clamp"><span class="type-signature">(static) </span>clamp<span class="signature">(a, len)</span><span class="type-signature"> &rarr; {bitArray}</span></h4>
+
+    
+
+
+
+<div class="description">
+    Truncate an array.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>a</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">bitArray</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The array.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>len</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The length to truncate to, in bits.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="bitArray.js.html">bitArray.js</a>, <a href="bitArray.js.html#line104">line 104</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    A new array, truncated to len bits.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">bitArray</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".concat"><span class="type-signature">(static) </span>concat<span class="signature">(a1, a2)</span><span class="type-signature"> &rarr; {bitArray}</span></h4>
+
+    
+
+
+
+<div class="description">
+    Concatenate two bit arrays.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>a1</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">bitArray</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The first array.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>a2</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">bitArray</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The second array.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="bitArray.js.html">bitArray.js</a>, <a href="bitArray.js.html#line73">line 73</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    The concatenation of a1 and a2.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">bitArray</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".equal"><span class="type-signature">(static) </span>equal<span class="signature">(a, b)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
+
+    
+
+
+
+<div class="description">
+    Compare two arrays for equality in a predictable amount of time.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>a</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">bitArray</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The first array.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>b</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">bitArray</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The second array.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="bitArray.js.html">bitArray.js</a>, <a href="bitArray.js.html#line142">line 142</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    true if a == b; false otherwise.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">boolean</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".extract"><span class="type-signature">(static) </span>extract<span class="signature">(a, bstart, blength)</span><span class="type-signature"> &rarr; {Number}</span></h4>
+
+    
+
+
+
+<div class="description">
+    Extract a number packed into a bit array.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>a</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">bitArray</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The array to slice.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>bstart</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The offset to the start of the slice, in bits.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>blength</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The length of the number to extract.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="bitArray.js.html">bitArray.js</a>, <a href="bitArray.js.html#line53">line 53</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    The requested slice.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Number</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".getPartial"><span class="type-signature">(static) </span>getPartial<span class="signature">(x)</span><span class="type-signature"> &rarr; {Number}</span></h4>
+
+    
+
+
+
+<div class="description">
+    Get the number of bits used by a partial word.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>x</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The partial word.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="bitArray.js.html">bitArray.js</a>, <a href="bitArray.js.html#line132">line 132</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    The number of bits used by the partial word.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Number</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".partial"><span class="type-signature">(static) </span>partial<span class="signature">(len, x, _end<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Number}</span></h4>
+
+    
+
+
+
+<div class="description">
+    Make a partial word for a bit array.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>len</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">The number of bits in the word.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>x</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">The bits.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>_end</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    0
+                
+                </td>
+            
+
+            <td class="description last">Pass 1 if x has already been shifted to the high side.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="bitArray.js.html">bitArray.js</a>, <a href="bitArray.js.html#line122">line 122</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    The partial word.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Number</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="sjcl.bn.html">sjcl.bn</a></li><li><a href="sjcl.cipher.aes.html">sjcl.cipher.aes</a></li><li><a href="sjcl.ecc.basicKey.publicKey.html">sjcl.ecc.basicKey.publicKey</a></li><li><a href="sjcl.ecc.basicKey.secretKey.html">sjcl.ecc.basicKey.secretKey</a></li><li><a href="sjcl.ecc.curve.html">sjcl.ecc.curve</a></li><li><a href="sjcl.ecc.ecdsa.publicKey.html">sjcl.ecc.ecdsa.publicKey</a></li><li><a href="sjcl.ecc.ecdsa.secretKey.html">sjcl.ecc.ecdsa.secretKey</a></li><li><a href="sjcl.ecc.elGamal.publicKey.html">sjcl.ecc.elGamal.publicKey</a></li><li><a href="sjcl.ecc.elGamal.secretKey.html">sjcl.ecc.elGamal.secretKey</a></li><li><a href="sjcl.ecc.point.html">sjcl.ecc.point</a></li><li><a href="sjcl.ecc.pointJac.html">sjcl.ecc.pointJac</a></li><li><a href="sjcl.exception.bug.html">sjcl.exception.bug</a></li><li><a href="sjcl.exception.corrupt.html">sjcl.exception.corrupt</a></li><li><a href="sjcl.exception.invalid.html">sjcl.exception.invalid</a></li><li><a href="sjcl.exception.notReady.html">sjcl.exception.notReady</a></li><li><a href="sjcl.hash.ripemd160.html">sjcl.hash.ripemd160</a></li><li><a href="sjcl.hash.sha1.html">sjcl.hash.sha1</a></li><li><a href="sjcl.hash.sha256.html">sjcl.hash.sha256</a></li><li><a href="sjcl.hash.sha512.html">sjcl.hash.sha512</a></li><li><a href="sjcl.misc.hmac.html">sjcl.misc.hmac</a></li><li><a href="sjcl.prng.html">sjcl.prng</a></li></ul><h3>Namespaces</h3><ul><li><a href="sjcl.html">sjcl</a></li><li><a href="sjcl.arrayBuffer.html">sjcl.arrayBuffer</a></li><li><a href="sjcl.bitArray.html">sjcl.bitArray</a></li><li><a href="sjcl.cipher.html">sjcl.cipher</a></li><li><a href="sjcl.codec.html">sjcl.codec</a></li><li><a href="sjcl.codec.arrayBuffer.html">sjcl.codec.arrayBuffer</a></li><li><a href="sjcl.codec.base32.html">sjcl.codec.base32</a></li><li><a href="sjcl.codec.base64.html">sjcl.codec.base64</a></li><li><a href="sjcl.codec.bytes.html">sjcl.codec.bytes</a></li><li><a href="sjcl.codec.hex.html">sjcl.codec.hex</a></li><li><a href="sjcl.codec.utf8String.html">sjcl.codec.utf8String</a></li><li><a href="sjcl.codec.z85.html">sjcl.codec.z85</a></li><li><a href="sjcl.ecc.html">sjcl.ecc</a></li><li><a href="sjcl.exception.html">sjcl.exception</a></li><li><a href="sjcl.hash.html">sjcl.hash</a></li><li><a href="sjcl.json.html">sjcl.json</a></li><li><a href="sjcl.keyexchange.html">sjcl.keyexchange</a></li><li><a href="sjcl.keyexchange.srp.html">sjcl.keyexchange.srp</a></li><li><a href="sjcl.misc.html">sjcl.misc</a></li><li><a href="sjcl.mode.html">sjcl.mode</a></li><li><a href="sjcl.mode.cbc.html">sjcl.mode.cbc</a></li><li><a href="sjcl.mode.ccm.html">sjcl.mode.ccm</a></li><li><a href="sjcl.mode.ctr.html">sjcl.mode.ctr</a></li><li><a href="sjcl.mode.gcm.html">sjcl.mode.gcm</a></li><li><a href="sjcl.mode.ocb2.html">sjcl.mode.ocb2</a></li><li><a href="sjcl.mode.ocb2progressive.html">sjcl.mode.ocb2progressive</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Jan 11 2017 22:49:26 GMT-0300 (ART)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

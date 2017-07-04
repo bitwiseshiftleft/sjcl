@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Namespace: ccm</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Namespace: ccm</h1>
+
+    
+
+
+
+
+<section>
+
+<header>
+    
+        <h2>
+            <span class="ancestors"><a href="sjcl.html">sjcl</a><a href="sjcl.mode.html">.mode</a>.</span>ccm</h2>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+            <div class="description">CTR mode with CBC MAC.</div>
+        
+
+        
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="ccm.js.html">ccm.js</a>, <a href="ccm.js.html#line15">line 15</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+    
+    </div>
+
+    
+
+    
+
+    
+
+     
+
+    
+
+    
+        <h3 class="subsection-title">Members</h3>
+
+        
+            
+<h4 class="name" id=".name"><span class="type-signature">(static, constant) </span>name<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    The name of the mode.
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="ccm.js.html">ccm.js</a>, <a href="ccm.js.html#line19">line 19</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    <h4 class="name" id=".decrypt"><span class="type-signature">(static) </span>decrypt<span class="signature">(prf, ciphertext, iv, adata<span class="signature-attributes">opt</span>, tlen<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {bitArray}</span></h4>
+
+    
+
+
+
+<div class="description">
+    Decrypt in CCM mode.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>prf</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">The pseudorandom function.  It must have a block size of 16 bytes.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>ciphertext</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">bitArray</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">The ciphertext data.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>iv</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">bitArray</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">The initialization value.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>adata</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">bitArray</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    []
+                
+                </td>
+            
+
+            <td class="description last">adata The authenticated data.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>tlen</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    64
+                
+                </td>
+            
+
+            <td class="description last">tlen the desired tag length, in bits.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="ccm.js.html">ccm.js</a>, <a href="ccm.js.html#line83">line 83</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    The decrypted data.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">bitArray</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".encrypt"><span class="type-signature">(static) </span>encrypt<span class="signature">(prf, plaintext, iv, adata<span class="signature-attributes">opt</span>, tlen<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {bitArray}</span></h4>
+
+    
+
+
+
+<div class="description">
+    Encrypt in CCM mode.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>prf</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">The pseudorandom function.  It must have a block size of 16 bytes.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>plaintext</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">bitArray</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">The plaintext data.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>iv</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">bitArray</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">The initialization value.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>adata</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">bitArray</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    []
+                
+                </td>
+            
+
+            <td class="description last">The authenticated data.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>tlen</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    64
+                
+                </td>
+            
+
+            <td class="description last">the desired tag length, in bits.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="ccm.js.html">ccm.js</a>, <a href="ccm.js.html#line51">line 51</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    The encrypted data, an array of bytes.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">bitArray</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="sjcl.bn.html">sjcl.bn</a></li><li><a href="sjcl.cipher.aes.html">sjcl.cipher.aes</a></li><li><a href="sjcl.ecc.basicKey.publicKey.html">sjcl.ecc.basicKey.publicKey</a></li><li><a href="sjcl.ecc.basicKey.secretKey.html">sjcl.ecc.basicKey.secretKey</a></li><li><a href="sjcl.ecc.curve.html">sjcl.ecc.curve</a></li><li><a href="sjcl.ecc.ecdsa.publicKey.html">sjcl.ecc.ecdsa.publicKey</a></li><li><a href="sjcl.ecc.ecdsa.secretKey.html">sjcl.ecc.ecdsa.secretKey</a></li><li><a href="sjcl.ecc.elGamal.publicKey.html">sjcl.ecc.elGamal.publicKey</a></li><li><a href="sjcl.ecc.elGamal.secretKey.html">sjcl.ecc.elGamal.secretKey</a></li><li><a href="sjcl.ecc.point.html">sjcl.ecc.point</a></li><li><a href="sjcl.ecc.pointJac.html">sjcl.ecc.pointJac</a></li><li><a href="sjcl.exception.bug.html">sjcl.exception.bug</a></li><li><a href="sjcl.exception.corrupt.html">sjcl.exception.corrupt</a></li><li><a href="sjcl.exception.invalid.html">sjcl.exception.invalid</a></li><li><a href="sjcl.exception.notReady.html">sjcl.exception.notReady</a></li><li><a href="sjcl.hash.ripemd160.html">sjcl.hash.ripemd160</a></li><li><a href="sjcl.hash.sha1.html">sjcl.hash.sha1</a></li><li><a href="sjcl.hash.sha256.html">sjcl.hash.sha256</a></li><li><a href="sjcl.hash.sha512.html">sjcl.hash.sha512</a></li><li><a href="sjcl.misc.hmac.html">sjcl.misc.hmac</a></li><li><a href="sjcl.prng.html">sjcl.prng</a></li></ul><h3>Namespaces</h3><ul><li><a href="sjcl.html">sjcl</a></li><li><a href="sjcl.arrayBuffer.html">sjcl.arrayBuffer</a></li><li><a href="sjcl.bitArray.html">sjcl.bitArray</a></li><li><a href="sjcl.cipher.html">sjcl.cipher</a></li><li><a href="sjcl.codec.html">sjcl.codec</a></li><li><a href="sjcl.codec.arrayBuffer.html">sjcl.codec.arrayBuffer</a></li><li><a href="sjcl.codec.base32.html">sjcl.codec.base32</a></li><li><a href="sjcl.codec.base64.html">sjcl.codec.base64</a></li><li><a href="sjcl.codec.bytes.html">sjcl.codec.bytes</a></li><li><a href="sjcl.codec.hex.html">sjcl.codec.hex</a></li><li><a href="sjcl.codec.utf8String.html">sjcl.codec.utf8String</a></li><li><a href="sjcl.codec.z85.html">sjcl.codec.z85</a></li><li><a href="sjcl.ecc.html">sjcl.ecc</a></li><li><a href="sjcl.exception.html">sjcl.exception</a></li><li><a href="sjcl.hash.html">sjcl.hash</a></li><li><a href="sjcl.json.html">sjcl.json</a></li><li><a href="sjcl.keyexchange.html">sjcl.keyexchange</a></li><li><a href="sjcl.keyexchange.srp.html">sjcl.keyexchange.srp</a></li><li><a href="sjcl.misc.html">sjcl.misc</a></li><li><a href="sjcl.mode.html">sjcl.mode</a></li><li><a href="sjcl.mode.cbc.html">sjcl.mode.cbc</a></li><li><a href="sjcl.mode.ccm.html">sjcl.mode.ccm</a></li><li><a href="sjcl.mode.ctr.html">sjcl.mode.ctr</a></li><li><a href="sjcl.mode.gcm.html">sjcl.mode.gcm</a></li><li><a href="sjcl.mode.ocb2.html">sjcl.mode.ocb2</a></li><li><a href="sjcl.mode.ocb2progressive.html">sjcl.mode.ocb2progressive</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Jan 11 2017 22:49:26 GMT-0300 (ART)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

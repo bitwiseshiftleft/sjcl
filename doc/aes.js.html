@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: aes.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: aes.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/** @fileOverview Low-level AES implementation.
+ *
+ * This file contains a low-level implementation of AES, optimized for
+ * size and for efficiency on several browsers.  It is based on
+ * OpenSSL's aes_core.c, a public-domain implementation by Vincent
+ * Rijmen, Antoon Bosselaers and Paulo Barreto.
+ *
+ * An older version of this implementation is available in the public
+ * domain, but this one is (c) Emily Stark, Mike Hamburg, Dan Boneh,
+ * Stanford University 2008-2010 and BSD-licensed for liability
+ * reasons.
+ *
+ * @author Emily Stark
+ * @author Mike Hamburg
+ * @author Dan Boneh
+ */
+
+/**
+ * Schedule out an AES key for both encryption and decryption.  This
+ * is a low-level class.  Use a cipher mode to do bulk encryption.
+ *
+ * @constructor
+ * @param {Array} key The key as an array of 4, 6 or 8 words.
+ */
+sjcl.cipher.aes = function (key) {
+  if (!this._tables[0][0][0]) {
+    this._precompute();
+  }
+  
+  var i, j, tmp,
+    encKey, decKey,
+    sbox = this._tables[0][4], decTable = this._tables[1],
+    keyLen = key.length, rcon = 1;
+  
+  if (keyLen !== 4 &amp;&amp; keyLen !== 6 &amp;&amp; keyLen !== 8) {
+    throw new sjcl.exception.invalid("invalid aes key size");
+  }
+  
+  this._key = [encKey = key.slice(0), decKey = []];
+  
+  // schedule encryption keys
+  for (i = keyLen; i &lt; 4 * keyLen + 28; i++) {
+    tmp = encKey[i-1];
+    
+    // apply sbox
+    if (i%keyLen === 0 || (keyLen === 8 &amp;&amp; i%keyLen === 4)) {
+      tmp = sbox[tmp>>>24]&lt;&lt;24 ^ sbox[tmp>>16&amp;255]&lt;&lt;16 ^ sbox[tmp>>8&amp;255]&lt;&lt;8 ^ sbox[tmp&amp;255];
+      
+      // shift rows and add rcon
+      if (i%keyLen === 0) {
+        tmp = tmp&lt;&lt;8 ^ tmp>>>24 ^ rcon&lt;&lt;24;
+        rcon = rcon&lt;&lt;1 ^ (rcon>>7)*283;
+      }
+    }
+    
+    encKey[i] = encKey[i-keyLen] ^ tmp;
+  }
+  
+  // schedule decryption keys
+  for (j = 0; i; j++, i--) {
+    tmp = encKey[j&amp;3 ? i : i - 4];
+    if (i&lt;=4 || j&lt;4) {
+      decKey[j] = tmp;
+    } else {
+      decKey[j] = decTable[0][sbox[tmp>>>24      ]] ^
+                  decTable[1][sbox[tmp>>16  &amp; 255]] ^
+                  decTable[2][sbox[tmp>>8   &amp; 255]] ^
+                  decTable[3][sbox[tmp      &amp; 255]];
+    }
+  }
+};
+
+sjcl.cipher.aes.prototype = {
+  // public
+  /* Something like this might appear here eventually
+  name: "AES",
+  blockSize: 4,
+  keySizes: [4,6,8],
+  */
+  
+  /**
+   * Encrypt an array of 4 big-endian words.
+   * @param {Array} data The plaintext.
+   * @return {Array} The ciphertext.
+   */
+  encrypt:function (data) { return this._crypt(data,0); },
+  
+  /**
+   * Decrypt an array of 4 big-endian words.
+   * @param {Array} data The ciphertext.
+   * @return {Array} The plaintext.
+   */
+  decrypt:function (data) { return this._crypt(data,1); },
+  
+  /**
+   * The expanded S-box and inverse S-box tables.  These will be computed
+   * on the client so that we don't have to send them down the wire.
+   *
+   * There are two tables, _tables[0] is for encryption and
+   * _tables[1] is for decryption.
+   *
+   * The first 4 sub-tables are the expanded S-box with MixColumns.  The
+   * last (_tables[01][4]) is the S-box itself.
+   *
+   * @private
+   */
+  _tables: [[[],[],[],[],[]],[[],[],[],[],[]]],
+
+  /**
+   * Expand the S-box tables.
+   *
+   * @private
+   */
+  _precompute: function () {
+   var encTable = this._tables[0], decTable = this._tables[1],
+       sbox = encTable[4], sboxInv = decTable[4],
+       i, x, xInv, d=[], th=[], x2, x4, x8, s, tEnc, tDec;
+
+    // Compute double and third tables
+   for (i = 0; i &lt; 256; i++) {
+     th[( d[i] = i&lt;&lt;1 ^ (i>>7)*283 )^i]=i;
+   }
+   
+   for (x = xInv = 0; !sbox[x]; x ^= x2 || 1, xInv = th[xInv] || 1) {
+     // Compute sbox
+     s = xInv ^ xInv&lt;&lt;1 ^ xInv&lt;&lt;2 ^ xInv&lt;&lt;3 ^ xInv&lt;&lt;4;
+     s = s>>8 ^ s&amp;255 ^ 99;
+     sbox[x] = s;
+     sboxInv[s] = x;
+     
+     // Compute MixColumns
+     x8 = d[x4 = d[x2 = d[x]]];
+     tDec = x8*0x1010101 ^ x4*0x10001 ^ x2*0x101 ^ x*0x1010100;
+     tEnc = d[s]*0x101 ^ s*0x1010100;
+     
+     for (i = 0; i &lt; 4; i++) {
+       encTable[i][x] = tEnc = tEnc&lt;&lt;24 ^ tEnc>>>8;
+       decTable[i][s] = tDec = tDec&lt;&lt;24 ^ tDec>>>8;
+     }
+   }
+   
+   // Compactify.  Considerable speedup on Firefox.
+   for (i = 0; i &lt; 5; i++) {
+     encTable[i] = encTable[i].slice(0);
+     decTable[i] = decTable[i].slice(0);
+   }
+  },
+  
+  /**
+   * Encryption and decryption core.
+   * @param {Array} input Four words to be encrypted or decrypted.
+   * @param dir The direction, 0 for encrypt and 1 for decrypt.
+   * @return {Array} The four encrypted or decrypted words.
+   * @private
+   */
+  _crypt:function (input, dir) {
+    if (input.length !== 4) {
+      throw new sjcl.exception.invalid("invalid aes block size");
+    }
+    
+    var key = this._key[dir],
+        // state variables a,b,c,d are loaded with pre-whitened data
+        a = input[0]           ^ key[0],
+        b = input[dir ? 3 : 1] ^ key[1],
+        c = input[2]           ^ key[2],
+        d = input[dir ? 1 : 3] ^ key[3],
+        a2, b2, c2,
+        
+        nInnerRounds = key.length/4 - 2,
+        i,
+        kIndex = 4,
+        out = [0,0,0,0],
+        table = this._tables[dir],
+        
+        // load up the tables
+        t0    = table[0],
+        t1    = table[1],
+        t2    = table[2],
+        t3    = table[3],
+        sbox  = table[4];
+ 
+    // Inner rounds.  Cribbed from OpenSSL.
+    for (i = 0; i &lt; nInnerRounds; i++) {
+      a2 = t0[a>>>24] ^ t1[b>>16 &amp; 255] ^ t2[c>>8 &amp; 255] ^ t3[d &amp; 255] ^ key[kIndex];
+      b2 = t0[b>>>24] ^ t1[c>>16 &amp; 255] ^ t2[d>>8 &amp; 255] ^ t3[a &amp; 255] ^ key[kIndex + 1];
+      c2 = t0[c>>>24] ^ t1[d>>16 &amp; 255] ^ t2[a>>8 &amp; 255] ^ t3[b &amp; 255] ^ key[kIndex + 2];
+      d  = t0[d>>>24] ^ t1[a>>16 &amp; 255] ^ t2[b>>8 &amp; 255] ^ t3[c &amp; 255] ^ key[kIndex + 3];
+      kIndex += 4;
+      a=a2; b=b2; c=c2;
+    }
+        
+    // Last round.
+    for (i = 0; i &lt; 4; i++) {
+      out[dir ? 3&amp;-i : i] =
+        sbox[a>>>24      ]&lt;&lt;24 ^ 
+        sbox[b>>16  &amp; 255]&lt;&lt;16 ^
+        sbox[c>>8   &amp; 255]&lt;&lt;8  ^
+        sbox[d      &amp; 255]     ^
+        key[kIndex++];
+      a2=a; a=b; b=c; c=d; d=a2;
+    }
+    
+    return out;
+  }
+};
+
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="sjcl.bn.html">sjcl.bn</a></li><li><a href="sjcl.cipher.aes.html">sjcl.cipher.aes</a></li><li><a href="sjcl.ecc.basicKey.publicKey.html">sjcl.ecc.basicKey.publicKey</a></li><li><a href="sjcl.ecc.basicKey.secretKey.html">sjcl.ecc.basicKey.secretKey</a></li><li><a href="sjcl.ecc.curve.html">sjcl.ecc.curve</a></li><li><a href="sjcl.ecc.ecdsa.publicKey.html">sjcl.ecc.ecdsa.publicKey</a></li><li><a href="sjcl.ecc.ecdsa.secretKey.html">sjcl.ecc.ecdsa.secretKey</a></li><li><a href="sjcl.ecc.elGamal.publicKey.html">sjcl.ecc.elGamal.publicKey</a></li><li><a href="sjcl.ecc.elGamal.secretKey.html">sjcl.ecc.elGamal.secretKey</a></li><li><a href="sjcl.ecc.point.html">sjcl.ecc.point</a></li><li><a href="sjcl.ecc.pointJac.html">sjcl.ecc.pointJac</a></li><li><a href="sjcl.exception.bug.html">sjcl.exception.bug</a></li><li><a href="sjcl.exception.corrupt.html">sjcl.exception.corrupt</a></li><li><a href="sjcl.exception.invalid.html">sjcl.exception.invalid</a></li><li><a href="sjcl.exception.notReady.html">sjcl.exception.notReady</a></li><li><a href="sjcl.hash.ripemd160.html">sjcl.hash.ripemd160</a></li><li><a href="sjcl.hash.sha1.html">sjcl.hash.sha1</a></li><li><a href="sjcl.hash.sha256.html">sjcl.hash.sha256</a></li><li><a href="sjcl.hash.sha512.html">sjcl.hash.sha512</a></li><li><a href="sjcl.misc.hmac.html">sjcl.misc.hmac</a></li><li><a href="sjcl.prng.html">sjcl.prng</a></li></ul><h3>Namespaces</h3><ul><li><a href="sjcl.html">sjcl</a></li><li><a href="sjcl.arrayBuffer.html">sjcl.arrayBuffer</a></li><li><a href="sjcl.bitArray.html">sjcl.bitArray</a></li><li><a href="sjcl.cipher.html">sjcl.cipher</a></li><li><a href="sjcl.codec.html">sjcl.codec</a></li><li><a href="sjcl.codec.arrayBuffer.html">sjcl.codec.arrayBuffer</a></li><li><a href="sjcl.codec.base32.html">sjcl.codec.base32</a></li><li><a href="sjcl.codec.base64.html">sjcl.codec.base64</a></li><li><a href="sjcl.codec.bytes.html">sjcl.codec.bytes</a></li><li><a href="sjcl.codec.hex.html">sjcl.codec.hex</a></li><li><a href="sjcl.codec.utf8String.html">sjcl.codec.utf8String</a></li><li><a href="sjcl.codec.z85.html">sjcl.codec.z85</a></li><li><a href="sjcl.ecc.html">sjcl.ecc</a></li><li><a href="sjcl.exception.html">sjcl.exception</a></li><li><a href="sjcl.hash.html">sjcl.hash</a></li><li><a href="sjcl.json.html">sjcl.json</a></li><li><a href="sjcl.keyexchange.html">sjcl.keyexchange</a></li><li><a href="sjcl.keyexchange.srp.html">sjcl.keyexchange.srp</a></li><li><a href="sjcl.misc.html">sjcl.misc</a></li><li><a href="sjcl.mode.html">sjcl.mode</a></li><li><a href="sjcl.mode.cbc.html">sjcl.mode.cbc</a></li><li><a href="sjcl.mode.ccm.html">sjcl.mode.ccm</a></li><li><a href="sjcl.mode.ctr.html">sjcl.mode.ctr</a></li><li><a href="sjcl.mode.gcm.html">sjcl.mode.gcm</a></li><li><a href="sjcl.mode.ocb2.html">sjcl.mode.ocb2</a></li><li><a href="sjcl.mode.ocb2progressive.html">sjcl.mode.ocb2progressive</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Jan 11 2017 22:49:26 GMT-0300 (ART)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

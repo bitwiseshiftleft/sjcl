@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: bitArray.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: bitArray.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/** @fileOverview Arrays of bits, encoded as arrays of Numbers.
+ *
+ * @author Emily Stark
+ * @author Mike Hamburg
+ * @author Dan Boneh
+ */
+
+/**
+ * Arrays of bits, encoded as arrays of Numbers.
+ * @namespace
+ * @description
+ * &lt;p>
+ * These objects are the currency accepted by SJCL's crypto functions.
+ * &lt;/p>
+ *
+ * &lt;p>
+ * Most of our crypto primitives operate on arrays of 4-byte words internally,
+ * but many of them can take arguments that are not a multiple of 4 bytes.
+ * This library encodes arrays of bits (whose size need not be a multiple of 8
+ * bits) as arrays of 32-bit words.  The bits are packed, big-endian, into an
+ * array of words, 32 bits at a time.  Since the words are double-precision
+ * floating point numbers, they fit some extra data.  We use this (in a private,
+ * possibly-changing manner) to encode the number of bits actually  present
+ * in the last word of the array.
+ * &lt;/p>
+ *
+ * &lt;p>
+ * Because bitwise ops clear this out-of-band data, these arrays can be passed
+ * to ciphers like AES which want arrays of words.
+ * &lt;/p>
+ */
+sjcl.bitArray = {
+  /**
+   * Array slices in units of bits.
+   * @param {bitArray} a The array to slice.
+   * @param {Number} bstart The offset to the start of the slice, in bits.
+   * @param {Number} bend The offset to the end of the slice, in bits.  If this is undefined,
+   * slice until the end of the array.
+   * @return {bitArray} The requested slice.
+   */
+  bitSlice: function (a, bstart, bend) {
+    a = sjcl.bitArray._shiftRight(a.slice(bstart/32), 32 - (bstart &amp; 31)).slice(1);
+    return (bend === undefined) ? a : sjcl.bitArray.clamp(a, bend-bstart);
+  },
+
+  /**
+   * Extract a number packed into a bit array.
+   * @param {bitArray} a The array to slice.
+   * @param {Number} bstart The offset to the start of the slice, in bits.
+   * @param {Number} blength The length of the number to extract.
+   * @return {Number} The requested slice.
+   */
+  extract: function(a, bstart, blength) {
+    // FIXME: this Math.floor is not necessary at all, but for some reason
+    // seems to suppress a bug in the Chromium JIT.
+    var x, sh = Math.floor((-bstart-blength) &amp; 31);
+    if ((bstart + blength - 1 ^ bstart) &amp; -32) {
+      // it crosses a boundary
+      x = (a[bstart/32|0] &lt;&lt; (32 - sh)) ^ (a[bstart/32+1|0] >>> sh);
+    } else {
+      // within a single word
+      x = a[bstart/32|0] >>> sh;
+    }
+    return x &amp; ((1&lt;&lt;blength) - 1);
+  },
+
+  /**
+   * Concatenate two bit arrays.
+   * @param {bitArray} a1 The first array.
+   * @param {bitArray} a2 The second array.
+   * @return {bitArray} The concatenation of a1 and a2.
+   */
+  concat: function (a1, a2) {
+    if (a1.length === 0 || a2.length === 0) {
+      return a1.concat(a2);
+    }
+    
+    var last = a1[a1.length-1], shift = sjcl.bitArray.getPartial(last);
+    if (shift === 32) {
+      return a1.concat(a2);
+    } else {
+      return sjcl.bitArray._shiftRight(a2, shift, last|0, a1.slice(0,a1.length-1));
+    }
+  },
+
+  /**
+   * Find the length of an array of bits.
+   * @param {bitArray} a The array.
+   * @return {Number} The length of a, in bits.
+   */
+  bitLength: function (a) {
+    var l = a.length, x;
+    if (l === 0) { return 0; }
+    x = a[l - 1];
+    return (l-1) * 32 + sjcl.bitArray.getPartial(x);
+  },
+
+  /**
+   * Truncate an array.
+   * @param {bitArray} a The array.
+   * @param {Number} len The length to truncate to, in bits.
+   * @return {bitArray} A new array, truncated to len bits.
+   */
+  clamp: function (a, len) {
+    if (a.length * 32 &lt; len) { return a; }
+    a = a.slice(0, Math.ceil(len / 32));
+    var l = a.length;
+    len = len &amp; 31;
+    if (l > 0 &amp;&amp; len) {
+      a[l-1] = sjcl.bitArray.partial(len, a[l-1] &amp; 0x80000000 >> (len-1), 1);
+    }
+    return a;
+  },
+
+  /**
+   * Make a partial word for a bit array.
+   * @param {Number} len The number of bits in the word.
+   * @param {Number} x The bits.
+   * @param {Number} [_end=0] Pass 1 if x has already been shifted to the high side.
+   * @return {Number} The partial word.
+   */
+  partial: function (len, x, _end) {
+    if (len === 32) { return x; }
+    return (_end ? x|0 : x &lt;&lt; (32-len)) + len * 0x10000000000;
+  },
+
+  /**
+   * Get the number of bits used by a partial word.
+   * @param {Number} x The partial word.
+   * @return {Number} The number of bits used by the partial word.
+   */
+  getPartial: function (x) {
+    return Math.round(x/0x10000000000) || 32;
+  },
+
+  /**
+   * Compare two arrays for equality in a predictable amount of time.
+   * @param {bitArray} a The first array.
+   * @param {bitArray} b The second array.
+   * @return {boolean} true if a == b; false otherwise.
+   */
+  equal: function (a, b) {
+    if (sjcl.bitArray.bitLength(a) !== sjcl.bitArray.bitLength(b)) {
+      return false;
+    }
+    var x = 0, i;
+    for (i=0; i&lt;a.length; i++) {
+      x |= a[i]^b[i];
+    }
+    return (x === 0);
+  },
+
+  /** Shift an array right.
+   * @param {bitArray} a The array to shift.
+   * @param {Number} shift The number of bits to shift.
+   * @param {Number} [carry=0] A byte to carry in
+   * @param {bitArray} [out=[]] An array to prepend to the output.
+   * @private
+   */
+  _shiftRight: function (a, shift, carry, out) {
+    var i, last2=0, shift2;
+    if (out === undefined) { out = []; }
+    
+    for (; shift >= 32; shift -= 32) {
+      out.push(carry);
+      carry = 0;
+    }
+    if (shift === 0) {
+      return out.concat(a);
+    }
+    
+    for (i=0; i&lt;a.length; i++) {
+      out.push(carry | a[i]>>>shift);
+      carry = a[i] &lt;&lt; (32-shift);
+    }
+    last2 = a.length ? a[a.length-1] : 0;
+    shift2 = sjcl.bitArray.getPartial(last2);
+    out.push(sjcl.bitArray.partial(shift+shift2 &amp; 31, (shift + shift2 > 32) ? carry : out.pop(),1));
+    return out;
+  },
+  
+  /** xor a block of 4 words together.
+   * @private
+   */
+  _xor4: function(x,y) {
+    return [x[0]^y[0],x[1]^y[1],x[2]^y[2],x[3]^y[3]];
+  },
+
+  /** byteswap a word array inplace.
+   * (does not handle partial words)
+   * @param {sjcl.bitArray} a word array
+   * @return {sjcl.bitArray} byteswapped array
+   */
+  byteswapM: function(a) {
+    var i, v, m = 0xff00;
+    for (i = 0; i &lt; a.length; ++i) {
+      v = a[i];
+      a[i] = (v >>> 24) | ((v >>> 8) &amp; m) | ((v &amp; m) &lt;&lt; 8) | (v &lt;&lt; 24);
+    }
+    return a;
+  }
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="sjcl.bn.html">sjcl.bn</a></li><li><a href="sjcl.cipher.aes.html">sjcl.cipher.aes</a></li><li><a href="sjcl.ecc.basicKey.publicKey.html">sjcl.ecc.basicKey.publicKey</a></li><li><a href="sjcl.ecc.basicKey.secretKey.html">sjcl.ecc.basicKey.secretKey</a></li><li><a href="sjcl.ecc.curve.html">sjcl.ecc.curve</a></li><li><a href="sjcl.ecc.ecdsa.publicKey.html">sjcl.ecc.ecdsa.publicKey</a></li><li><a href="sjcl.ecc.ecdsa.secretKey.html">sjcl.ecc.ecdsa.secretKey</a></li><li><a href="sjcl.ecc.elGamal.publicKey.html">sjcl.ecc.elGamal.publicKey</a></li><li><a href="sjcl.ecc.elGamal.secretKey.html">sjcl.ecc.elGamal.secretKey</a></li><li><a href="sjcl.ecc.point.html">sjcl.ecc.point</a></li><li><a href="sjcl.ecc.pointJac.html">sjcl.ecc.pointJac</a></li><li><a href="sjcl.exception.bug.html">sjcl.exception.bug</a></li><li><a href="sjcl.exception.corrupt.html">sjcl.exception.corrupt</a></li><li><a href="sjcl.exception.invalid.html">sjcl.exception.invalid</a></li><li><a href="sjcl.exception.notReady.html">sjcl.exception.notReady</a></li><li><a href="sjcl.hash.ripemd160.html">sjcl.hash.ripemd160</a></li><li><a href="sjcl.hash.sha1.html">sjcl.hash.sha1</a></li><li><a href="sjcl.hash.sha256.html">sjcl.hash.sha256</a></li><li><a href="sjcl.hash.sha512.html">sjcl.hash.sha512</a></li><li><a href="sjcl.misc.hmac.html">sjcl.misc.hmac</a></li><li><a href="sjcl.prng.html">sjcl.prng</a></li></ul><h3>Namespaces</h3><ul><li><a href="sjcl.html">sjcl</a></li><li><a href="sjcl.arrayBuffer.html">sjcl.arrayBuffer</a></li><li><a href="sjcl.bitArray.html">sjcl.bitArray</a></li><li><a href="sjcl.cipher.html">sjcl.cipher</a></li><li><a href="sjcl.codec.html">sjcl.codec</a></li><li><a href="sjcl.codec.arrayBuffer.html">sjcl.codec.arrayBuffer</a></li><li><a href="sjcl.codec.base32.html">sjcl.codec.base32</a></li><li><a href="sjcl.codec.base64.html">sjcl.codec.base64</a></li><li><a href="sjcl.codec.bytes.html">sjcl.codec.bytes</a></li><li><a href="sjcl.codec.hex.html">sjcl.codec.hex</a></li><li><a href="sjcl.codec.utf8String.html">sjcl.codec.utf8String</a></li><li><a href="sjcl.codec.z85.html">sjcl.codec.z85</a></li><li><a href="sjcl.ecc.html">sjcl.ecc</a></li><li><a href="sjcl.exception.html">sjcl.exception</a></li><li><a href="sjcl.hash.html">sjcl.hash</a></li><li><a href="sjcl.json.html">sjcl.json</a></li><li><a href="sjcl.keyexchange.html">sjcl.keyexchange</a></li><li><a href="sjcl.keyexchange.srp.html">sjcl.keyexchange.srp</a></li><li><a href="sjcl.misc.html">sjcl.misc</a></li><li><a href="sjcl.mode.html">sjcl.mode</a></li><li><a href="sjcl.mode.cbc.html">sjcl.mode.cbc</a></li><li><a href="sjcl.mode.ccm.html">sjcl.mode.ccm</a></li><li><a href="sjcl.mode.ctr.html">sjcl.mode.ctr</a></li><li><a href="sjcl.mode.gcm.html">sjcl.mode.gcm</a></li><li><a href="sjcl.mode.ocb2.html">sjcl.mode.ocb2</a></li><li><a href="sjcl.mode.ocb2progressive.html">sjcl.mode.ocb2progressive</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Jan 11 2017 22:49:26 GMT-0300 (ART)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

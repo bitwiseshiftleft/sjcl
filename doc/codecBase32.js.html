@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: codecBase32.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: codecBase32.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/** @fileOverview Bit array codec implementations.
+ *
+ * @author Nils Kenneweg
+ */
+
+/**
+ * Base32 encoding/decoding
+ * @namespace
+ */
+sjcl.codec.base32 = {
+  /** The base32 alphabet.
+   * @private
+   */
+  _chars: "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567",
+  _hexChars: "0123456789ABCDEFGHIJKLMNOPQRSTUV",
+
+  /* bits in an array */
+  BITS: 32,
+  /* base to encode at (2^x) */
+  BASE: 5,
+  /* bits - base */
+  REMAINING: 27,
+
+  /** Convert from a bitArray to a base32 string. */
+  fromBits: function (arr, _noEquals, _hex) {
+    var BITS = sjcl.codec.base32.BITS, BASE = sjcl.codec.base32.BASE, REMAINING = sjcl.codec.base32.REMAINING;
+    var out = "", i, bits=0, c = sjcl.codec.base32._chars, ta=0, bl = sjcl.bitArray.bitLength(arr);
+
+    if (_hex) {
+      c = sjcl.codec.base32._hexChars;
+    }
+
+    for (i=0; out.length * BASE &lt; bl; ) {
+      out += c.charAt((ta ^ arr[i]>>>bits) >>> REMAINING);
+      if (bits &lt; BASE) {
+        ta = arr[i] &lt;&lt; (BASE-bits);
+        bits += REMAINING;
+        i++;
+      } else {
+        ta &lt;&lt;= BASE;
+        bits -= BASE;
+      }
+    }
+    while ((out.length &amp; 7) &amp;&amp; !_noEquals) { out += "="; }
+
+    return out;
+  },
+
+  /** Convert from a base32 string to a bitArray */
+  toBits: function(str, _hex) {
+    str = str.replace(/\s|=/g,'').toUpperCase();
+    var BITS = sjcl.codec.base32.BITS, BASE = sjcl.codec.base32.BASE, REMAINING = sjcl.codec.base32.REMAINING;
+    var out = [], i, bits=0, c = sjcl.codec.base32._chars, ta=0, x, format="base32";
+
+    if (_hex) {
+      c = sjcl.codec.base32._hexChars;
+      format = "base32hex";
+    }
+
+    for (i=0; i&lt;str.length; i++) {
+      x = c.indexOf(str.charAt(i));
+      if (x &lt; 0) {
+        // Invalid character, try hex format
+        if (!_hex) {
+          try {
+            return sjcl.codec.base32hex.toBits(str);
+          }
+          catch (e) {}
+        }
+        throw new sjcl.exception.invalid("this isn't " + format + "!");
+      }
+      if (bits > REMAINING) {
+        bits -= REMAINING;
+        out.push(ta ^ x>>>bits);
+        ta  = x &lt;&lt; (BITS-bits);
+      } else {
+        bits += BASE;
+        ta ^= x &lt;&lt; (BITS-bits);
+      }
+    }
+    if (bits&amp;56) {
+      out.push(sjcl.bitArray.partial(bits&amp;56, ta, 1));
+    }
+    return out;
+  }
+};
+
+sjcl.codec.base32hex = {
+  fromBits: function (arr, _noEquals) { return sjcl.codec.base32.fromBits(arr,_noEquals,1); },
+  toBits: function (str) { return sjcl.codec.base32.toBits(str,1); }
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="sjcl.bn.html">sjcl.bn</a></li><li><a href="sjcl.cipher.aes.html">sjcl.cipher.aes</a></li><li><a href="sjcl.ecc.basicKey.publicKey.html">sjcl.ecc.basicKey.publicKey</a></li><li><a href="sjcl.ecc.basicKey.secretKey.html">sjcl.ecc.basicKey.secretKey</a></li><li><a href="sjcl.ecc.curve.html">sjcl.ecc.curve</a></li><li><a href="sjcl.ecc.ecdsa.publicKey.html">sjcl.ecc.ecdsa.publicKey</a></li><li><a href="sjcl.ecc.ecdsa.secretKey.html">sjcl.ecc.ecdsa.secretKey</a></li><li><a href="sjcl.ecc.elGamal.publicKey.html">sjcl.ecc.elGamal.publicKey</a></li><li><a href="sjcl.ecc.elGamal.secretKey.html">sjcl.ecc.elGamal.secretKey</a></li><li><a href="sjcl.ecc.point.html">sjcl.ecc.point</a></li><li><a href="sjcl.ecc.pointJac.html">sjcl.ecc.pointJac</a></li><li><a href="sjcl.exception.bug.html">sjcl.exception.bug</a></li><li><a href="sjcl.exception.corrupt.html">sjcl.exception.corrupt</a></li><li><a href="sjcl.exception.invalid.html">sjcl.exception.invalid</a></li><li><a href="sjcl.exception.notReady.html">sjcl.exception.notReady</a></li><li><a href="sjcl.hash.ripemd160.html">sjcl.hash.ripemd160</a></li><li><a href="sjcl.hash.sha1.html">sjcl.hash.sha1</a></li><li><a href="sjcl.hash.sha256.html">sjcl.hash.sha256</a></li><li><a href="sjcl.hash.sha512.html">sjcl.hash.sha512</a></li><li><a href="sjcl.misc.hmac.html">sjcl.misc.hmac</a></li><li><a href="sjcl.prng.html">sjcl.prng</a></li></ul><h3>Namespaces</h3><ul><li><a href="sjcl.html">sjcl</a></li><li><a href="sjcl.arrayBuffer.html">sjcl.arrayBuffer</a></li><li><a href="sjcl.bitArray.html">sjcl.bitArray</a></li><li><a href="sjcl.cipher.html">sjcl.cipher</a></li><li><a href="sjcl.codec.html">sjcl.codec</a></li><li><a href="sjcl.codec.arrayBuffer.html">sjcl.codec.arrayBuffer</a></li><li><a href="sjcl.codec.base32.html">sjcl.codec.base32</a></li><li><a href="sjcl.codec.base64.html">sjcl.codec.base64</a></li><li><a href="sjcl.codec.bytes.html">sjcl.codec.bytes</a></li><li><a href="sjcl.codec.hex.html">sjcl.codec.hex</a></li><li><a href="sjcl.codec.utf8String.html">sjcl.codec.utf8String</a></li><li><a href="sjcl.codec.z85.html">sjcl.codec.z85</a></li><li><a href="sjcl.ecc.html">sjcl.ecc</a></li><li><a href="sjcl.exception.html">sjcl.exception</a></li><li><a href="sjcl.hash.html">sjcl.hash</a></li><li><a href="sjcl.json.html">sjcl.json</a></li><li><a href="sjcl.keyexchange.html">sjcl.keyexchange</a></li><li><a href="sjcl.keyexchange.srp.html">sjcl.keyexchange.srp</a></li><li><a href="sjcl.misc.html">sjcl.misc</a></li><li><a href="sjcl.mode.html">sjcl.mode</a></li><li><a href="sjcl.mode.cbc.html">sjcl.mode.cbc</a></li><li><a href="sjcl.mode.ccm.html">sjcl.mode.ccm</a></li><li><a href="sjcl.mode.ctr.html">sjcl.mode.ctr</a></li><li><a href="sjcl.mode.gcm.html">sjcl.mode.gcm</a></li><li><a href="sjcl.mode.ocb2.html">sjcl.mode.ocb2</a></li><li><a href="sjcl.mode.ocb2progressive.html">sjcl.mode.ocb2progressive</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Jan 11 2017 22:49:26 GMT-0300 (ART)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
