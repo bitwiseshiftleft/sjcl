@@ -1,4 +1,4 @@
-/** @fileOverview Convenince functions centered around JSON encapsulation.
+/** @fileOverview Convenience functions centered around JSON encapsulation.
  *
  * @author Emily Stark
  * @author Mike Hamburg
