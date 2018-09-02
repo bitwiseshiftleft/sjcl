@@ -17,7 +17,7 @@
  * Context for a SHA-256 operation in progress.
  * @constructor
  */
-sjcl.hash.sha256 = function (hash) {
+sjcl.hash.sha256 =  (hash) => {
   if (!this._key[0]) { this._precompute(); }
   if (hash) {
     this._h = hash._h.slice(0);
