@@ -1,3 +1,6 @@
+// Thanks to Colin McRae and Jonathan Burns of ionic security
+// for reporting and fixing two bugs in this file!
+
 /**
  * Constructs a new bignum from another bignum, a number or a hex string.
  * @constructor
@@ -237,7 +240,8 @@ sjcl.bn.prototype = {
 
   /** this * that.  Normalizes and reduces. */
   mul: function(that) {
-    if (typeof(that) === "number") { that = new this._class(that); }
+    if (typeof(that) === "number") { that = new this._class(that); } else { that.normalize(); }
+    this.normalize();
     var i, j, a = this.limbs, b = that.limbs, al = a.length, bl = b.length, out = new this._class(), c = out.limbs, ai, ii=this.maxMul;
 
     for (i=0; i < this.limbs.length + that.limbs.length + 1; i++) {
@@ -382,7 +386,7 @@ sjcl.bn.prototype = {
     var montIn = function(c) { return montMul(c, R2); },
     montMul = function(a, b) {
       // Standard Montgomery reduction
-      var k, carry, ab, right, abBar, mask = (1 << (s + 1)) - 1;
+      var k, ab, right, abBar, mask = (1 << (s + 1)) - 1;
 
       ab = a.mul(b);
 
@@ -588,7 +592,7 @@ sjcl.bn.pseudoMersennePrime = function(exponent, coeff) {
 
   for (i=0; i<coeff.length; i++) {
     ppr.offset[i] = Math.floor(coeff[i][0] / ppr.radix - tmp);
-    ppr.fullOffset[i] = Math.ceil(coeff[i][0] / ppr.radix - tmp);
+    ppr.fullOffset[i] = Math.floor(coeff[i][0] / ppr.radix ) - mo + 1;
     ppr.factor[i] = coeff[i][1] * Math.pow(1/2, exponent - coeff[i][0] + ppr.offset[i] * ppr.radix);
     ppr.fullFactor[i] = coeff[i][1] * Math.pow(1/2, exponent - coeff[i][0] + ppr.fullOffset[i] * ppr.radix);
     ppr.modulus.addM(new sjcl.bn(Math.pow(2,coeff[i][0])*coeff[i][1]));
