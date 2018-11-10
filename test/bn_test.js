@@ -5,7 +5,7 @@ new sjcl.test.TestCase("Bignum modular reduction test", function (cb) {
     return;
   }
 
-  var a, N, r;
+  var a, N, r, i, tv;
   for (i=0; i < sjcl.test.vector.bn_mod.length; i++) {
     tv = sjcl.test.vector.bn_mod[i];
     try {
@@ -27,7 +27,7 @@ new sjcl.test.TestCase("Bignum modular multiplication test", function (cb) {
     return;
   }
 
-  var a, b, N, r;
+  var a, b, N, r, i, tv;
   for(var j=0;j<10;j++)for (i=0; i < sjcl.test.vector.bn_mulmod.length; i++) {
       tv = sjcl.test.vector.bn_mulmod[i];
     try {
@@ -74,5 +74,24 @@ new sjcl.test.TestCase("Bignum toString test", function (cb) {
   }
   this.require((new sjcl.bn(12312434)).power(10).toString() ===
     '0xb99c06973dcc72429aa1dd41b0bc40a424289a05d3d72f066ee4e71c400');
+  cb && cb();
+});
+
+new sjcl.test.TestCase("Big Limbs Multiplication test", function (cb) {
+  if (!sjcl.bn) {
+    this.unimplemented();
+    cb && cb();
+    return;
+  }
+
+  var expected = "0x1000001800002100000a000002fffffa000001",
+       bigLimb = Math.pow(2,26) - 1;
+
+  var x = new sjcl.bn(0);
+  x.limbs = [bigLimb, bigLimb, bigLimb];
+  var actual = x.square().toString();
+
+  this.require(actual === expected, "Expected: " + expected + " Actual: " + actual);
+
   cb && cb();
 });
