@@ -4,8 +4,6 @@ cache:
   directories:
     - node_modules
 node_js:
-  - "6"
-  - "4.2"
+  - "10"
   - "0.12"
-  - "0.10"
 before_script: ./configure --with-all
