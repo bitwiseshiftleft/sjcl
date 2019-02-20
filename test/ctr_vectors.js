@@ -88,5 +88,10 @@ sjcl.test.vector.ctr = [
   { key: '3d25c893d44c4a831b5df70dd4796e31da1511fbcc01050ed3136a3546587448',
     iv:  '6d794b58f8f72cc5176fea41d7b8103e',
     pt:  '77f1a3c4e2abe13f46e978d37eef76eca76561cbb8b5ad55a07300b32e6df3fe',
-    ct:  '9b07440ffb0d8136d0adf8b93784bf24fbabc75def9806b33a7d06887204151e'}
+    ct:  '9b07440ffb0d8136d0adf8b93784bf24fbabc75def9806b33a7d06887204151e'},
+  { key: '3d25c893d44c4a831b5df70dd4796e31da1511fbcc01050ed3136a3546587448',
+    iv:  'abcdef90ffffffffffffffffffffffff',
+    pt:  '77f1a3c4e2abe13f46e978d37eef76eca76561cbb8b5ad55a07300b32e6df3fe',
+    ct:  'ff9be0c14b6a5c8fa99fa5142ab65951144aa48854785395d5251fe285c053e7'},
+
 ];
