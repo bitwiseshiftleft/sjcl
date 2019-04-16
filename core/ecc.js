@@ -56,11 +56,12 @@ sjcl.ecc.point.prototype = {
     var m, i, j;
     if (this._multiples === undefined) {
       j = this.toJac().doubl();
-      m = this._multiples = [new sjcl.ecc.point(this.curve), this, j.toAffine()];
+      m = [j];
       for (i=3; i<16; i++) {
         j = j.add(this);
-        m.push(j.toAffine());
+        m.push(j);
       }
+      this._multiples = [new sjcl.ecc.point(this.curve), this].concat(sjcl.ecc.pointJac.toAffineMultiple(m));
     }
     return this._multiples;
   },
@@ -99,6 +100,67 @@ sjcl.ecc.pointJac = function(curve, x, y, z) {
     this.isIdentity = false;
   }
   this.curve = curve;
+};
+
+/**
+ * Returns points converted to affine coordinates.
+ * @param {Array} points An array of {sjcl.ecc.pointJac} to convert.
+ * @return {Array} An array of {sjcl.ecc.point} that were converted.
+ */
+sjcl.ecc.pointJac.toAffineMultiple = function (points) {
+  var i=0, j, ret = new Array(points.length), p, tmp, z, zi, zi2, curve;
+  for (; i<points.length; i++) {
+    p = points[i];
+    if (curve != p.curve) {
+      // if not first time
+      if (curve) {
+        // curve mismatch so just convert points individually
+        for (i=0; i<points.length; i++) {
+          ret[i] = points[i].toAffine();
+        }
+        return ret;
+      } else {
+        curve = p.curve;
+      }
+    }
+    // multiply all z coordinates
+    if (!p.isIdentity && !p.z.equals(0)) {
+      if (tmp) {
+        tmp.push(z);
+        z = z.mul(p.z);
+      } else {
+        z = p.z;
+        tmp = [];
+      }
+    }
+  }
+  // if any z coordinates invert
+  if (tmp) {
+    // z is now the product of all z coordinates inverted
+    z = z.inverse();
+    j = tmp.length-1;
+  }
+  for (i--; i>=0; i--) {
+    p = points[i];
+    if (p.isIdentity || p.z.equals(0)) {
+      ret[i] = new sjcl.ecc.point(p.curve);
+    } else {
+      // if not last
+      if (j >= 0) {
+        // remove all other inverted z coordinates from product of inverses
+        // zi is now inverse of p.z
+        zi = z.mul(tmp[j]);
+        // remove the inverse of p.z from product of inverses
+        z = z.mul(p.z);
+        j--;
+      } else {
+        zi = z;
+      }
+      zi2 = zi.square();
+      ret[i] = new sjcl.ecc.point(p.curve, p.x.mul(zi2).fullReduce(), p.y.mul(zi2.mul(zi)).fullReduce());
+    }
+  }
+  return ret;
 };
 
 sjcl.ecc.pointJac.prototype = {
