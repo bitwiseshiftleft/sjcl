@@ -20,6 +20,9 @@
     "jsdoc": "jsdoc -c jsdoc.conf.json",
     "lint": "eslint . || true"
   },
+  "browser": {
+    "crypto": false
+  },
   "engines": {
     "node": "*"
   },
