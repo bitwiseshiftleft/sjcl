@@ -520,11 +520,14 @@ sjcl.bn.prototype = {
   toBits: function(len) {
     this.fullReduce();
     len = len || this.exponent || this.bitLength();
-    var i = Math.floor((len-1)/24), w=sjcl.bitArray, e = (len + 7 & -8) % this.radix || this.radix,
+    // round up to nearest byte
+    len = len + 7 & -8;
+    var i = Math.floor((len-1)/this.radix),
+        w = sjcl.bitArray,
+        e = len % this.radix || this.radix,
         out = [w.partial(e, this.getLimb(i))];
     for (i--; i >= 0; i--) {
-      out = w.concat(out, [w.partial(Math.min(this.radix,len), this.getLimb(i))]);
-      len -= this.radix;
+      out = w.concat(out, [w.partial(this.radix, this.getLimb(i))]);
     }
     return out;
   },
