@@ -64,7 +64,9 @@ sjcl.beware["CTR mode is dangerous because it doesn't protect message integrity.
         d[i+1] ^= e[1];
         d[i+2] ^= e[2];
         d[i+3] ^= e[3];
-        c[3]++;
+        for(var carry = 3; carry >= 0; carry--) {
+          if (++c[carry]) break; // If overflowing, it'll be 0 and we'll have to continue propagating the carry
+        }
       }
       return sjcl.bitArray.clamp(d, bl);
     }
