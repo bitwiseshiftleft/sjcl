@@ -29,5 +29,8 @@
   "devDependencies": {
     "eslint": "^2.11.1",
     "jsdoc": "3.4.0"
+  },
+  "dependencies": {
+    "expo-crypto": "^8.0.0"
   }
 }

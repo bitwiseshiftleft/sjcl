@@ -1,4 +1,4 @@
-sjcl
+sjcl - Expo compatible
 ====
 
 [![Build Status](https://travis-ci.org/bitwiseshiftleft/sjcl.png)](https://travis-ci.org/bitwiseshiftleft/sjcl)
