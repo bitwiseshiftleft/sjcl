@@ -22,8 +22,8 @@ sjcl.keyexchange.srp = {
    * @param {String} P The password.
    * @param {Object} s A bitArray of the salt.
    * @param {Object} group The SRP group. Use sjcl.keyexchange.srp.knownGroup
-                           to obtain this object.
-   * @return {Object} A bitArray of SRP v.
+   *                       to obtain this object.
+   * @return {Object} A bn of SRP v.
    */
   makeVerifier: function(I, P, s, group) {
     var x;
@@ -43,6 +43,132 @@ sjcl.keyexchange.srp = {
   makeX: function(I, P, s) {
     var inner = sjcl.hash.sha1.hash(I + ':' + P);
     return sjcl.hash.sha1.hash(sjcl.bitArray.concat(s, inner));
+  },
+
+  /**
+   * Calculates SRP group constant k.
+   *   k = SHA1(N | PAD(g)) [RFC 5054]
+   * @param {Object} group The SRP group. Use sjcl.keyexchange.srp.knownGroup
+   *                       to obtain this object.
+   * @return {Object} A bitArray of SRP k.
+   */
+  makeK: function(group) {
+    var nbits = group.N.bitLength();
+    var inner = sjcl.bitArray.concat(group.N.toBits(nbits), group.g.toBits(nbits));
+    return sjcl.hash.sha1.hash(inner);
+  },
+
+  /**
+   * Calculates key derivation variable u per [RFC 5054].
+   *   u = SHA1(PAD(A) | PAD(B))
+   * @param {Object} clientPub A bn of client pubilc message (A).
+   * @param {Object} serverPub A bn of server public message (B).
+   * @param {Object} group The SRP group. Use sjcl.keyexchange.srp.knownGroup
+   *                       to obtain this object.
+   * @return {Object} A bitArray of SRP u.
+   */
+  makeU: function(clientPub, serverPub, group) {
+    var nbits = group.N.bitLength();
+    var inner = sjcl.bitArray.concat(clientPub.toBits(nbits), serverPub.toBits(nbits));
+    return sjcl.hash.sha1.hash(inner);
+  },
+  
+  /**
+   * Calculates client secret and public values for the client key exchange SRP message.
+   *   private = a = random value from 0 to N-2
+   *   public = A = g^a mod N  [RFC 5054]
+   * @param {Object} group The SRP group. Use sjcl.keyexchange.srp.knownGroup
+   *                       to obtain this object.
+   * @param {Object} priv When given, will be used instad of random value for client secret.
+   *                      Expected bn.
+   * @return {Object} A pair of bn of SRP a and A as {private: a, public: A}.
+   */
+  makeClientMsg: function(group, priv=undefined) {
+    var a, A; // Private and public parts
+    var q = group.N.sub(1); // Group order
+
+    if (priv === undefined) {
+      a = sjcl.bn.random(q);
+    } else {
+      a = priv;
+    }
+
+    A = group.g.powermod(a, group.N);
+    return { private: a, public: A };
+  },
+
+  /**
+   * Calculates server secret and public values for the server key exchange SRP message.
+   *   private = b = random value from 0 to N-2
+   *   public = B = k*v + g^b mod N  [RFC 5054]
+   * @param {Object} v A bn of client verification token v.
+   * @param {Object} group The SRP group. Use sjcl.keyexchange.srp.knownGroup
+   *                       to obtain this object.
+   * @param {Object} priv When given, will be used instad of random value for server secret.
+   *                      Expected bn.
+   * @return {Object} A pair of bn of SRP a and A as {private: a, public: A}.
+   */
+  makeServerMsg: function(v, group, priv=undefined) {
+    var b, B; // Private and public parts
+    var q = group.N.sub(1); // Group order
+    var k = sjcl.keyexchange.srp.makeK(group);
+
+    if (priv === undefined) {
+      b = sjcl.bn.random(q);
+    } else {
+      b = priv;
+    }
+
+    k = sjcl.bn.fromBits(k);
+    // B = k*v + g^b % N
+    B = group.g.powermod(b, group.N);
+    B.addM(k.mulmod(v, group.N));
+    B = B.mod(group.N);
+    return { private: b, public: B };
+  },
+
+  /**
+   * Calculates shared secret (pre-master secret key per [RFC 5054] nomenclature) from using client's data.
+   *   pmsk = (B - (k * g^x)) ^ (a + (u * x)) mod N  [RFC 5054]
+   * @param {String} I The username.
+   * @param {String} P The password.
+   * @param {Object} s A bitArray of the salt.
+   * @param {Object} clientMsg Client ephemeral key pair as returned by makeClientMsg.
+   * @param {Object} serverPub A bn of server ephemeral public key (server key exchange message).
+   * @param {Object} group The SRP group. Use sjcl.keyexchange.srp.knownGroup
+   *                       to obtain this object.
+   * @return {Object} A bitArray of pmsk (shared secret).
+   */
+  makeClientPmsk: function(I, P, s, clientMsg, serverPub, group) {
+    var q = group.N.sub(1); /* Group order */
+    var u = sjcl.keyexchange.srp.makeU(clientMsg.public, serverPub, group);
+    var k = sjcl.keyexchange.srp.makeK(group);
+    var x = sjcl.keyexchange.srp.makeX(I, P, s);
+    u = sjcl.bn.fromBits(u);
+    k = sjcl.bn.fromBits(k);
+    x = sjcl.bn.fromBits(x);
+    // (B - (k * g^x)) ^ (a + (u * x)) mod N
+    var base = serverPub.sub(k.mulmod(group.g.powermod(x, group.N), group.N)).mod(group.N);
+    var exp = clientMsg.private.add(u.mulmod(x, q)).mod(q);
+    return base.powermod(exp, group.N).toBits(group.N.bitLength());
+  },
+
+  /**
+   * Calculates shared secret (pre-master secret key per [RFC 5054] nomenclature) from using server's data.
+   *   pmsk = (A * v^u) ^ b mod N  [RFC 5054]
+   * @param {Object} v A bn of client verification token v.
+   * @param {Object} clientPub A bn of client ephemeral public key (client key exchange message).
+   * @param {Object} serverMsg Server ephemeral key pair as retuurned by makeServerMsg.
+   * @param {Object} group The SRP group. Use sjcl.keyexchange.srp.knownGroup
+   *                       to obtain this object.
+   * @return {Object} A bitArray of pmsk (shared secret).
+   */
+  makeServerPmsk: function(v, clientPub, serverMsg, group) {
+    var u = sjcl.keyexchange.srp.makeU(clientPub, serverMsg.public, group);
+    u = sjcl.bn.fromBits(u);
+    // (A * v^u) ^ b mod N
+    var base = clientPub.mulmod(v.powermod(u, group.N), group.N);
+    return base.powermod(serverMsg.private, group.N).toBits(group.N.bitLength());
   },
 
   /**
