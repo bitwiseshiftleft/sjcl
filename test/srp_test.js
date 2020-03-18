@@ -8,7 +8,10 @@ new sjcl.test.TestCase("SRP known-answer (RFC 5054) tests", function (cb) {
   var i, kat = sjcl.test.vector.srp, tv, group, v, x;
 
   for (i=0; i<kat.length; i++) {
-    tv = Object.assign({}, kat[i]); // Make shallow copy to preserve the test vector
+    // Make shallow copy of test vector as to not modify the original
+    // Note: This is a workaround for older EcmaScript variants (<=5), for EcmaScript 6+ Object.assign could be used instead.
+    tv = {}
+    for (var attr in kat[i]) { tv[attr] = kat[i][attr]; }
     group = sjcl.keyexchange.srp.knownGroup(tv.known_group_size);
     tv.s = sjcl.codec.hex.toBits(tv.s);
     tv.v = new sjcl.bn(tv.v);
@@ -62,7 +65,10 @@ new sjcl.test.TestCase("SRP simulation (RFC 5054) tests", function (cb) {
   sjcl.random.addEntropy(entropy, 256, "object");
 
   for (i=0; i<kat.length; i++) {
-    tv = Object.assign({}, kat[i]); // Make shallow copy to preserve the test vector
+    // Make shallow copy of test vector as to not modify the original
+    // Note: This is a workaround for older EcmaScript variants (<=5), for EcmaScript 6+ Object.assign could be used instead.
+    tv = {}
+    for (var attr in kat[i]) { tv[attr] = kat[i][attr]; }
     group = sjcl.keyexchange.srp.knownGroup(tv.known_group_size);
     tv.s = sjcl.codec.hex.toBits(tv.s);
     tv.v = new sjcl.bn(tv.v);
