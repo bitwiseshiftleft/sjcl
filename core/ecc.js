@@ -518,11 +518,15 @@ sjcl.ecc.basicKey.generateKeys = function(cn) {
     curve = curve || 256;
 
     if (typeof curve === "number") {
-      curve = sjcl.ecc.curves['c'+curve];
-      if (curve === undefined) {
-        throw new sjcl.exception.invalid("no such curve");
-      }
+      curve = 'c' + curve; 
     }
+
+    curve = sjcl.ecc.curves[curve];
+    
+    if (curve === undefined) {
+      throw new sjcl.exception.invalid("no such curve");
+    }
+    
     sec = sec || sjcl.bn.random(curve.r, paranoia);
 
     var pub = curve.G.mult(sec);
