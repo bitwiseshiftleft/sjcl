@@ -482,7 +482,7 @@ sjcl.random = new sjcl.prng(6);
   // function for getting nodejs crypto module. catches and ignores errors.
   function getCryptoModule() {
     try {
-      return require('msrcrypto');
+      return require('crypto');
     }
     catch (e) {
       return null;
