@@ -119,8 +119,6 @@
       return;
     }
 
-    this.require(sjcl.bitArray.old_equal([sjcl.bitArray.partial(1,0xffffffff,1)], [sjcl.bitArray.partial(1,0x80000000,1)]));
-
     this.require(sjcl.bitArray.equal([sjcl.bitArray.partial(1,0xffffffff,1)], [sjcl.bitArray.partial(1,0x80000000,1)]));
     this.require(!sjcl.bitArray.equal([sjcl.bitArray.partial(2,0xffffffff,1)], [sjcl.bitArray.partial(2,0x80000000,1)]));
 
