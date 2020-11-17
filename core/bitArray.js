@@ -143,12 +143,16 @@ sjcl.bitArray = {
     if (sjcl.bitArray.bitLength(a) !== sjcl.bitArray.bitLength(b)) {
       return false;
     }
-    var x = 0, i;
-    for (i=0; i<a.length; i++) {
+    if (sjcl.bitArray.bitLength(a) <= 0) {
+      return true;
+    }
+    var x = 0, i, m = 0x80000000 >> sjcl.bitArray.getPartial(a) - 1, l = a.length;
+    for (i=0; i< l - 1 ; i++) {
       x |= a[i]^b[i];
     }
-    return (x === 0);
+    return (!x && !(a[l - 1] & m ^ b[l - 1] & m) );
   },
+
 
   /** Shift an array right.
    * @param {bitArray} a The array to shift.
