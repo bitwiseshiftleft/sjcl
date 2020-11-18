@@ -19,8 +19,9 @@
  * @param {Object} [Prff=sjcl.misc.hmac] The pseudorandom function family.
  * @return {bitArray} the derived key.
  */
-sjcl.misc.pbkdf2 = function (password, salt, count, length, Prff) {
+sjcl.misc.pbkdf2 = function (password, salt, count, length, Prff, hash) {
   count = count || 10000;
+  hash = hash || sjcl.hash.sha256
   
   if (length < 0 || count < 0) {
     throw new sjcl.exception.invalid("invalid params to pbkdf2");
@@ -36,7 +37,7 @@ sjcl.misc.pbkdf2 = function (password, salt, count, length, Prff) {
   
   Prff = Prff || sjcl.misc.hmac;
   
-  var prf = new Prff(password),
+  var prf = new Prff(password, hash),
       u, ui, i, j, k, out = [], b = sjcl.bitArray;
 
   for (k = 1; 32 * out.length < (length || 1); k++) {
