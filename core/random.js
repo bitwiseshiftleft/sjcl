@@ -489,6 +489,10 @@ sjcl.random = new sjcl.prng(6);
     }
   }
 
+    if(!window) {
+        return require('expo-crypto');
+    }
+
   try {
     var buf, crypt, ab;
 

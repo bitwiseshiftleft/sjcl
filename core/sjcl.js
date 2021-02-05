@@ -16,7 +16,7 @@
  * The Stanford Javascript Crypto Library, top-level namespace.
  * @namespace
  */
-require('expo-crypto');
+// require('expo-crypto');
 
 var sjcl = {
   /**
