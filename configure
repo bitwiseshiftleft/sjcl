@@ -41,7 +41,7 @@ my %enabled = ();
 $enabled{$_} = 0 foreach (@targets);
 
 # by default, all but codecBytes, codecZ85, srp, bn
-$enabled{$_} = 1 foreach (qw/aes bitArray codecString codecHex codecBase32 codecBase64 sha256 ccm ocb2 gcm hmac pbkdf2 random convenience/);
+$enabled{$_} = 1 foreach (qw/aes bitArray codecString codecHex codecBase32 codecBase64 sha256 ccm ocb2 gcm hmac pbkdf2 codecBytes random convenience/);
 
 # argument parsing
 while (my $arg = shift @ARGV) {
