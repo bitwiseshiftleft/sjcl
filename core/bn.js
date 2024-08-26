@@ -140,7 +140,7 @@ sjcl.bn.prototype = {
       l[i] = (tmp+carry)>>1;
       carry = (tmp&1) << r;
     }
-    if (!l[l.length-1]) {
+    if (!l[l.length-1] && l.length > 1) {
       l.pop();
     }
     return this;
@@ -386,6 +386,7 @@ sjcl.bn.prototype = {
     var montIn = function(c) { return montMul(c, R2); },
     montMul = function(a, b) {
       // Standard Montgomery reduction
+      // Assumes a and b are already mod N
       var k, ab, right, abBar, mask = (1 << (s + 1)) - 1;
 
       ab = a.mul(b);
@@ -419,7 +420,8 @@ sjcl.bn.prototype = {
     },
     montOut = function(c) { return montMul(c, 1); };
 
-    pow = montIn(pow);
+    // pow may be larger than N, and montIn/montMul assume their params are already mod N.
+    pow = montIn(pow.mod(N));
     out = montIn(out);
 
     // Sliding-Window Exponentiation (HAC 14.85)
