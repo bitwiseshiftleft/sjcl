@@ -95,3 +95,21 @@ new sjcl.test.TestCase("Big Limbs Multiplication test", function (cb) {
 
   cb && cb();
 });
+
+
+new sjcl.test.TestCase("Regression: Halving one makes zero", function (cb) {
+  if (!sjcl.bn) {
+    this.unimplemented();
+    cb && cb();
+    return;
+  }
+
+  var actual = new sjcl.bn(1).halveM();
+  this.require(actual.limbs.length === 1, "Expected: " + [0] + " Actual: " + actual.limbs);
+  this.require(actual.limbs[0] === 0, "Expected: " + [0] + " Actual: " + actual.limbs);
+
+  actual = new sjcl.bn(0).halveM();
+  this.require(actual.limbs.length === 1, "Expected: " + [0] + " Actual: " + actual.limbs);
+  this.require(actual.limbs[0] === 0, "Expected: " + [0] + " Actual: " + actual.limbs);
+  cb && cb();
+});
