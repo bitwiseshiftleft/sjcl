@@ -1,5 +1,12 @@
-sjcl
+[DEPRECATED] sjcl
 ====
+
+Deprecation status
+====
+Having not been updated in many years, sjcl is deprecated.  Please do not use it in new projects, and consider instead a more modern alternative.
+
+====
+
 
 [![Build Status](https://travis-ci.org/bitwiseshiftleft/sjcl.png)](https://travis-ci.org/bitwiseshiftleft/sjcl)
 
