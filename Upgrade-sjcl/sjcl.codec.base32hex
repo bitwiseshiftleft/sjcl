@@ -1,0 +1,27 @@
+codecBase32 has been re-enabled with changes to conform to RFC 4648:
+
+Padding with 
+= is now applied to the output of fromBits. 
+
+ don't want that padding, 
+
+ disable 
+ 
+ with 
+ 'Bits
+
+ 'a
+
+ 'second parameter 'of true or anything that evaluates as "truthy" in JS
+The encoding alpha
+'of
+
+ for 
+ sjcl.codec.base32 n
+ now matches that specified by the RFC, rather than the extended hex alphabet.
+The former extended hex alphabet is now 
+able through
+
+ 'sjcl.codec.base32hex
+ '(also matching the RFC). 
+ 'So if you encoded something with base32 before, you'll want to decode it with base32hex now.
