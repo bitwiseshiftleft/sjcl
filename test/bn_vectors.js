@@ -78,5 +78,11 @@ sjcl.test.vector.bn_powermod = [
     x: "eeaf0ab9adb3008dd6c314c9c25600057674df692c0006e0d5d8e2050b98be48e4",
     N: "b48130d6e07674df740e1d33b4816e0d5d8e20e2050b98be48e457674df74096ea",
     v: "9c3219b694befb9caac51a13eb1ac7053b02c654b6a0541cfa60c483592d478630"
+  },
+  {
+    g: 2000,
+    x: 2,
+    N: 19,
+    v: 6
   }
 ];
