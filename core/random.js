@@ -482,7 +482,11 @@ sjcl.random = new sjcl.prng(6);
   // function for getting nodejs crypto module. catches and ignores errors.
   function getCryptoModule() {
     try {
-      return require('crypto');
+      if (typeof navigator !== 'undefined' && navigator.product === 'ReactNative') {
+        return require('react-native-randombytes');
+      } else if (typeof process != 'undefined' && process.platform) {
+        return eval("require('crypto');")
+      }
     }
     catch (e) {
       return null;
