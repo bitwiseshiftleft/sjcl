@@ -440,14 +440,14 @@ sjcl.prng.prototype = {
     }
   },
   _accelerometerCollector: function (ev) {
-    var ac = ev.accelerationIncludingGravity.x||ev.accelerationIncludingGravity.y||ev.accelerationIncludingGravity.z;
-    if(window.orientation){
+    if (window.orientation) {
       var or = window.orientation;
       if (typeof or === "number") {
         this.addEntropy(or, 1, "accelerometer");
       }
     }
-    if (ac) {
+    if (ev.accelerationIncludingGravity) {
+      var ac = ev.accelerationIncludingGravity.x||ev.accelerationIncludingGravity.y||ev.accelerationIncludingGravity.z;
       this.addEntropy(ac, 2, "accelerometer");
     }
     this._addCurrentTimeToEntropy(0);
