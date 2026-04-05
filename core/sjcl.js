@@ -1,17 +1,3 @@
-/** @fileOverview Javascript cryptography implementation.
- *
- * Crush to remove comments, shorten variable names and
- * generally reduce transmission size.
- *
- * @author Emily Stark
- * @author Mike Hamburg
- * @author Dan Boneh
- */
-
-"use strict";
-/*jslint indent: 2, bitwise: false, nomen: false, plusplus: false, white: false, regexp: false */
-/*global document, window, escape, unescape, module, require, Uint32Array */
-
 /**
  * The Stanford Javascript Crypto Library, top-level namespace.
  * @namespace
@@ -101,3 +87,5 @@ var sjcl = {
     }
   }
 };
+
+(function (sjcl) { /* This will be closed by footer.js */
