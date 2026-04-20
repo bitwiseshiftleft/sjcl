@@ -89,6 +89,24 @@ sjcl.bn.prototype = {
   },
 
   /**
+   * Constant time conditional move.
+   * If b=false, returns x; otherwise, returns y.
+   */
+  cmov: function(x, y, b) {
+    var z = new x._class(0);
+    var m = x.radixMask;
+    var m0 = m & (m + b);
+    var m1 = m & (m + (!b));
+    x.fullReduce();
+    y.fullReduce();
+    for (var i = Math.max(x.limbs.length, y.limbs.length) - 1; i >= 0; i--) {
+      z.limbs.unshift((x.getLimb(i) & m0) ^ (y.getLimb(i) & m1));
+    }
+    z.trim();
+    return z;
+  },
+
+  /**
    * Convert to a hex string.
    */
   toString: function() {
